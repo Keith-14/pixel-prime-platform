@@ -7,6 +7,7 @@ import { Home } from "./pages/Home";
 import { LoadingScreen } from "./pages/LoadingScreen";
 import { Login } from "./pages/Login";
 import { Quran } from "./pages/Quran";
+import { Qibla } from "./pages/Qibla";
 import { Shop } from "./pages/Shop";
 import { Places } from "./pages/Places";
 import { Account } from "./pages/Account";
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Home />} />
           <Route path="/quran" element={<Quran />} />
+          <Route path="/qibla" element={<Qibla />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/places" element={<Places />} />
           <Route path="/account" element={<Account />} />

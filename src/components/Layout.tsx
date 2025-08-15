@@ -1,6 +1,7 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { BottomNavigation } from './BottomNavigation';
 import { TopHeader } from './TopHeader';
+import { SideMenu } from './SideMenu';
 
 interface LayoutProps {
   children: ReactNode;
@@ -9,6 +10,16 @@ interface LayoutProps {
 }
 
 export const Layout = ({ children, showNavigation = true, showHeader = true }: LayoutProps) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const handleMenuClick = () => {
+    setIsMenuOpen(true);
+  };
+
+  const handleMenuClose = () => {
+    setIsMenuOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col max-w-md mx-auto relative">
       {/* Islamic pattern background */}
@@ -19,13 +30,16 @@ export const Layout = ({ children, showNavigation = true, showHeader = true }: L
         }}></div>
       </div>
       
-      {showHeader && <TopHeader />}
+      {showHeader && <TopHeader onMenuClick={handleMenuClick} />}
       
       <main className={`flex-1 relative z-10 ${showNavigation ? 'pb-20' : ''}`}>
         {children}
       </main>
       
       {showNavigation && <BottomNavigation />}
+      
+      {/* Side Menu */}
+      <SideMenu isOpen={isMenuOpen} onClose={handleMenuClose} />
     </div>
   );
 };
