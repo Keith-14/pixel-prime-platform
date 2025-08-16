@@ -3,8 +3,9 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
 import { useState, useEffect } from 'react';
-import { ChevronLeft, Play, Pause, Volume2 } from 'lucide-react';
+import { ChevronLeft, Play, Pause, Volume2, Search } from 'lucide-react';
 
 interface Surah {
   surahName: string;
@@ -36,6 +37,7 @@ export const Quran = () => {
   const [loadingSurah, setLoadingSurah] = useState(false);
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
   const [playingVerse, setPlayingVerse] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Fetch all surahs on component mount
   useEffect(() => {
@@ -94,6 +96,13 @@ export const Quran = () => {
       setCurrentAudio(null);
     };
   };
+
+  // Filter surahs based on search query
+  const filteredSurahs = surahs.filter(surah => 
+    surah.surahName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    surah.surahNameTranslation.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    surah.surahNameArabic.includes(searchQuery)
+  );
 
   if (loading) {
     return (
@@ -230,36 +239,51 @@ export const Quran = () => {
           </h1>
         </div>
 
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Input
+            placeholder="Search chapters..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 rounded-2xl"
+          />
+        </div>
+
         <div className="space-y-3">
-          {surahs.map((surah, index) => (
-            <Card 
-              key={index}
-              className="p-4 rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors"
-              onClick={() => fetchSurahDetails(index + 1)}
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-sage text-primary-foreground rounded-full flex items-center justify-center">
-                  <span className="text-sm font-bold">{index + 1}</span>
+          {filteredSurahs.map((surah, index) => {
+            // Find original index for surah number
+            const originalIndex = surahs.findIndex(s => s.surahName === surah.surahName);
+            return (
+              <Card 
+                key={originalIndex}
+                className="p-4 rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={() => fetchSurahDetails(originalIndex + 1)}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-sage text-primary-foreground rounded-full flex items-center justify-center">
+                    <span className="text-sm font-bold">{originalIndex + 1}</span>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-sage">
+                      {surah.surahName}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {surah.surahNameTranslation}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-arabic mb-1" dir="rtl">
+                      {surah.surahNameArabic}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {surah.totalAyah} verses
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-sage">
-                    {surah.surahName}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {surah.surahNameTranslation}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-lg font-arabic mb-1" dir="rtl">
-                    {surah.surahNameArabic}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {surah.totalAyah} verses
-                  </p>
-                </div>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
       </div>
     </Layout>
