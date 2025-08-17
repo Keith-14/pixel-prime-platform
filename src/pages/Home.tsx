@@ -17,7 +17,53 @@ export const Home = () => {
   const navigate = useNavigate();
   const [location, setLocation] = useState("Getting location...");
   const [currentDate, setCurrentDate] = useState("");
+  const [currentTime, setCurrentTime] = useState("");
+  const [currentPrayer, setCurrentPrayer] = useState({ name: "", nextTime: "" });
   
+  const getCurrentPrayer = () => {
+    const now = new Date();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    const currentMinutes = hours * 60 + minutes;
+
+    // Approximate prayer times (can be made more accurate with proper calculation)
+    const prayerTimes = {
+      Fajr: { start: 5 * 60, end: 6 * 60 + 30 }, // 5:00 - 6:30
+      Dhuhr: { start: 12 * 60 + 30, end: 15 * 60 }, // 12:30 - 15:00
+      Asr: { start: 15 * 60, end: 18 * 60 }, // 15:00 - 18:00
+      Maghrib: { start: 18 * 60, end: 19 * 60 + 30 }, // 18:00 - 19:30
+      Isha: { start: 19 * 60 + 30, end: 23 * 60 } // 19:30 - 23:00
+    };
+
+    for (const [name, time] of Object.entries(prayerTimes)) {
+      if (currentMinutes >= time.start && currentMinutes <= time.end) {
+        const nextPrayerTime = time.end;
+        const nextHours = Math.floor(nextPrayerTime / 60);
+        const nextMins = nextPrayerTime % 60;
+        return {
+          name: `${name} Time`,
+          nextTime: `Next prayer at ${nextHours.toString().padStart(2, '0')}:${nextMins.toString().padStart(2, '0')}`
+        };
+      }
+    }
+
+    // If no current prayer time, show next prayer
+    const nextPrayerNames = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+    const nextPrayer = nextPrayerNames.find(name => {
+      const time = prayerTimes[name as keyof typeof prayerTimes];
+      return currentMinutes < time.start;
+    }) || 'Fajr';
+
+    const nextTime = prayerTimes[nextPrayer as keyof typeof prayerTimes].start;
+    const nextHours = Math.floor(nextTime / 60);
+    const nextMins = nextTime % 60;
+
+    return {
+      name: `Next: ${nextPrayer}`,
+      nextTime: `${nextHours.toString().padStart(2, '0')}:${nextMins.toString().padStart(2, '0')}`
+    };
+  };
+
   useEffect(() => {
     // Get user's location
     if (navigator.geolocation) {
@@ -54,6 +100,26 @@ export const Home = () => {
     setCurrentDate(islamicDate);
   }, []);
 
+  // Update time and prayer info every second
+  useEffect(() => {
+    const updateTimeAndPrayer = () => {
+      const now = new Date();
+      const timeString = now.toLocaleTimeString('en-US', { 
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+      setCurrentTime(timeString);
+      setCurrentPrayer(getCurrentPrayer());
+    };
+
+    updateTimeAndPrayer(); // Initial call
+    const interval = setInterval(updateTimeAndPrayer, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <Layout>
       <div className="px-4 py-6 space-y-6">
@@ -73,7 +139,15 @@ export const Home = () => {
             <MapPin className="h-4 w-4 text-sage" />
             <span className="text-sm text-muted-foreground">{location}</span>
           </div>
-          <p className="text-lg text-foreground mt-2">{currentDate}</p>
+          
+          {/* Time and Prayer Info */}
+          <div className="mt-3 space-y-2">
+            <div className="text-2xl font-bold text-sage">{currentTime}</div>
+            <div className="text-sm text-sage font-medium">{currentPrayer.name}</div>
+            <div className="text-xs text-muted-foreground">{currentPrayer.nextTime}</div>
+          </div>
+          
+          <p className="text-lg text-foreground mt-3">{currentDate}</p>
         </div>
 
         {/* Main Feature Cards */}
