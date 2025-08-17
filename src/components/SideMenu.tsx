@@ -5,6 +5,8 @@ import {
   User, 
   HelpCircle, 
   TrendingUp,
+  Plane,
+  Building2,
   X 
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -19,6 +21,8 @@ const menuItems = [
   { icon: BookOpen, label: 'QURAN', path: '/quran' },
   { icon: ShoppingBag, label: 'SHOP', path: '/shop' },
   { icon: MapPin, label: 'NEARBY PLACES', path: '/places' },
+  { icon: Plane, label: 'HAJJ', path: '/hajj' },
+  { icon: Building2, label: 'BUSINESS ACCOUNT', path: '/business-account' },
   { icon: User, label: 'ACCOUNT', path: '/account' },
   { icon: HelpCircle, label: "FAQ'S", path: '/faq' },
   { icon: TrendingUp, label: 'YOUR PROGRESS', path: '/progress' },
