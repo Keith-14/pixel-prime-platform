@@ -3,23 +3,59 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ShoppingCart, Search, Filter } from 'lucide-react';
+import { useCart } from '@/contexts/CartContext';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 const products = [
   {
     id: 1,
     name: 'TASBIH',
-    price: '$20.00',
+    price: 20.00,
     image: '/placeholder-tasbih.png',
   },
   {
     id: 2,
-    name: 'TASBIH',
-    price: '$20.00',
-    image: '/placeholder-tasbih.png',
+    name: 'PRAYER RUG',
+    price: 35.00,
+    image: '/placeholder-rug.png',
+  },
+  {
+    id: 3,
+    name: 'QURAN',
+    price: 25.00,
+    image: '/placeholder-quran.png',
+  },
+  {
+    id: 4,
+    name: 'ISLAMIC BOOK',
+    price: 15.00,
+    image: '/placeholder-book.png',
   },
 ];
 
 export const Shop = () => {
+  const { addToCart, getTotalItems } = useCart();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleAddToCart = (product: typeof products[0]) => {
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image
+    });
+    toast({
+      title: "Added to cart",
+      description: `${product.name} has been added to your cart.`,
+    });
+  };
+
+  const handleCartClick = () => {
+    navigate('/cart');
+  };
+
   return (
     <Layout>
       <div className="px-4 py-6 space-y-6">
@@ -36,9 +72,14 @@ export const Shop = () => {
             <Filter className="h-4 w-4 mr-2" />
             Filters
           </Button>
-          <Button variant="ghost" className="ml-2">
+          <Button variant="ghost" className="ml-2 relative" onClick={handleCartClick}>
             <ShoppingCart className="h-5 w-5" />
             Cart
+            {getTotalItems() > 0 && (
+              <span className="absolute -top-1 -right-1 bg-sage text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {getTotalItems()}
+              </span>
+            )}
           </Button>
         </div>
 
@@ -55,11 +96,12 @@ export const Shop = () => {
                 {product.name}
               </h3>
               <p className="text-lg font-bold text-center mb-3">
-                {product.price}
+                ${product.price.toFixed(2)}
               </p>
               <Button 
                 variant="outline" 
                 className="w-full rounded-full border-sage text-sage hover:bg-sage hover:text-primary-foreground"
+                onClick={() => handleAddToCart(product)}
               >
                 ADD TO CART
               </Button>
