@@ -38,6 +38,8 @@ export const Quran = () => {
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
   const [playingVerse, setPlayingVerse] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
+  const [autoPlayIndex, setAutoPlayIndex] = useState(0);
 
   // Fetch all surahs on component mount
   useEffect(() => {
@@ -81,6 +83,7 @@ export const Quran = () => {
     // If clicking the same verse that's playing, just stop
     if (playingVerse === verseNo) {
       setCurrentAudio(null);
+      setIsAutoPlaying(false);
       return;
     }
 
@@ -94,7 +97,42 @@ export const Quran = () => {
     audio.onended = () => {
       setPlayingVerse(null);
       setCurrentAudio(null);
+      
+      // Continue auto-play if enabled
+      if (isAutoPlaying && selectedSurah) {
+        const nextIndex = autoPlayIndex + 1;
+        if (nextIndex < selectedSurah.arabic1.length) {
+          setAutoPlayIndex(nextIndex);
+          setTimeout(() => {
+            playAudio((nextIndex + 1).toString(), selectedSurah.audio['1'].originalUrl);
+          }, 500); // Small delay between verses
+        } else {
+          setIsAutoPlaying(false);
+          setAutoPlayIndex(0);
+        }
+      }
     };
+  };
+
+  // Auto-play all verses in the chapter
+  const autoPlayChapter = () => {
+    if (!selectedSurah || !selectedSurah.audio || !selectedSurah.audio['1']) return;
+    
+    if (isAutoPlaying) {
+      // Stop auto-play
+      if (currentAudio) {
+        currentAudio.pause();
+        setCurrentAudio(null);
+        setPlayingVerse(null);
+      }
+      setIsAutoPlaying(false);
+      setAutoPlayIndex(0);
+    } else {
+      // Start auto-play from first verse
+      setIsAutoPlaying(true);
+      setAutoPlayIndex(0);
+      playAudio('1', selectedSurah.audio['1'].originalUrl);
+    }
   };
 
   // Filter surahs based on search query
@@ -163,10 +201,31 @@ export const Quran = () => {
               </div>
             </div>
 
-            {/* Translation Toggle */}
+            {/* Auto-play and Translation Controls */}
             <div className="flex items-center justify-between mb-4">
-              <span className="text-sm font-medium">Translation</span>
               <div className="flex items-center space-x-2">
+                <Button
+                  variant={isAutoPlaying ? "destructive" : "default"}
+                  size="sm"
+                  onClick={autoPlayChapter}
+                  disabled={!selectedSurah?.audio?.['1']}
+                  className="flex items-center space-x-2"
+                >
+                  {isAutoPlaying ? (
+                    <>
+                      <Pause className="w-4 h-4" />
+                      <span>Stop Auto-play</span>
+                    </>
+                  ) : (
+                    <>
+                      <Volume2 className="w-4 h-4" />
+                      <span>Auto-play Chapter</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm font-medium">Translation</span>
                 <Switch 
                   checked={showTranslation} 
                   onCheckedChange={setShowTranslation}
