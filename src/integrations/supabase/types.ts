@@ -14,6 +14,208 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_logs: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      hajj_bookings: {
+        Row: {
+          amount_paid: number
+          booked_at: string
+          id: string
+          status: Database["public"]["Enums"]["booking_status"]
+          trip_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_paid: number
+          booked_at?: string
+          id?: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          trip_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number
+          booked_at?: string
+          id?: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          trip_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hajj_bookings_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "hajj_trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hajj_trips: {
+        Row: {
+          created_at: string
+          description: string
+          end_date: string
+          id: string
+          is_active: boolean | null
+          price: number
+          slots_available: number
+          start_date: string
+          title: string
+          travel_partner_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          end_date: string
+          id?: string
+          is_active?: boolean | null
+          price: number
+          slots_available: number
+          start_date: string
+          title: string
+          travel_partner_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          end_date?: string
+          id?: string
+          is_active?: boolean | null
+          price?: number
+          slots_available?: number
+          start_date?: string
+          title?: string
+          travel_partner_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      order_items: {
+        Row: {
+          created_at: string
+          id: string
+          order_id: string
+          price: number
+          product_id: string
+          quantity: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_id: string
+          price: number
+          product_id: string
+          quantity: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_id?: string
+          price?: number
+          product_id?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          created_at: string
+          id: string
+          status: Database["public"]["Enums"]["order_status"]
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          status?: Database["public"]["Enums"]["order_status"]
+          total_amount: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          status?: Database["public"]["Enums"]["order_status"]
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      product_images: {
+        Row: {
+          created_at: string
+          display_order: number | null
+          id: string
+          image_url: string
+          product_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          image_url: string
+          product_id: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          image_url?: string
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_images_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category: string | null
@@ -83,6 +285,69 @@ export type Database = {
         }
         Relationships: []
       }
+      salah_log: {
+        Row: {
+          asr: boolean
+          created_at: string
+          date: string
+          dhuhr: boolean
+          fajr: boolean
+          id: string
+          isha: boolean
+          maghrib: boolean
+          user_id: string
+        }
+        Insert: {
+          asr?: boolean
+          created_at?: string
+          date: string
+          dhuhr?: boolean
+          fajr?: boolean
+          id?: string
+          isha?: boolean
+          maghrib?: boolean
+          user_id: string
+        }
+        Update: {
+          asr?: boolean
+          created_at?: string
+          date?: string
+          dhuhr?: boolean
+          fajr?: boolean
+          id?: string
+          isha?: boolean
+          maghrib?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
+      salah_streaks: {
+        Row: {
+          created_at: string
+          current_streak: number
+          id: string
+          last_updated: string
+          longest_streak: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_streak?: number
+          id?: string
+          last_updated?: string
+          longest_streak?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_streak?: number
+          id?: string
+          last_updated?: string
+          longest_streak?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -123,6 +388,8 @@ export type Database = {
     }
     Enums: {
       app_role: "normal_user" | "seller" | "travel_partner" | "admin"
+      booking_status: "pending" | "confirmed" | "cancelled"
+      order_status: "pending" | "paid" | "shipped" | "delivered" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -251,6 +518,8 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["normal_user", "seller", "travel_partner", "admin"],
+      booking_status: ["pending", "confirmed", "cancelled"],
+      order_status: ["pending", "paid", "shipped", "delivered", "cancelled"],
     },
   },
 } as const
