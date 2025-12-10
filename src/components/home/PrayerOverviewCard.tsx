@@ -26,10 +26,7 @@ export const PrayerOverviewCard = ({
   const activePrayer = normalizePrayerName(currentPrayerName);
 
   return (
-    <Card className="relative overflow-hidden rounded-3xl border-none bg-gradient-to-br from-sage-dark via-primary to-sage-dark px-5 py-5 text-primary-foreground shadow-xl">
-      {/* Subtle decorative element - reduced opacity */}
-      <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-cream/5" />
-      <div className="pointer-events-none absolute -left-4 -bottom-4 h-20 w-20 rounded-full bg-cream/5" />
+    <Card className="relative overflow-hidden rounded-3xl border-none bg-sage-dark px-5 py-5 text-primary-foreground shadow-lg">
 
       <div className="relative z-10 flex items-start justify-between gap-4">
         <div>

@@ -3,16 +3,18 @@ import { BookOpen } from "lucide-react";
 
 export const TodaysVerseCard = () => {
   return (
-    <Card className="rounded-3xl border-none bg-sage-light/40 px-4 py-4 text-foreground shadow-md">
+    <Card className="rounded-3xl border-none bg-sage-dark px-5 py-5 text-primary-foreground shadow-lg">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold">Today's Verse</h2>
-          <p className="mt-2 text-xs text-muted-foreground">
+          <p className="text-xs font-medium uppercase tracking-widest text-cream/80">
+            Today's Verse
+          </p>
+          <p className="mt-3 text-sm leading-relaxed text-cream/90">
             "Indeed, with hardship comes ease." (Qur'an 94:6)
           </p>
         </div>
-        <span className="mt-1 flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <BookOpen className="h-4 w-4" />
+        <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-cream/10 text-cream">
+          <BookOpen className="h-5 w-5" />
         </span>
       </div>
     </Card>
