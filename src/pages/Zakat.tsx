@@ -37,15 +37,15 @@ export const Zakat = () => {
     <Layout>
       <div className="px-4 py-6 space-y-6">
         {/* Header */}
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-sage mb-2">ZAKAT CALCULATOR</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-primary mb-2">Zakat Calculator</h1>
           <p className="text-sm text-muted-foreground">Calculate your obligatory charity</p>
         </div>
 
         {/* Info Card */}
-        <Card className="bg-sage-light/20 border-sage-light p-4 rounded-2xl">
+        <Card className="bg-secondary/50 border-border p-4 rounded-2xl">
           <div className="flex items-start space-x-3">
-            <Info className="h-5 w-5 text-sage mt-0.5" />
+            <Info className="h-5 w-5 text-primary mt-0.5" />
             <div className="text-sm">
               <p className="text-foreground mb-2">
                 Zakat is 2.5% of your total wealth above the Nisab threshold.
@@ -60,62 +60,62 @@ export const Zakat = () => {
         {/* Input Form */}
         <div className="space-y-4">
           <div>
-            <Label htmlFor="cash" className="text-sage font-medium">Cash & Savings ($)</Label>
+            <Label htmlFor="cash" className="text-primary font-medium">Cash & Savings ($)</Label>
             <Input
               id="cash"
               type="number"
               placeholder="0"
               value={cash}
               onChange={(e) => setCash(e.target.value)}
-              className="mt-1 bg-background border-sage-light"
+              className="mt-1 bg-card border-border"
             />
           </div>
 
           <div>
-            <Label htmlFor="gold" className="text-sage font-medium">Gold Value ($)</Label>
+            <Label htmlFor="gold" className="text-primary font-medium">Gold Value ($)</Label>
             <Input
               id="gold"
               type="number"
               placeholder="0"
               value={gold}
               onChange={(e) => setGold(e.target.value)}
-              className="mt-1 bg-background border-sage-light"
+              className="mt-1 bg-card border-border"
             />
           </div>
 
           <div>
-            <Label htmlFor="silver" className="text-sage font-medium">Silver Value ($)</Label>
+            <Label htmlFor="silver" className="text-primary font-medium">Silver Value ($)</Label>
             <Input
               id="silver"
               type="number"
               placeholder="0"
               value={silver}
               onChange={(e) => setSilver(e.target.value)}
-              className="mt-1 bg-background border-sage-light"
+              className="mt-1 bg-card border-border"
             />
           </div>
 
           <div>
-            <Label htmlFor="business" className="text-sage font-medium">Business Assets ($)</Label>
+            <Label htmlFor="business" className="text-primary font-medium">Business Assets ($)</Label>
             <Input
               id="business"
               type="number"
               placeholder="0"
               value={business}
               onChange={(e) => setBusiness(e.target.value)}
-              className="mt-1 bg-background border-sage-light"
+              className="mt-1 bg-card border-border"
             />
           </div>
 
           <div>
-            <Label htmlFor="investments" className="text-sage font-medium">Investments & Stocks ($)</Label>
+            <Label htmlFor="investments" className="text-primary font-medium">Investments & Stocks ($)</Label>
             <Input
               id="investments"
               type="number"
               placeholder="0"
               value={investments}
               onChange={(e) => setInvestments(e.target.value)}
-              className="mt-1 bg-background border-sage-light"
+              className="mt-1 bg-card border-border"
             />
           </div>
         </div>
@@ -123,7 +123,7 @@ export const Zakat = () => {
         {/* Calculate Button */}
         <Button 
           onClick={calculateZakat}
-          className="w-full bg-sage hover:bg-sage/90 text-white py-3 rounded-2xl font-medium"
+          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 rounded-2xl font-medium"
         >
           <Calculator className="h-5 w-5 mr-2" />
           Calculate Zakat
@@ -131,7 +131,7 @@ export const Zakat = () => {
 
         {/* Result */}
         {zakatAmount > 0 && (
-          <Card className="bg-sage text-white p-6 rounded-2xl text-center">
+          <Card className="bg-primary text-primary-foreground p-6 rounded-2xl text-center">
             <h3 className="text-lg font-semibold mb-2">Your Zakat Amount</h3>
             <p className="text-3xl font-bold">${zakatAmount.toFixed(2)}</p>
             <p className="text-sm opacity-90 mt-2">
@@ -152,7 +152,7 @@ export const Zakat = () => {
 
         {/* Islamic Guidelines */}
         <Card className="bg-card p-4 rounded-2xl">
-          <h3 className="text-lg font-semibold text-sage mb-3">Zakat Guidelines</h3>
+          <h3 className="text-lg font-semibold text-primary mb-3">Zakat Guidelines</h3>
           <div className="space-y-2 text-sm text-muted-foreground">
             <p>• Zakat is calculated on wealth held for one lunar year</p>
             <p>• Rate is 2.5% of total qualifying wealth</p>

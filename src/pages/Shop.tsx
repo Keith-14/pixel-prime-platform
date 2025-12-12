@@ -61,46 +61,50 @@ export const Shop = () => {
       <div className="px-4 py-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div className="relative flex-1 mr-3">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input 
-              placeholder="Search" 
-              className="pl-10 bg-sage-light border-sage-light rounded-full"
-            />
-          </div>
-          <Button variant="outline" className="rounded-full">
-            <Filter className="h-4 w-4 mr-2" />
-            Filters
-          </Button>
-          <Button variant="ghost" className="ml-2 relative" onClick={handleCartClick}>
+          <h1 className="text-2xl font-bold text-primary">Shop</h1>
+          <Button variant="ghost" className="relative text-primary" onClick={handleCartClick}>
             <ShoppingCart className="h-5 w-5" />
-            Cart
             {getTotalItems() > 0 && (
-              <span className="absolute -top-1 -right-1 bg-sage text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
                 {getTotalItems()}
               </span>
             )}
           </Button>
         </div>
 
+        {/* Search and Filter */}
+        <div className="flex items-center space-x-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input 
+              placeholder="Search products..." 
+              className="pl-10 bg-card border-border rounded-full"
+            />
+          </div>
+          <Button variant="outline" className="rounded-full border-border">
+            <Filter className="h-4 w-4 mr-2" />
+            Filters
+          </Button>
+        </div>
+
         {/* Products Grid */}
         <div className="grid grid-cols-2 gap-4">
           {products.map((product) => (
-            <Card key={product.id} className="p-4 rounded-2xl">
-              <div className="aspect-square bg-sage-light rounded-xl mb-3 flex items-center justify-center">
-                <div className="w-16 h-16 bg-sage/20 rounded-full flex items-center justify-center">
-                  <div className="w-8 h-8 bg-sage rounded-full"></div>
+            <Card key={product.id} className="p-4 rounded-2xl bg-card">
+              <div className="aspect-square bg-secondary rounded-xl mb-3 flex items-center justify-center">
+                <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-primary rounded-full"></div>
                 </div>
               </div>
-              <h3 className="font-semibold text-sage text-center mb-1">
+              <h3 className="font-semibold text-primary text-center mb-1">
                 {product.name}
               </h3>
-              <p className="text-lg font-bold text-center mb-3">
+              <p className="text-lg font-bold text-foreground text-center mb-3">
                 ${product.price.toFixed(2)}
               </p>
               <Button 
                 variant="outline" 
-                className="w-full rounded-full border-sage text-sage hover:bg-sage hover:text-primary-foreground"
+                className="w-full rounded-full border-primary text-primary hover:bg-primary hover:text-primary-foreground"
                 onClick={() => handleAddToCart(product)}
               >
                 ADD TO CART

@@ -3,7 +3,7 @@ import { Layout } from '@/components/Layout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Navigation, Search, Filter, MapPin, Loader2, AlertCircle } from 'lucide-react';
+import { Navigation, Search, MapPin, Loader2, AlertCircle } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { toast } from 'sonner';
 import 'leaflet/dist/leaflet.css';
@@ -146,18 +146,10 @@ export const Places = () => {
       <div className="px-4 py-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div className="relative flex-1 mr-3">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input 
-              placeholder="Search mosques..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-sage-light border-sage-light rounded-full"
-            />
-          </div>
+          <h1 className="text-2xl font-bold text-primary">Nearby Mosques</h1>
           <Button 
             variant="outline" 
-            className="rounded-full"
+            className="rounded-full border-primary text-primary"
             onClick={() => setShowMap(!showMap)}
           >
             <MapPin className="h-4 w-4 mr-2" />
@@ -165,11 +157,22 @@ export const Places = () => {
           </Button>
         </div>
 
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input 
+            placeholder="Search mosques..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 bg-card border-border rounded-full"
+          />
+        </div>
+
         {/* Location Status */}
         {loading && (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin mr-2" />
-            <span>Finding mosques near you...</span>
+            <Loader2 className="h-6 w-6 animate-spin mr-2 text-primary" />
+            <span className="text-foreground">Finding mosques near you...</span>
           </div>
         )}
 
@@ -177,7 +180,7 @@ export const Places = () => {
           <div className="flex flex-col items-center justify-center py-8 space-y-4">
             <AlertCircle className="h-12 w-12 text-muted-foreground" />
             <p className="text-center text-muted-foreground">Location access required to find nearby mosques</p>
-            <Button onClick={getUserLocation}>
+            <Button onClick={getUserLocation} className="bg-primary text-primary-foreground hover:bg-primary/90">
               <MapPin className="h-4 w-4 mr-2" />
               Enable Location
             </Button>
@@ -209,7 +212,7 @@ export const Places = () => {
                       <p className="text-sm text-muted-foreground">{mosque.distance?.toFixed(2)} km away</p>
                       <Button 
                         size="sm" 
-                        className="mt-2"
+                        className="mt-2 bg-primary text-primary-foreground"
                         onClick={() => openDirections(mosque)}
                       >
                         Get Directions
@@ -228,20 +231,20 @@ export const Places = () => {
             {filteredMosques.length === 0 && !loading ? (
               <div className="text-center py-8">
                 <p className="text-muted-foreground">No mosques found nearby</p>
-                <Button onClick={getUserLocation} className="mt-4">
+                <Button onClick={getUserLocation} className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90">
                   <Search className="h-4 w-4 mr-2" />
                   Search Again
                 </Button>
               </div>
             ) : (
               filteredMosques.map((mosque) => (
-                <Card key={mosque.id} className="p-4 rounded-2xl">
+                <Card key={mosque.id} className="p-4 rounded-2xl bg-card">
                   <div className="flex items-start space-x-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-sage to-sage-dark rounded-xl flex items-center justify-center">
+                    <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center">
                       <span className="text-2xl">🕌</span>
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-sage mb-1">{mosque.name}</h3>
+                      <h3 className="font-semibold text-primary mb-1">{mosque.name}</h3>
                       <p className="text-sm text-muted-foreground mb-2">{mosque.address}</p>
                       <p className="text-xs text-muted-foreground mb-3">
                         {mosque.distance?.toFixed(2)} km away
@@ -249,7 +252,7 @@ export const Places = () => {
                       <Button 
                         variant="outline" 
                         size="sm"
-                        className="rounded-full border-sage text-sage hover:bg-sage hover:text-primary-foreground"
+                        className="rounded-full border-primary text-primary hover:bg-primary hover:text-primary-foreground"
                         onClick={() => openDirections(mosque)}
                       >
                         <Navigation className="h-4 w-4 mr-2" />

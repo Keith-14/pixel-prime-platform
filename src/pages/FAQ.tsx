@@ -47,25 +47,21 @@ export const FAQ = () => {
   return (
     <Layout>
       <div className="px-4 py-6 space-y-6">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold bg-sage text-primary-foreground px-6 py-3 rounded-2xl">
-            FAQ's
-          </h1>
-        </div>
+        <h1 className="text-2xl font-bold text-primary">FAQ's</h1>
 
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input 
             placeholder="Search" 
-            className="pl-10 bg-sage-light border-sage-light rounded-full"
+            className="pl-10 bg-card border-border rounded-full"
           />
         </div>
 
         {/* FAQ Items */}
         <div className="space-y-3">
           {faqs.map((faq) => (
-            <Card key={faq.id} className="rounded-2xl overflow-hidden">
+            <Card key={faq.id} className="rounded-2xl overflow-hidden bg-card">
               <Collapsible 
                 open={openItems.includes(faq.id)}
                 onOpenChange={() => toggleItem(faq.id)}
@@ -76,7 +72,7 @@ export const FAQ = () => {
                       {faq.id}. {faq.question}
                     </span>
                     <Plus 
-                      className={`h-5 w-5 text-sage transition-transform ${
+                      className={`h-5 w-5 text-primary transition-transform ${
                         openItems.includes(faq.id) ? 'rotate-45' : ''
                       }`} 
                     />

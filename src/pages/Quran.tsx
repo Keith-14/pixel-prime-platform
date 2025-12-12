@@ -196,11 +196,7 @@ export const Quran = () => {
     return (
       <Layout>
         <div className="px-4 py-6 space-y-6">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold bg-sage text-primary-foreground px-6 py-3 rounded-2xl">
-              QURAN
-            </h1>
-          </div>
+          <h1 className="text-2xl font-bold text-primary">Quran</h1>
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
               <Card key={i} className="p-4 rounded-2xl">
@@ -224,25 +220,23 @@ export const Quran = () => {
               variant="ghost"
               size="sm"
               onClick={() => setSelectedSurah(null)}
-              className="flex items-center space-x-2"
+              className="flex items-center space-x-2 text-primary"
             >
               <ChevronLeft className="w-4 h-4" />
               <span>Back</span>
             </Button>
-            <div className="text-center flex-1">
-              <h1 className="text-2xl font-bold bg-sage text-primary-foreground px-4 py-2 rounded-2xl inline-block">
-                {selectedSurah.surahNameTranslation}
-              </h1>
-            </div>
+            <h1 className="text-xl font-bold text-primary flex-1">
+              {selectedSurah.surahNameTranslation}
+            </h1>
           </div>
 
-          <Card className="p-4 rounded-2xl">
+          <Card className="p-4 rounded-2xl bg-card">
             <div className="flex items-center space-x-3 mb-4">
-              <div className="w-10 h-10 bg-sage text-primary-foreground rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center">
                 <span className="text-lg font-bold">{selectedSurah.surahNo}</span>
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-sage">
+                <h2 className="text-lg font-semibold text-primary">
                   {selectedSurah.surahName}: {selectedSurah.surahNameTranslation}
                 </h2>
                 <p className="text-sm text-muted-foreground">
@@ -253,12 +247,12 @@ export const Quran = () => {
 
             {/* Reciter Selection */}
             <div className="mb-4">
-              <label className="text-sm font-medium mb-2 block">Reciter</label>
+              <label className="text-sm font-medium mb-2 block text-foreground">Reciter</label>
               <Select value={selectedReciter} onValueChange={handleReciterChange}>
-                <SelectTrigger className="w-full rounded-xl">
+                <SelectTrigger className="w-full rounded-xl border-border">
                   <SelectValue placeholder="Select reciter" />
                 </SelectTrigger>
-                <SelectContent className="bg-background border rounded-xl">
+                <SelectContent className="bg-card border rounded-xl">
                   {Object.entries(RECITERS).map(([id, name]) => (
                     <SelectItem key={id} value={id}>
                       {name}
@@ -275,7 +269,7 @@ export const Quran = () => {
                   variant={isAutoPlaying ? "destructive" : "default"}
                   size="sm"
                   onClick={autoPlayChapter}
-                  className="flex items-center space-x-2"
+                  className={`flex items-center space-x-2 ${!isAutoPlaying ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}`}
                 >
                   {isAutoPlaying ? (
                     <>
@@ -291,7 +285,7 @@ export const Quran = () => {
                 </Button>
               </div>
               <div className="flex items-center space-x-2">
-                <span className="text-sm font-medium">Translation</span>
+                <span className="text-sm font-medium text-foreground">Translation</span>
                 <Switch 
                   checked={showTranslation} 
                   onCheckedChange={setShowTranslation}
@@ -306,7 +300,7 @@ export const Quran = () => {
             {loadingSurah ? (
               <div className="space-y-4">
                 {[...Array(7)].map((_, i) => (
-                  <div key={i} className="text-center border-b border-sage-light pb-4">
+                  <div key={i} className="text-center border-b border-border pb-4">
                     <Skeleton className="w-8 h-8 rounded-full mx-auto mb-2" />
                     <Skeleton className="h-6 w-full mb-2" />
                     <Skeleton className="h-4 w-3/4 mx-auto" />
@@ -316,16 +310,16 @@ export const Quran = () => {
             ) : (
               <div className="space-y-4">
                 {selectedSurah.arabic1?.map((arabicText, index) => (
-                  <div key={index + 1} className="text-center border-b border-sage-light pb-4">
+                  <div key={index + 1} className="text-center border-b border-border pb-4">
                     <div className="flex items-center justify-center space-x-2 mb-2">
-                      <div className="w-8 h-8 bg-sage text-primary-foreground rounded-full flex items-center justify-center">
+                      <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center">
                         <span className="text-sm font-bold">{index + 1}</span>
                       </div>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => playAudio(index + 1)}
-                        className="p-1 h-8 w-8"
+                        className="p-1 h-8 w-8 text-primary hover:bg-primary/10"
                       >
                         {playingVerse === (index + 1).toString() ? (
                           <Pause className="w-4 h-4" />
@@ -356,11 +350,7 @@ export const Quran = () => {
   return (
     <Layout>
       <div className="px-4 py-6 space-y-6">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold bg-sage text-primary-foreground px-6 py-3 rounded-2xl">
-            QURAN
-          </h1>
-        </div>
+        <h1 className="text-2xl font-bold text-primary">Quran</h1>
 
         {/* Search Bar */}
         <div className="relative">
@@ -369,7 +359,7 @@ export const Quran = () => {
             placeholder="Search chapters..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 rounded-2xl"
+            className="pl-10 rounded-2xl bg-card border-border"
           />
         </div>
 
@@ -380,15 +370,15 @@ export const Quran = () => {
             return (
               <Card 
                 key={originalIndex}
-                className="p-4 rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors"
+                className="p-4 rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors bg-card"
                 onClick={() => fetchSurahDetails(originalIndex + 1)}
               >
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-sage text-primary-foreground rounded-full flex items-center justify-center">
+                  <div className="w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center">
                     <span className="text-sm font-bold">{originalIndex + 1}</span>
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-sage">
+                    <h3 className="font-semibold text-primary">
                       {surah.surahName}
                     </h3>
                     <p className="text-sm text-muted-foreground">

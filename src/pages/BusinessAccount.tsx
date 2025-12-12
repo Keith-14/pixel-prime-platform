@@ -67,17 +67,15 @@ export const BusinessAccount = () => {
   return (
     <Layout>
       <div className="px-4 py-6 space-y-6">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold bg-sage text-primary-foreground px-6 py-3 rounded-2xl">
-            BUSINESS ACCOUNT
-          </h1>
-          <p className="text-muted-foreground mt-2">
+        <div>
+          <h1 className="text-2xl font-bold text-primary mb-2">Business Account</h1>
+          <p className="text-muted-foreground">
             Grow your Islamic business with our platform
           </p>
         </div>
 
         {/* Hero Section */}
-        <Card className="bg-sage text-primary-foreground p-6 rounded-2xl text-center">
+        <Card className="bg-primary text-primary-foreground p-6 rounded-2xl text-center">
           <Building2 className="h-12 w-12 mx-auto mb-4" />
           <h2 className="text-xl font-bold mb-2">Transform Your Business</h2>
           <p className="opacity-90 mb-4">
@@ -101,13 +99,13 @@ export const BusinessAccount = () => {
 
         {/* Business Perks */}
         <div className="space-y-4">
-          <h3 className="text-xl font-bold text-sage">Business Account Benefits</h3>
+          <h3 className="text-xl font-bold text-primary">Business Account Benefits</h3>
           <div className="grid grid-cols-1 gap-3">
             {businessPerks.map(({ icon: Icon, title, description }, index) => (
-              <Card key={index} className="p-4 rounded-2xl">
+              <Card key={index} className="p-4 rounded-2xl bg-card">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-sage/10 rounded-full">
-                    <Icon className="h-5 w-5 text-sage" />
+                  <div className="p-2 bg-primary/10 rounded-full">
+                    <Icon className="h-5 w-5 text-primary" />
                   </div>
                   <div>
                     <h4 className="font-medium text-foreground">{title}</h4>
@@ -121,15 +119,15 @@ export const BusinessAccount = () => {
 
         {/* Pricing Plans */}
         <div className="space-y-4">
-          <h3 className="text-xl font-bold text-sage">Choose Your Plan</h3>
+          <h3 className="text-xl font-bold text-primary">Choose Your Plan</h3>
           <div className="space-y-4">
             {plans.map((plan, index) => (
               <Card 
                 key={index} 
-                className={`p-4 rounded-2xl relative ${plan.popular ? 'border-2 border-sage' : ''}`}
+                className={`p-4 rounded-2xl relative bg-card ${plan.popular ? 'border-2 border-primary' : ''}`}
               >
                 {plan.popular && (
-                  <div className="absolute -top-2 left-4 bg-sage text-primary-foreground px-3 py-1 rounded-full text-xs font-medium flex items-center space-x-1">
+                  <div className="absolute -top-2 left-4 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium flex items-center space-x-1">
                     <Crown className="h-3 w-3" />
                     <span>Most Popular</span>
                   </div>
@@ -139,7 +137,7 @@ export const BusinessAccount = () => {
                   <div>
                     <h4 className="font-bold text-lg text-foreground">{plan.name}</h4>
                     <div className="flex items-baseline space-x-1">
-                      <span className="text-2xl font-bold text-sage">{plan.price}</span>
+                      <span className="text-2xl font-bold text-primary">{plan.price}</span>
                       <span className="text-sm text-muted-foreground">{plan.period}</span>
                     </div>
                   </div>
@@ -148,7 +146,7 @@ export const BusinessAccount = () => {
                 <div className="space-y-2 mb-4">
                   {plan.features.map((feature, featureIndex) => (
                     <div key={featureIndex} className="flex items-center space-x-2">
-                      <Check className="h-4 w-4 text-sage" />
+                      <Check className="h-4 w-4 text-primary" />
                       <span className="text-sm text-foreground">{feature}</span>
                     </div>
                   ))}
@@ -157,8 +155,8 @@ export const BusinessAccount = () => {
                 <Button 
                   className={`w-full ${
                     plan.popular 
-                      ? 'bg-sage hover:bg-sage/90 text-primary-foreground' 
-                      : 'bg-sage/10 hover:bg-sage/20 text-sage'
+                      ? 'bg-primary hover:bg-primary/90 text-primary-foreground' 
+                      : 'bg-primary/10 hover:bg-primary/20 text-primary'
                   }`}
                 >
                   {plan.popular ? 'Get Started' : 'Choose Plan'}
@@ -169,12 +167,12 @@ export const BusinessAccount = () => {
         </div>
 
         {/* CTA Section */}
-        <Card className="bg-sage text-primary-foreground p-6 rounded-2xl text-center">
+        <Card className="bg-primary text-primary-foreground p-6 rounded-2xl text-center">
           <h3 className="text-xl font-bold mb-2">Ready to Start Selling?</h3>
           <p className="opacity-90 mb-4">
             Join our community of Muslim entrepreneurs today
           </p>
-          <Button className="bg-white text-sage hover:bg-white/90">
+          <Button className="bg-card text-primary hover:bg-card/90">
             Upgrade to Business Account
           </Button>
         </Card>

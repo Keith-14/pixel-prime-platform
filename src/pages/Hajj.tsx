@@ -46,17 +46,15 @@ export const Hajj = () => {
   return (
     <Layout>
       <div className="px-4 py-6 space-y-6">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold bg-sage text-primary-foreground px-6 py-3 rounded-2xl">
-            HAJJ PILGRIMAGE
-          </h1>
-          <p className="text-muted-foreground mt-2">
+        <div>
+          <h1 className="text-2xl font-bold text-primary mb-2">Hajj Pilgrimage</h1>
+          <p className="text-muted-foreground">
             Join fellow Muslims on this sacred journey
           </p>
         </div>
 
         {/* Hero Section */}
-        <Card className="bg-sage text-primary-foreground p-6 rounded-2xl text-center">
+        <Card className="bg-primary text-primary-foreground p-6 rounded-2xl text-center">
           <Plane className="h-12 w-12 mx-auto mb-4" />
           <h2 className="text-xl font-bold mb-2">Sacred Journey Awaits</h2>
           <p className="opacity-90 mb-4">
@@ -80,9 +78,9 @@ export const Hajj = () => {
 
         {/* Package Cards */}
         <div className="space-y-4">
-          <h3 className="text-xl font-bold text-sage">Available Packages</h3>
+          <h3 className="text-xl font-bold text-primary">Available Packages</h3>
           {hajjPackages.map((pkg) => (
-            <Card key={pkg.id} className="p-4 rounded-2xl">
+            <Card key={pkg.id} className="p-4 rounded-2xl bg-card">
               <div className="flex justify-between items-start mb-3">
                 <div>
                   <h4 className="font-bold text-lg text-foreground">{pkg.name}</h4>
@@ -92,19 +90,19 @@ export const Hajj = () => {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-sage">{pkg.price}</div>
+                  <div className="text-2xl font-bold text-primary">{pkg.price}</div>
                   <div className="text-sm text-muted-foreground">per person</div>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="flex items-center space-x-2">
-                  <Calendar className="h-4 w-4 text-sage" />
-                  <span className="text-sm">{pkg.duration}</span>
+                  <Calendar className="h-4 w-4 text-primary" />
+                  <span className="text-sm text-foreground">{pkg.duration}</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Users className="h-4 w-4 text-sage" />
-                  <span className="text-sm">{pkg.group}</span>
+                  <Users className="h-4 w-4 text-primary" />
+                  <span className="text-sm text-foreground">{pkg.group}</span>
                 </div>
               </div>
 
@@ -113,7 +111,7 @@ export const Hajj = () => {
                   {pkg.features.map((feature, index) => (
                     <span 
                       key={index}
-                      className="px-2 py-1 bg-sage/10 text-sage text-xs rounded-full"
+                      className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full"
                     >
                       {feature}
                     </span>
@@ -121,7 +119,7 @@ export const Hajj = () => {
                 </div>
               </div>
 
-              <Button className="w-full bg-sage hover:bg-sage/90 text-primary-foreground">
+              <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
                 Book Package
               </Button>
             </Card>
@@ -129,19 +127,19 @@ export const Hajj = () => {
         </div>
 
         {/* Information Section */}
-        <Card className="p-4 rounded-2xl">
-          <h3 className="font-bold text-lg mb-3 text-sage">Important Information</h3>
+        <Card className="p-4 rounded-2xl bg-card">
+          <h3 className="font-bold text-lg mb-3 text-primary">Important Information</h3>
           <div className="space-y-2 text-sm text-muted-foreground">
             <div className="flex items-start space-x-2">
-              <Clock className="h-4 w-4 mt-0.5 text-sage" />
+              <Clock className="h-4 w-4 mt-0.5 text-primary" />
               <p>Booking must be completed at least 6 months in advance</p>
             </div>
             <div className="flex items-start space-x-2">
-              <MapPin className="h-4 w-4 mt-0.5 text-sage" />
+              <MapPin className="h-4 w-4 mt-0.5 text-primary" />
               <p>All packages include accommodation in Mecca and Medina</p>
             </div>
             <div className="flex items-start space-x-2">
-              <Users className="h-4 w-4 mt-0.5 text-sage" />
+              <Users className="h-4 w-4 mt-0.5 text-primary" />
               <p>Group leaders are experienced Islamic scholars</p>
             </div>
           </div>

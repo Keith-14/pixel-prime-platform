@@ -19,10 +19,10 @@ export const Cart = () => {
       <Layout>
         <div className="px-4 py-6 space-y-6">
           <div className="flex items-center space-x-3">
-            <Button variant="ghost" onClick={() => navigate('/shop')}>
+            <Button variant="ghost" onClick={() => navigate('/shop')} className="text-primary">
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h1 className="text-2xl font-bold text-sage">Shopping Cart</h1>
+            <h1 className="text-2xl font-bold text-primary">Shopping Cart</h1>
           </div>
           
           <div className="text-center py-12">
@@ -31,7 +31,7 @@ export const Cart = () => {
             <p className="text-muted-foreground mb-6">Add some items to your cart to get started</p>
             <Button 
               onClick={() => navigate('/shop')}
-              className="bg-sage hover:bg-sage/90 text-primary-foreground"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               Continue Shopping
             </Button>
@@ -51,10 +51,10 @@ export const Cart = () => {
       <div className="px-4 py-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <Button variant="ghost" onClick={() => navigate('/shop')}>
+            <Button variant="ghost" onClick={() => navigate('/shop')} className="text-primary">
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h1 className="text-2xl font-bold text-sage">Shopping Cart</h1>
+            <h1 className="text-2xl font-bold text-primary">Shopping Cart</h1>
           </div>
           <Button 
             variant="outline" 
@@ -68,17 +68,17 @@ export const Cart = () => {
         {/* Cart Items */}
         <div className="space-y-4">
           {items.map((item) => (
-            <Card key={item.id} className="p-4 rounded-2xl">
+            <Card key={item.id} className="p-4 rounded-2xl bg-card">
               <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-sage-light rounded-xl flex items-center justify-center">
-                  <div className="w-8 h-8 bg-sage/20 rounded-full flex items-center justify-center">
-                    <div className="w-4 h-4 bg-sage rounded-full"></div>
+                <div className="w-16 h-16 bg-secondary rounded-xl flex items-center justify-center">
+                  <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
+                    <div className="w-4 h-4 bg-primary rounded-full"></div>
                   </div>
                 </div>
                 
                 <div className="flex-1">
                   <h3 className="font-semibold text-foreground">{item.name}</h3>
-                  <p className="text-sage font-bold">${item.price.toFixed(2)}</p>
+                  <p className="text-primary font-bold">${item.price.toFixed(2)}</p>
                 </div>
                 
                 <div className="flex items-center space-x-2">
@@ -86,16 +86,16 @@ export const Cart = () => {
                     variant="outline" 
                     size="sm"
                     onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                    className="h-8 w-8 p-0"
+                    className="h-8 w-8 p-0 border-border"
                   >
                     <Minus className="h-4 w-4" />
                   </Button>
-                  <span className="w-8 text-center font-medium">{item.quantity}</span>
+                  <span className="w-8 text-center font-medium text-foreground">{item.quantity}</span>
                   <Button 
                     variant="outline" 
                     size="sm"
                     onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                    className="h-8 w-8 p-0"
+                    className="h-8 w-8 p-0 border-border"
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
@@ -114,27 +114,27 @@ export const Cart = () => {
         </div>
 
         {/* Order Summary */}
-        <Card className="p-4 rounded-2xl bg-sage/5">
-          <h3 className="font-bold text-lg mb-4 text-sage">Order Summary</h3>
+        <Card className="p-4 rounded-2xl bg-secondary/50">
+          <h3 className="font-bold text-lg mb-4 text-primary">Order Summary</h3>
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Subtotal ({items.length} items)</span>
-              <span className="font-medium">${subtotal.toFixed(2)}</span>
+              <span className="font-medium text-foreground">${subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Tax</span>
-              <span className="font-medium">${tax.toFixed(2)}</span>
+              <span className="font-medium text-foreground">${tax.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Shipping</span>
-              <span className="font-medium">
+              <span className="font-medium text-foreground">
                 {shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}
               </span>
             </div>
-            <div className="border-t pt-2 mt-2">
+            <div className="border-t border-border pt-2 mt-2">
               <div className="flex justify-between text-lg font-bold">
-                <span className="text-sage">Total</span>
-                <span className="text-sage">${total.toFixed(2)}</span>
+                <span className="text-primary">Total</span>
+                <span className="text-primary">${total.toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -143,7 +143,7 @@ export const Cart = () => {
         {/* Checkout Button */}
         <Button 
           onClick={handleProceedToPay}
-          className="w-full bg-sage hover:bg-sage/90 text-primary-foreground py-3 text-lg font-semibold rounded-2xl"
+          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 text-lg font-semibold rounded-2xl"
         >
           Proceed to Payment - ${total.toFixed(2)}
         </Button>
@@ -152,7 +152,7 @@ export const Cart = () => {
           <Button 
             variant="ghost" 
             onClick={() => navigate('/shop')}
-            className="text-sage"
+            className="text-primary"
           >
             Continue Shopping
           </Button>

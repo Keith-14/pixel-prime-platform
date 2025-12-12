@@ -10,21 +10,21 @@ export const MakkahLive = () => {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-6 space-y-6">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-foreground">Makkah Live Stream</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-primary mb-2">Makkah Live Stream</h1>
           <p className="text-muted-foreground">Watch the Holy Kaaba live 24/7</p>
         </div>
 
         {/* Main clickable stream card */}
         <Card 
-          className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] border-2 border-sage"
+          className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] border-2 border-primary bg-card"
           onClick={handleStreamClick}
         >
           <CardContent className="p-8">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="relative">
-                <div className="absolute inset-0 animate-pulse bg-sage/20 rounded-full blur-xl"></div>
-                <Radio className="h-16 w-16 text-sage relative z-10" />
+                <div className="absolute inset-0 animate-pulse bg-primary/20 rounded-full blur-xl"></div>
+                <Radio className="h-16 w-16 text-primary relative z-10" />
               </div>
               <div>
                 <h2 className="text-2xl font-semibold text-foreground mb-2">
@@ -33,7 +33,7 @@ export const MakkahLive = () => {
                 <p className="text-muted-foreground mb-4">
                   Experience the blessed view of Masjid al-Haram
                 </p>
-                <div className="flex items-center justify-center gap-2 text-sage font-medium">
+                <div className="flex items-center justify-center gap-2 text-primary font-medium">
                   <span>Open YouTube Stream</span>
                   <ExternalLink className="h-4 w-4" />
                 </div>
@@ -43,9 +43,9 @@ export const MakkahLive = () => {
         </Card>
 
         {/* Information about Makkah */}
-        <Card>
+        <Card className="bg-card">
           <CardContent className="p-6 space-y-4">
-            <h3 className="text-xl font-semibold text-foreground">About Makkah</h3>
+            <h3 className="text-xl font-semibold text-primary">About Makkah</h3>
             <div className="space-y-3 text-muted-foreground">
               <p>
                 Makkah (Mecca) is the holiest city in Islam and the birthplace of Prophet Muhammad (peace be upon him). 

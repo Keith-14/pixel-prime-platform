@@ -77,10 +77,10 @@ export const Qibla = () => {
     <Layout>
       <div className="px-4 py-6 space-y-6">
         {/* Header */}
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-sage mb-2">QIBLA DIRECTION</h1>
-          <div className="flex items-center justify-center space-x-2">
-            <MapPin className="h-4 w-4 text-sage" />
+        <div>
+          <h1 className="text-2xl font-bold text-primary mb-2">Qibla Direction</h1>
+          <div className="flex items-center space-x-2">
+            <MapPin className="h-4 w-4 text-primary" />
             <span className="text-sm text-muted-foreground">
               {userLocation ? `${userLocation.lat.toFixed(2)}, ${userLocation.lng.toFixed(2)}` : 'Getting location...'}
             </span>
@@ -88,10 +88,10 @@ export const Qibla = () => {
         </div>
 
         {/* Compass Card */}
-        <Card className="p-8 rounded-3xl bg-gradient-to-br from-sage/10 to-sage/5">
+        <Card className="p-8 rounded-3xl bg-secondary/30">
           <div className="relative w-80 h-80 mx-auto">
             {/* Outer compass ring */}
-            <div className="absolute inset-0 border-4 border-sage/30 rounded-full">
+            <div className="absolute inset-0 border-4 border-primary/30 rounded-full">
               {/* Compass markings */}
               {[...Array(36)].map((_, i) => {
                 const angle = i * 10;
@@ -101,7 +101,7 @@ export const Qibla = () => {
                 return (
                   <div
                     key={i}
-                    className="absolute w-0.5 bg-sage/50"
+                    className="absolute w-0.5 bg-primary/50"
                     style={{
                       height: isCardinal ? '20px' : isMainDirection ? '15px' : '10px',
                       left: '50%',
@@ -114,17 +114,17 @@ export const Qibla = () => {
               })}
               
               {/* Cardinal directions */}
-              <div className="absolute top-2 left-1/2 transform -translate-x-1/2 text-sage font-bold text-lg">N</div>
-              <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-sage font-bold text-lg">S</div>
-              <div className="absolute left-2 top-1/2 transform -translate-y-1/2 text-sage font-bold text-lg">W</div>
-              <div className="absolute right-2 top-1/2 transform -translate-y-1/2 text-sage font-bold text-lg">E</div>
+              <div className="absolute top-2 left-1/2 transform -translate-x-1/2 text-primary font-bold text-lg">N</div>
+              <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-primary font-bold text-lg">S</div>
+              <div className="absolute left-2 top-1/2 transform -translate-y-1/2 text-primary font-bold text-lg">W</div>
+              <div className="absolute right-2 top-1/2 transform -translate-y-1/2 text-primary font-bold text-lg">E</div>
             </div>
 
             {/* Inner compass */}
-            <div className="absolute inset-8 border-2 border-sage/20 rounded-full bg-gradient-to-br from-cream to-white">
+            <div className="absolute inset-8 border-2 border-primary/20 rounded-full bg-card">
               {/* Qibla direction pointer */}
               <div
-                className="absolute w-1 bg-sage rounded-full transition-transform duration-500"
+                className="absolute w-1 bg-primary rounded-full transition-transform duration-500"
                 style={{
                   height: '120px',
                   left: '50%',
@@ -135,13 +135,13 @@ export const Qibla = () => {
               >
                 {/* Arrow head */}
                 <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                  <div className="w-0 h-0 border-l-4 border-r-4 border-b-8 border-l-transparent border-r-transparent border-b-sage"></div>
+                  <div className="w-0 h-0 border-l-4 border-r-4 border-b-8 border-l-transparent border-r-transparent border-b-primary"></div>
                 </div>
               </div>
 
               {/* Center circle */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-sage rounded-full flex items-center justify-center">
-                <Navigation className="h-4 w-4 text-white" />
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                <Navigation className="h-4 w-4 text-primary-foreground" />
               </div>
 
               {/* Kaaba symbol */}
@@ -154,8 +154,8 @@ export const Qibla = () => {
                   transform: `rotate(${compassDirection}deg)`
                 }}
               >
-                <div className="w-6 h-6 bg-black rounded-sm flex items-center justify-center">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                <div className="w-6 h-6 bg-foreground rounded-sm flex items-center justify-center">
+                  <div className="w-2 h-2 bg-primary-foreground rounded-full"></div>
                 </div>
               </div>
             </div>
@@ -163,7 +163,7 @@ export const Qibla = () => {
         </Card>
 
         {/* Direction Info */}
-        <Card className="p-4 rounded-2xl bg-sage text-primary-foreground">
+        <Card className="p-4 rounded-2xl bg-primary text-primary-foreground">
           <div className="text-center">
             <h3 className="font-bold text-lg mb-2">QIBLA DIRECTION</h3>
             <p className="text-2xl font-bold">{Math.round(qiblaDirection)}°</p>
@@ -177,14 +177,14 @@ export const Qibla = () => {
         <Button 
           onClick={getUserLocation}
           disabled={isCalibrating}
-          className="w-full bg-sage hover:bg-sage-dark text-primary-foreground rounded-2xl py-3"
+          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl py-3"
         >
           {isCalibrating ? 'Calibrating...' : 'Recalibrate Location'}
         </Button>
 
         {/* Instructions */}
-        <Card className="p-4 rounded-2xl">
-          <h3 className="font-semibold text-sage mb-2">How to use:</h3>
+        <Card className="p-4 rounded-2xl bg-card">
+          <h3 className="font-semibold text-primary mb-2">How to use:</h3>
           <ul className="text-sm text-muted-foreground space-y-1">
             <li>• Hold your phone flat and horizontal</li>
             <li>• The green arrow points to Qibla direction</li>

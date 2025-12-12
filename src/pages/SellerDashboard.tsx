@@ -104,10 +104,10 @@ export const SellerDashboard = () => {
     <Layout>
       <div className="px-4 py-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-sage">Seller Dashboard</h1>
+          <h1 className="text-2xl font-bold text-primary">Seller Dashboard</h1>
           <Button
             onClick={handleAddProduct}
-            className="bg-sage hover:bg-sage-dark text-primary-foreground"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Product

@@ -28,19 +28,15 @@ export const Progress = () => {
   return (
     <Layout>
       <div className="px-4 py-6 space-y-6">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold bg-sage text-primary-foreground px-6 py-3 rounded-2xl">
-            YOUR PROGRESS
-          </h1>
-        </div>
+        <h1 className="text-2xl font-bold text-primary">Your Progress</h1>
 
         {/* Progress Stats */}
         <div className="grid grid-cols-2 gap-4">
-          <Card className="bg-sage text-primary-foreground p-4 rounded-2xl text-center">
+          <Card className="bg-primary text-primary-foreground p-4 rounded-2xl text-center">
             <h3 className="font-bold text-lg">{dayStreak}</h3>
             <p className="text-sm opacity-90">DAY STREAK</p>
           </Card>
-          <Card className="bg-sage text-primary-foreground p-4 rounded-2xl text-center">
+          <Card className="bg-primary text-primary-foreground p-4 rounded-2xl text-center">
             <h3 className="font-bold text-lg">{progressPercentage}%</h3>
             <p className="text-sm opacity-90">TODAY'S PROGRESS</p>
           </Card>
@@ -49,21 +45,21 @@ export const Progress = () => {
         {/* Prayer Checklist */}
         <div className="space-y-3">
           {prayerStatus.map((prayer, index) => (
-            <Card key={prayer.name} className="p-4 rounded-2xl">
+            <Card key={prayer.name} className="p-4 rounded-2xl bg-card">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="bg-sage text-primary-foreground px-3 py-1 rounded-full text-sm font-medium">
+                  <div className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium">
                     {prayer.name}
                   </div>
-                  <span className="text-lg font-bold">{prayer.time}</span>
+                  <span className="text-lg font-bold text-foreground">{prayer.time}</span>
                 </div>
                 <Button
                   variant={prayer.completed ? "default" : "outline"}
                   onClick={() => markPrayerDone(index)}
                   className={`rounded-full ${
                     prayer.completed 
-                      ? "bg-sage text-primary-foreground" 
-                      : "border-sage text-sage hover:bg-sage hover:text-primary-foreground"
+                      ? "bg-primary text-primary-foreground" 
+                      : "border-primary text-primary hover:bg-primary hover:text-primary-foreground"
                   }`}
                 >
                   {prayer.completed ? (
