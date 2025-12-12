@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useState, useEffect } from 'react';
 import { ChevronLeft, Play, Pause, Volume2, Search } from 'lucide-react';
 
@@ -29,6 +30,21 @@ interface SurahDetail extends Surah {
   };
 }
 
+const RECITERS: Record<string, string> = {
+  "1": "Mishary Rashid Al Afasy",
+  "2": "Abu Bakr Al Shatri",
+  "3": "Nasser Al Qatami",
+  "4": "Yasser Al Dosari",
+  "5": "Hani Ar Rifai"
+};
+
+const getStoredReciter = (): string => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('selectedReciter') || '1';
+  }
+  return '1';
+};
+
 export const Quran = () => {
   const [showTranslation, setShowTranslation] = useState(true);
   const [surahs, setSurahs] = useState<Surah[]>([]);
@@ -40,6 +56,35 @@ export const Quran = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
   const [autoPlayIndex, setAutoPlayIndex] = useState(0);
+  const [selectedReciter, setSelectedReciter] = useState<string>(getStoredReciter());
+
+  // Persist reciter selection
+  const handleReciterChange = (reciterId: string) => {
+    setSelectedReciter(reciterId);
+    localStorage.setItem('selectedReciter', reciterId);
+    // Stop current audio when changing reciter
+    if (currentAudio) {
+      currentAudio.pause();
+      setCurrentAudio(null);
+      setPlayingVerse(null);
+      setIsAutoPlaying(false);
+    }
+  };
+
+  // Build verse audio URL for the selected reciter
+  const getVerseAudioUrl = (surahNo: number, verseNo: number): string => {
+    const paddedSurah = surahNo.toString().padStart(3, '0');
+    const paddedVerse = verseNo.toString().padStart(3, '0');
+    // Using Quran.com CDN for individual verse audio
+    const reciterIds: Record<string, string> = {
+      "1": "Alafasy_128kbps",
+      "2": "Abu_Bakr_Ash-Shaatree_128kbps",
+      "3": "Nasser_Alqatami_128kbps",
+      "4": "Yasser_Ad-Dussary_128kbps",
+      "5": "Hani_Rifai_192kbps"
+    };
+    return `https://everyayah.com/data/${reciterIds[selectedReciter]}/${paddedSurah}${paddedVerse}.mp3`;
+  };
 
   // Fetch all surahs on component mount
   useEffect(() => {
@@ -72,8 +117,10 @@ export const Quran = () => {
     }
   };
 
-  // Play audio for a verse
-  const playAudio = (verseNo: string, audioUrl: string) => {
+  // Play audio for a verse using individual verse audio
+  const playAudio = (verseNo: number) => {
+    if (!selectedSurah) return;
+    
     // Stop current audio if playing
     if (currentAudio) {
       currentAudio.pause();
@@ -81,17 +128,20 @@ export const Quran = () => {
     }
 
     // If clicking the same verse that's playing, just stop
-    if (playingVerse === verseNo) {
+    if (playingVerse === verseNo.toString()) {
       setCurrentAudio(null);
       setIsAutoPlaying(false);
       return;
     }
 
+    // Get the audio URL for the specific verse
+    const audioUrl = getVerseAudioUrl(selectedSurah.surahNo, verseNo);
+    
     // Play new audio
     const audio = new Audio(audioUrl);
-    audio.play();
+    audio.play().catch(err => console.error('Audio playback error:', err));
     setCurrentAudio(audio);
-    setPlayingVerse(verseNo);
+    setPlayingVerse(verseNo.toString());
 
     // Handle audio end
     audio.onended = () => {
@@ -100,11 +150,11 @@ export const Quran = () => {
       
       // Continue auto-play if enabled
       if (isAutoPlaying && selectedSurah) {
-        const nextIndex = autoPlayIndex + 1;
-        if (nextIndex < selectedSurah.arabic1.length) {
-          setAutoPlayIndex(nextIndex);
+        const nextVerse = verseNo + 1;
+        if (nextVerse <= selectedSurah.arabic1.length) {
+          setAutoPlayIndex(nextVerse - 1);
           setTimeout(() => {
-            playAudio((nextIndex + 1).toString(), selectedSurah.audio['1'].originalUrl);
+            playAudio(nextVerse);
           }, 500); // Small delay between verses
         } else {
           setIsAutoPlaying(false);
@@ -116,7 +166,7 @@ export const Quran = () => {
 
   // Auto-play all verses in the chapter
   const autoPlayChapter = () => {
-    if (!selectedSurah || !selectedSurah.audio || !selectedSurah.audio['1']) return;
+    if (!selectedSurah) return;
     
     if (isAutoPlaying) {
       // Stop auto-play
@@ -131,7 +181,7 @@ export const Quran = () => {
       // Start auto-play from first verse
       setIsAutoPlaying(true);
       setAutoPlayIndex(0);
-      playAudio('1', selectedSurah.audio['1'].originalUrl);
+      playAudio(1);
     }
   };
 
@@ -201,6 +251,23 @@ export const Quran = () => {
               </div>
             </div>
 
+            {/* Reciter Selection */}
+            <div className="mb-4">
+              <label className="text-sm font-medium mb-2 block">Reciter</label>
+              <Select value={selectedReciter} onValueChange={handleReciterChange}>
+                <SelectTrigger className="w-full rounded-xl">
+                  <SelectValue placeholder="Select reciter" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border rounded-xl">
+                  {Object.entries(RECITERS).map(([id, name]) => (
+                    <SelectItem key={id} value={id}>
+                      {name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Auto-play and Translation Controls */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2">
@@ -208,18 +275,17 @@ export const Quran = () => {
                   variant={isAutoPlaying ? "destructive" : "default"}
                   size="sm"
                   onClick={autoPlayChapter}
-                  disabled={!selectedSurah?.audio?.['1']}
                   className="flex items-center space-x-2"
                 >
                   {isAutoPlaying ? (
                     <>
                       <Pause className="w-4 h-4" />
-                      <span>Stop Auto-play</span>
+                      <span>Stop</span>
                     </>
                   ) : (
                     <>
                       <Volume2 className="w-4 h-4" />
-                      <span>Auto-play Chapter</span>
+                      <span>Auto-play</span>
                     </>
                   )}
                 </Button>
@@ -231,7 +297,7 @@ export const Quran = () => {
                   onCheckedChange={setShowTranslation}
                 />
                 <span className="text-xs text-muted-foreground">
-                  {showTranslation ? 'SHOW' : 'HIDE'}
+                  {showTranslation ? 'ON' : 'OFF'}
                 </span>
               </div>
             </div>
@@ -255,20 +321,18 @@ export const Quran = () => {
                       <div className="w-8 h-8 bg-sage text-primary-foreground rounded-full flex items-center justify-center">
                         <span className="text-sm font-bold">{index + 1}</span>
                       </div>
-                      {selectedSurah.audio && selectedSurah.audio['1'] && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => playAudio((index + 1).toString(), selectedSurah.audio['1'].originalUrl)}
-                          className="p-1 h-8 w-8"
-                        >
-                          {playingVerse === (index + 1).toString() ? (
-                            <Pause className="w-4 h-4" />
-                          ) : (
-                            <Play className="w-4 h-4" />
-                          )}
-                        </Button>
-                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => playAudio(index + 1)}
+                        className="p-1 h-8 w-8"
+                      >
+                        {playingVerse === (index + 1).toString() ? (
+                          <Pause className="w-4 h-4" />
+                        ) : (
+                          <Play className="w-4 h-4" />
+                        )}
+                      </Button>
                     </div>
                     <p className="text-lg font-arabic mb-2" dir="rtl">
                       {arabicText}
