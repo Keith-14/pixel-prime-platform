@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { Home } from "./pages/Home";
 import { LoadingScreen } from "./pages/LoadingScreen";
 import { Register } from "./pages/Register";
+import { Onboarding } from "./pages/Onboarding";
 import { Quran } from "./pages/Quran";
 import { Qibla } from "./pages/Qibla";
 import { Shop } from "./pages/Shop";
@@ -52,6 +53,7 @@ const App = () => (
             <Routes>
               <Route path="/loading" element={<LoadingScreen />} />
               <Route path="/login" element={<Register />} />
+              <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
               <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
               <Route path="/quran" element={<ProtectedRoute><Quran /></ProtectedRoute>} />
               <Route path="/qibla" element={<ProtectedRoute><Qibla /></ProtectedRoute>} />

@@ -91,14 +91,16 @@ export const Register = () => {
           toast.error(error.message);
         } else {
           toast.success('Account created successfully!');
-          // Redirect based on role
+          // Store destination for after onboarding
+          let destination = '/';
           if (role === 'seller') {
-            navigate('/seller-dashboard');
+            destination = '/seller-dashboard';
           } else if (role === 'travel_partner') {
-            navigate('/business-account');
-          } else {
-            navigate('/');
+            destination = '/business-account';
           }
+          localStorage.setItem('barakah_onboarding_destination', destination);
+          // New users go to onboarding first
+          navigate('/onboarding');
         }
       }
     } catch (error: any) {
