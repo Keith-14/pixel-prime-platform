@@ -79,12 +79,14 @@ export const Places = () => {
   // Find nearby mosques using Overpass API
   const findNearbyMosques = async (location: UserLocation) => {
     try {
-      const radius = 5000; // 5km radius
+      const radius = 10000; // 10km radius for better results
       const overpassQuery = `
-        [out:json][timeout:25];
+        [out:json][timeout:30];
         (
           node["amenity"="place_of_worship"]["religion"="muslim"](around:${radius},${location.lat},${location.lon});
+          node["building"="mosque"](around:${radius},${location.lat},${location.lon});
           way["amenity"="place_of_worship"]["religion"="muslim"](around:${radius},${location.lat},${location.lon});
+          way["building"="mosque"](around:${radius},${location.lat},${location.lon});
           relation["amenity"="place_of_worship"]["religion"="muslim"](around:${radius},${location.lat},${location.lon});
         );
         out center;
@@ -92,35 +94,55 @@ export const Places = () => {
 
       const response = await fetch('https://overpass-api.de/api/interpreter', {
         method: 'POST',
-        body: overpassQuery,
+        body: `data=${encodeURIComponent(overpassQuery)}`,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
       });
 
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
       const data = await response.json();
       
-      const mosquesList: Mosque[] = data.elements.map((element: any) => {
-        const lat = element.lat || element.center?.lat;
-        const lon = element.lon || element.center?.lon;
-        const distance = calculateDistance(location.lat, location.lon, lat, lon);
-        
-        return {
-          id: element.id.toString(),
-          name: element.tags?.name || 'Mosque',
-          lat,
-          lon,
-          distance,
-          address: element.tags?.['addr:full'] || element.tags?.['addr:street'] || 'No address available',
-        };
-      }).filter((mosque: Mosque) => mosque.lat && mosque.lon)
+      if (!data.elements || data.elements.length === 0) {
+        setMosques([]);
+        toast.info('No mosques found in your area. Try expanding your search.');
+        return;
+      }
+      
+      const mosquesList: Mosque[] = data.elements
+        .map((element: any) => {
+          const lat = element.lat || element.center?.lat;
+          const lon = element.lon || element.center?.lon;
+          
+          if (!lat || !lon) return null;
+          
+          const distance = calculateDistance(location.lat, location.lon, lat, lon);
+          
+          return {
+            id: element.id.toString(),
+            name: element.tags?.name || element.tags?.['name:en'] || element.tags?.['name:ar'] || 'Mosque',
+            lat,
+            lon,
+            distance,
+            address: element.tags?.['addr:full'] || element.tags?.['addr:street'] || element.tags?.['addr:city'] || 'Address not available',
+          };
+        })
+        .filter((mosque: Mosque | null): mosque is Mosque => mosque !== null)
         .sort((a: Mosque, b: Mosque) => (a.distance || 0) - (b.distance || 0));
 
       setMosques(mosquesList);
-      toast.success(`Found ${mosquesList.length} mosques nearby`);
+      
+      if (mosquesList.length > 0) {
+        toast.success(`Found ${mosquesList.length} mosque${mosquesList.length > 1 ? 's' : ''} nearby`);
+      } else {
+        toast.info('No mosques found in your area.');
+      }
     } catch (error) {
-      toast.error('Failed to find nearby mosques. Please try again.');
       console.error('Error finding mosques:', error);
+      toast.error('Failed to find nearby mosques. Please try again.');
     } finally {
       setLoading(false);
     }
