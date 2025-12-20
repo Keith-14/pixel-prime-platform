@@ -115,6 +115,49 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+/* Smooth transition utilities */
+@layer utilities {
+  .transition-smooth {
+    @apply transition-all duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)];
+  }
+  
+  .transition-fast {
+    @apply transition-all duration-[150ms] ease-[cubic-bezier(0.4,0,0.2,1)];
+  }
+  
+  .transition-slow {
+    @apply transition-all duration-[350ms] ease-[cubic-bezier(0.4,0,0.2,1)];
+  }
+
+  /* Interactive hover states */
+  .hover-lift {
+    @apply transition-smooth hover:-translate-y-0.5 hover:shadow-md;
+  }
+  
+  .hover-scale {
+    @apply transition-fast hover:scale-[1.02] active:scale-[0.98];
+  }
+  
+  .press-scale {
+    @apply transition-fast active:scale-[0.97];
+  }
+
+  /* Page transition wrapper */
+  .page-transition {
+    @apply animate-fade-in;
+  }
+
+  /* Card interactions */
+  .card-interactive {
+    @apply transition-smooth hover:shadow-md hover:-translate-y-0.5 active:scale-[0.99];
+  }
+
+  /* Button press effect */
+  .btn-press {
+    @apply transition-fast active:scale-[0.97] active:opacity-90;
   }
 }
