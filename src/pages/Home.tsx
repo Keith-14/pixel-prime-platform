@@ -14,18 +14,20 @@ import {
   Heart,
   Menu,
   Bell,
+  Loader2,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { useLocation } from '@/hooks/useLocation';
 
 export const Home = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { location, loading: locationLoading, error: locationError, refresh: refreshLocation } = useLocation();
   const [userName, setUserName] = useState<string>('');
-  const [location, setLocation] = useState('Getting location...');
   const [currentDate, setCurrentDate] = useState('');
   const [currentTime, setCurrentTime] = useState('');
   const [currentPrayer, setCurrentPrayer] = useState({ name: '', nextTime: '' });
@@ -115,33 +117,6 @@ export const Home = () => {
   };
 
   useEffect(() => {
-    // Get user's location
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-
-          // Get location name using reverse geocoding
-          try {
-            const response = await fetch(
-              `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`,
-            );
-            const data = await response.json();
-            setLocation(
-              `${data.city || data.locality || 'Unknown'}, ${
-                data.countryName || 'Unknown'
-              }`,
-            );
-          } catch (error) {
-            setLocation('Location unavailable');
-          }
-        },
-        () => {
-          setLocation('Location access denied');
-        },
-      );
-    }
-
     // Get current date and Islamic date
     const now = new Date();
     const islamicDate = new Intl.DateTimeFormat('en-u-ca-islamic', {
@@ -214,7 +189,21 @@ export const Home = () => {
             <h1 className="text-2xl font-semibold text-foreground">Barakah Home</h1>
             <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
               <MapPin className="h-3 w-3 text-primary" />
-              <span className="line-clamp-1">{location}</span>
+              {locationLoading ? (
+                <span className="flex items-center gap-1">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Getting location...
+                </span>
+              ) : locationError ? (
+                <button 
+                  onClick={refreshLocation}
+                  className="text-destructive hover:underline"
+                >
+                  {locationError} Tap to retry
+                </button>
+              ) : (
+                <span className="line-clamp-1">{location?.city}, {location?.country}</span>
+              )}
             </div>
             <p className="text-xs text-muted-foreground">{currentDate}</p>
           </div>
