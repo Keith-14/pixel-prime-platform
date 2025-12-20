@@ -24,14 +24,20 @@ export const BottomNavigation = () => {
               key={path}
               onClick={() => navigate(path)}
               className={cn(
-                "flex flex-col items-center py-2 px-3 text-xs font-medium transition-colors",
+                "flex flex-col items-center py-2 px-3 text-xs font-medium transition-all duration-[200ms] ease-[cubic-bezier(0.4,0,0.2,1)] active:scale-95",
                 isActive 
-                  ? "text-sage" 
-                  : "text-muted-foreground hover:text-sage"
+                  ? "text-sage scale-105" 
+                  : "text-muted-foreground hover:text-sage hover:scale-105"
               )}
             >
-              <Icon className="h-5 w-5 mb-1" />
-              <span>{label}</span>
+              <Icon className={cn(
+                "h-5 w-5 mb-1 transition-transform duration-[200ms] ease-[cubic-bezier(0.4,0,0.2,1)]",
+                isActive && "scale-110"
+              )} />
+              <span className={cn(
+                "transition-all duration-[200ms]",
+                isActive && "font-semibold"
+              )}>{label}</span>
             </button>
           );
         })}

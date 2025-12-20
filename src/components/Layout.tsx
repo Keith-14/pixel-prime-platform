@@ -1,7 +1,9 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { BottomNavigation } from './BottomNavigation';
 import { TopHeader } from './TopHeader';
 import { SideMenu } from './SideMenu';
+import { cn } from '@/lib/utils';
 
 interface LayoutProps {
   children: ReactNode;
@@ -11,6 +13,15 @@ interface LayoutProps {
 
 export const Layout = ({ children, showNavigation = true, showHeader = true }: LayoutProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(true);
+  const location = useLocation();
+
+  // Trigger page transition animation on route change
+  useEffect(() => {
+    setIsTransitioning(true);
+    const timer = setTimeout(() => setIsTransitioning(false), 300);
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
 
   const handleMenuClick = () => {
     setIsMenuOpen(true);
@@ -32,7 +43,11 @@ export const Layout = ({ children, showNavigation = true, showHeader = true }: L
       
       {showHeader && <TopHeader onMenuClick={handleMenuClick} />}
       
-      <main className={`flex-1 relative z-10 ${showNavigation ? 'pb-20' : ''}`}>
+      <main className={cn(
+        "flex-1 relative z-10",
+        showNavigation && "pb-20",
+        isTransitioning && "animate-fade-in"
+      )}>
         {children}
       </main>
       

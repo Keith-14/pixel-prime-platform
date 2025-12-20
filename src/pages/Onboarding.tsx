@@ -108,7 +108,7 @@ export const Onboarding = () => {
       <div className="relative z-10 w-full flex flex-col items-center">
         {/* Slide Content */}
         <div 
-          className={`w-full text-center transition-all duration-300 ease-out ${
+          className={`w-full text-center transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
             isAnimating 
               ? slideDirection === 'left' 
                 ? 'opacity-0 -translate-x-8' 
@@ -117,7 +117,7 @@ export const Onboarding = () => {
           }`}
         >
           {/* Icon */}
-          <div className={`${slides[currentSlide].color} w-24 h-24 rounded-full mx-auto mb-8 flex items-center justify-center shadow-lg`}>
+          <div className={`${slides[currentSlide].color} w-24 h-24 rounded-full mx-auto mb-8 flex items-center justify-center shadow-lg transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}>
             <CurrentIcon className="h-12 w-12 text-primary-foreground" />
           </div>
 
@@ -138,10 +138,10 @@ export const Onboarding = () => {
             <button
               key={index}
               onClick={() => handleDotClick(index)}
-              className={`rounded-full transition-all duration-300 ${
+              className={`rounded-full transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
                 index === currentSlide
-                  ? 'w-8 h-2 bg-primary'
-                  : 'w-2 h-2 bg-primary/30 hover:bg-primary/50'
+                  ? 'w-8 h-2 bg-primary scale-100'
+                  : 'w-2 h-2 bg-primary/30 hover:bg-primary/50 hover:scale-110'
               }`}
               aria-label={`Go to slide ${index + 1}`}
             />
@@ -151,7 +151,7 @@ export const Onboarding = () => {
         {/* Navigation Button */}
         <Button
           onClick={handleNext}
-          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-14 font-semibold text-lg shadow-lg"
+          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-14 font-semibold text-lg shadow-lg transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] hover:shadow-xl hover:-translate-y-0.5"
         >
           {currentSlide === slides.length - 1 ? 'Get Started' : 'Next'}
         </Button>
@@ -166,7 +166,7 @@ export const Onboarding = () => {
               localStorage.removeItem(ONBOARDING_DESTINATION_KEY);
               navigate(destination, { replace: true });
             }}
-            className="mt-4 text-muted-foreground text-sm hover:text-foreground transition-colors"
+            className="mt-4 text-muted-foreground text-sm hover:text-foreground transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]"
           >
             Skip
           </button>
