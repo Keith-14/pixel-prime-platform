@@ -3,12 +3,13 @@ import { Layout } from '@/components/Layout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Navigation, Search, MapPin, Loader2, AlertCircle, RefreshCw, UtensilsCrossed } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Navigation, Search, MapPin, Loader2, AlertCircle, RefreshCw, UtensilsCrossed, Settings2, LocateFixed } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { toast } from 'sonner';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { useLocation } from '@/hooks/useLocation';
+import { useGlobalLocation } from '@/contexts/LocationContext';
 
 // Fix Leaflet default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -31,12 +32,17 @@ interface Place {
 }
 
 export const Places = () => {
-  const { location: userLocation, loading: locationLoading, error: locationError, refresh: refreshLocation } = useLocation();
+  const { location: userLocation, loading: locationLoading, error: locationError, refresh: refreshLocation, setManualLocation, clearManualLocation } = useGlobalLocation();
   const [places, setPlaces] = useState<Place[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showMap, setShowMap] = useState(false);
   const [placeType, setPlaceType] = useState<PlaceType>('mosque');
+  const [locationDialogOpen, setLocationDialogOpen] = useState(false);
+  const [manualLat, setManualLat] = useState('');
+  const [manualLon, setManualLon] = useState('');
+  const [citySearch, setCitySearch] = useState('');
+  const [searchingCity, setSearchingCity] = useState(false);
 
   // Calculate distance between two points
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -49,6 +55,54 @@ export const Places = () => {
       Math.sin(dLon/2) * Math.sin(dLon/2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     return R * c;
+  };
+
+  // Search for city coordinates
+  const searchCity = async () => {
+    if (!citySearch.trim()) return;
+    
+    setSearchingCity(true);
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(citySearch)}&limit=1`
+      );
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        const { lat, lon } = data[0];
+        await setManualLocation(parseFloat(lat), parseFloat(lon));
+        setLocationDialogOpen(false);
+        setCitySearch('');
+      } else {
+        toast.error('City not found. Please try a different search.');
+      }
+    } catch (error) {
+      toast.error('Failed to search for city. Please try again.');
+    } finally {
+      setSearchingCity(false);
+    }
+  };
+
+  // Set manual coordinates
+  const handleManualCoordinates = async () => {
+    const lat = parseFloat(manualLat);
+    const lon = parseFloat(manualLon);
+    
+    if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+      toast.error('Please enter valid coordinates');
+      return;
+    }
+    
+    await setManualLocation(lat, lon);
+    setLocationDialogOpen(false);
+    setManualLat('');
+    setManualLon('');
+  };
+
+  // Use current GPS location
+  const useCurrentLocation = () => {
+    clearManualLocation();
+    setLocationDialogOpen(false);
   };
 
   // Build Overpass query based on place type
@@ -85,7 +139,7 @@ export const Places = () => {
   const findNearbyPlaces = async (lat: number, lon: number, type: PlaceType) => {
     setLoading(true);
     try {
-      const radius = 10000; // 10km radius
+      const radius = 5000; // 5km radius as requested
       const overpassQuery = buildOverpassQuery(lat, lon, radius, type);
 
       const response = await fetch('https://overpass-api.de/api/interpreter', {
@@ -106,7 +160,7 @@ export const Places = () => {
       
       if (!data.elements || data.elements.length === 0) {
         setPlaces([]);
-        toast.info(`No ${typeLabel} found in your area. Try expanding your search.`);
+        toast.info(`No ${typeLabel} found within 5km. Try changing your location.`);
         return;
       }
       
@@ -137,9 +191,9 @@ export const Places = () => {
       setPlaces(placesList);
       
       if (placesList.length > 0) {
-        toast.success(`Found ${placesList.length} ${typeLabel} nearby`);
+        toast.success(`Found ${placesList.length} ${typeLabel} within 5km`);
       } else {
-        toast.info(`No ${typeLabel} found in your area.`);
+        toast.info(`No ${typeLabel} found within 5km.`);
       }
     } catch (error) {
       console.error('Error finding places:', error);
@@ -190,12 +244,97 @@ export const Places = () => {
           <div>
             <h1 className="text-2xl font-bold text-primary">Nearby Places</h1>
             {userLocation && (
-              <p className="text-xs text-muted-foreground mt-1">
-                📍 {userLocation.city}, {userLocation.country}
+              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                {userLocation.isManual ? '📌' : '📍'} {userLocation.city}, {userLocation.country}
+                {userLocation.isManual && <span className="text-primary text-[10px]">(manual)</span>}
               </p>
             )}
           </div>
           <div className="flex gap-2">
+            <Dialog open={locationDialogOpen} onOpenChange={setLocationDialogOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  className="rounded-full border-primary text-primary"
+                >
+                  <Settings2 className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-sm">
+                <DialogHeader>
+                  <DialogTitle>Change Location</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  {/* Use GPS */}
+                  <Button 
+                    onClick={useCurrentLocation} 
+                    className="w-full bg-primary text-primary-foreground"
+                    disabled={locationLoading}
+                  >
+                    <LocateFixed className="h-4 w-4 mr-2" />
+                    Use My Current GPS Location
+                  </Button>
+                  
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">Or search city</span>
+                    </div>
+                  </div>
+                  
+                  {/* Search by city */}
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Enter city name..."
+                      value={citySearch}
+                      onChange={(e) => setCitySearch(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && searchCity()}
+                    />
+                    <Button onClick={searchCity} disabled={searchingCity}>
+                      {searchingCity ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">Or enter coordinates</span>
+                    </div>
+                  </div>
+                  
+                  {/* Manual coordinates */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      placeholder="Latitude"
+                      type="number"
+                      step="any"
+                      value={manualLat}
+                      onChange={(e) => setManualLat(e.target.value)}
+                    />
+                    <Input
+                      placeholder="Longitude"
+                      type="number"
+                      step="any"
+                      value={manualLon}
+                      onChange={(e) => setManualLon(e.target.value)}
+                    />
+                  </div>
+                  <Button 
+                    onClick={handleManualCoordinates} 
+                    variant="outline" 
+                    className="w-full"
+                    disabled={!manualLat || !manualLon}
+                  >
+                    Set Coordinates
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
             <Button 
               variant="outline" 
               size="icon"
@@ -254,7 +393,7 @@ export const Places = () => {
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin mr-2 text-primary" />
             <span className="text-foreground">
-              {locationLoading ? 'Getting your location...' : `Finding ${getPlaceLabel(placeType).toLowerCase()} near you...`}
+              {locationLoading ? 'Getting your location...' : `Finding ${getPlaceLabel(placeType).toLowerCase()} within 5km...`}
             </span>
           </div>
         )}
@@ -264,10 +403,16 @@ export const Places = () => {
           <div className="flex flex-col items-center justify-center py-8 space-y-4">
             <AlertCircle className="h-12 w-12 text-muted-foreground" />
             <p className="text-center text-muted-foreground">{locationError}</p>
-            <Button onClick={refreshLocation} className="bg-primary text-primary-foreground hover:bg-primary/90">
-              <MapPin className="h-4 w-4 mr-2" />
-              Try Again
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={refreshLocation} className="bg-primary text-primary-foreground hover:bg-primary/90">
+                <MapPin className="h-4 w-4 mr-2" />
+                Try Again
+              </Button>
+              <Button onClick={() => setLocationDialogOpen(true)} variant="outline">
+                <Settings2 className="h-4 w-4 mr-2" />
+                Set Manually
+              </Button>
+            </div>
           </div>
         )}
 
@@ -276,7 +421,7 @@ export const Places = () => {
           <div className="h-96 rounded-2xl overflow-hidden">
             <MapContainer
               center={[userLocation.latitude, userLocation.longitude]}
-              zoom={13}
+              zoom={14}
               style={{ height: '100%', width: '100%' }}
             >
               <TileLayer
@@ -314,11 +459,17 @@ export const Places = () => {
           <div className="grid grid-cols-1 gap-4">
             {filteredPlaces.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">No {getPlaceLabel(placeType).toLowerCase()} found nearby</p>
-                <Button onClick={handleRefresh} className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90">
-                  <Search className="h-4 w-4 mr-2" />
-                  Search Again
-                </Button>
+                <p className="text-muted-foreground">No {getPlaceLabel(placeType).toLowerCase()} found within 5km</p>
+                <div className="flex gap-2 justify-center mt-4">
+                  <Button onClick={handleRefresh} className="bg-primary text-primary-foreground hover:bg-primary/90">
+                    <Search className="h-4 w-4 mr-2" />
+                    Search Again
+                  </Button>
+                  <Button onClick={() => setLocationDialogOpen(true)} variant="outline">
+                    <Settings2 className="h-4 w-4 mr-2" />
+                    Change Location
+                  </Button>
+                </div>
               </div>
             ) : (
               filteredPlaces.map((place) => (
