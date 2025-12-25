@@ -1,32 +1,34 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Heart, MessageCircle, Plus, Send, ArrowLeft, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+import { MessageCircle, Plus, Send, ArrowLeft, Loader2, Trash2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
-interface Comment {
+interface Reply {
   id: string;
-  userId: string;
-  userName: string;
+  post_id: string;
+  user_id: string;
+  user_name: string;
   content: string;
-  timestamp: Date;
+  created_at: string;
 }
 
 interface Post {
   id: string;
-  userId: string;
-  userName: string;
+  user_id: string;
+  user_name: string;
   content: string;
-  timestamp: Date;
-  likes: string[];
-  comments: Comment[];
+  created_at: string;
+  replies?: Reply[];
 }
 
-const formatTimeAgo = (date: Date): string => {
+const formatTimeAgo = (dateStr: string): string => {
+  const date = new Date(dateStr);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
@@ -41,151 +43,250 @@ const formatTimeAgo = (date: Date): string => {
 
 export const Forum = () => {
   const { user } = useAuth();
-  const [posts, setPosts] = useState<Post[]>([
-    {
-      id: '1',
-      userId: 'user1',
-      userName: 'Abdullah',
-      content: 'Assalamu Alaikum everyone! Just wanted to share that I completed reading Surah Al-Kahf today. May Allah bless us all.',
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      likes: ['user2', 'user3'],
-      comments: [
-        { id: 'c1', userId: 'user2', userName: 'Fatima', content: 'MashaAllah, may Allah reward you!', timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000) }
-      ]
-    },
-    {
-      id: '2',
-      userId: 'user2',
-      userName: 'Fatima',
-      content: 'Looking for recommendations on good Islamic books for beginners. Any suggestions?',
-      timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
-      likes: ['user1'],
-      comments: []
-    },
-    {
-      id: '3',
-      userId: 'user3',
-      userName: 'Omar',
-      content: 'Reminder: The last third of the night is the best time for dua. May Allah accept all our prayers.',
-      timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
-      likes: ['user1', 'user2', 'user4'],
-      comments: [
-        { id: 'c2', userId: 'user4', userName: 'Aisha', content: 'JazakAllah khair for the reminder!', timestamp: new Date(Date.now() - 10 * 60 * 60 * 1000) }
-      ]
-    }
-  ]);
-
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
   const [newPostContent, setNewPostContent] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-  const [newComment, setNewComment] = useState('');
+  const [newReply, setNewReply] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  const currentUserId = user?.id || 'guest';
-  const currentUserName = 'You';
+  const currentUserName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
 
-  const handleCreatePost = () => {
-    if (!newPostContent.trim()) return;
+  // Fetch posts
+  const fetchPosts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('guftagu_posts')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    const newPost: Post = {
-      id: Date.now().toString(),
-      userId: currentUserId,
-      userName: currentUserName,
-      content: newPostContent.trim(),
-      timestamp: new Date(),
-      likes: [],
-      comments: []
+      if (error) throw error;
+      setPosts(data || []);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+      toast.error('Failed to load posts');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch replies for a post
+  const fetchReplies = async (postId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('guftagu_replies')
+        .select('*')
+        .eq('post_id', postId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching replies:', error);
+      return [];
+    }
+  };
+
+  // Set up real-time subscriptions
+  useEffect(() => {
+    fetchPosts();
+
+    // Subscribe to new posts
+    const postsChannel = supabase
+      .channel('guftagu-posts')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'guftagu_posts' },
+        (payload) => {
+          setPosts((prev) => [payload.new as Post, ...prev]);
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'guftagu_posts' },
+        (payload) => {
+          setPosts((prev) => prev.filter((p) => p.id !== payload.old.id));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(postsChannel);
+    };
+  }, []);
+
+  // Subscribe to replies when a post is selected
+  useEffect(() => {
+    if (!selectedPost) return;
+
+    const loadReplies = async () => {
+      const replies = await fetchReplies(selectedPost.id);
+      setSelectedPost((prev) => prev ? { ...prev, replies } : null);
     };
 
-    setPosts([newPost, ...posts]);
-    setNewPostContent('');
-    setIsCreateDialogOpen(false);
-  };
+    loadReplies();
 
-  const handleLike = (postId: string) => {
-    setPosts(posts.map(post => {
-      if (post.id === postId) {
-        const isLiked = post.likes.includes(currentUserId);
-        return {
-          ...post,
-          likes: isLiked
-            ? post.likes.filter(id => id !== currentUserId)
-            : [...post.likes, currentUserId]
-        };
-      }
-      return post;
-    }));
-  };
+    const repliesChannel = supabase
+      .channel(`guftagu-replies-${selectedPost.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'guftagu_replies', filter: `post_id=eq.${selectedPost.id}` },
+        (payload) => {
+          setSelectedPost((prev) => {
+            if (!prev) return null;
+            return {
+              ...prev,
+              replies: [...(prev.replies || []), payload.new as Reply]
+            };
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'guftagu_replies', filter: `post_id=eq.${selectedPost.id}` },
+        (payload) => {
+          setSelectedPost((prev) => {
+            if (!prev) return null;
+            return {
+              ...prev,
+              replies: (prev.replies || []).filter((r) => r.id !== payload.old.id)
+            };
+          });
+        }
+      )
+      .subscribe();
 
-  const handleAddComment = (postId: string) => {
-    if (!newComment.trim()) return;
-
-    const comment: Comment = {
-      id: Date.now().toString(),
-      userId: currentUserId,
-      userName: currentUserName,
-      content: newComment.trim(),
-      timestamp: new Date()
+    return () => {
+      supabase.removeChannel(repliesChannel);
     };
+  }, [selectedPost?.id]);
 
-    setPosts(posts.map(post => {
-      if (post.id === postId) {
-        return {
-          ...post,
-          comments: [...post.comments, comment]
-        };
-      }
-      return post;
-    }));
+  const handleCreatePost = async () => {
+    if (!newPostContent.trim() || !user) return;
 
-    setNewComment('');
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from('guftagu_posts').insert({
+        user_id: user.id,
+        user_name: currentUserName,
+        content: newPostContent.trim(),
+      });
+
+      if (error) throw error;
+
+      setNewPostContent('');
+      setIsCreateDialogOpen(false);
+      toast.success('Post shared!');
+    } catch (error) {
+      console.error('Error creating post:', error);
+      toast.error('Failed to create post');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const PostCard = ({ post }: { post: Post }) => {
-    const isLiked = post.likes.includes(currentUserId);
+  const handleDeletePost = async (postId: string) => {
+    try {
+      const { error } = await supabase.from('guftagu_posts').delete().eq('id', postId);
+      if (error) throw error;
+      toast.success('Post deleted');
+      if (selectedPost?.id === postId) {
+        setSelectedPost(null);
+      }
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      toast.error('Failed to delete post');
+    }
+  };
+
+  const handleAddReply = async () => {
+    if (!newReply.trim() || !user || !selectedPost) return;
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from('guftagu_replies').insert({
+        post_id: selectedPost.id,
+        user_id: user.id,
+        user_name: currentUserName,
+        content: newReply.trim(),
+      });
+
+      if (error) throw error;
+
+      setNewReply('');
+      toast.success('Reply sent!');
+    } catch (error) {
+      console.error('Error adding reply:', error);
+      toast.error('Failed to send reply');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteReply = async (replyId: string) => {
+    try {
+      const { error } = await supabase.from('guftagu_replies').delete().eq('id', replyId);
+      if (error) throw error;
+      toast.success('Reply deleted');
+    } catch (error) {
+      console.error('Error deleting reply:', error);
+      toast.error('Failed to delete reply');
+    }
+  };
+
+  const PostCard = ({ post, showActions = true }: { post: Post; showActions?: boolean }) => {
+    const isOwner = user?.id === post.user_id;
 
     return (
       <Card className="bg-card border-border shadow-sm">
         <CardContent className="p-4">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-              <span className="text-primary font-semibold text-sm">
-                {post.userName.charAt(0).toUpperCase()}
-              </span>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                <span className="text-primary font-semibold text-sm">
+                  {post.user_name.charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <div>
+                <p className="font-medium text-foreground">{post.user_name}</p>
+                <p className="text-xs text-muted-foreground">{formatTimeAgo(post.created_at)}</p>
+              </div>
             </div>
-            <div>
-              <p className="font-medium text-foreground">{post.userName}</p>
-              <p className="text-xs text-muted-foreground">{formatTimeAgo(post.timestamp)}</p>
-            </div>
+            {isOwner && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeletePost(post.id);
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
           </div>
 
           <p className="text-foreground mb-4 leading-relaxed">{post.content}</p>
 
-          <div className="flex items-center gap-4 pt-2 border-t border-border">
-            <button
-              onClick={() => handleLike(post.id)}
-              className={cn(
-                "flex items-center gap-2 text-sm transition-colors",
-                isLiked ? "text-red-500" : "text-muted-foreground hover:text-red-500"
-              )}
-            >
-              <Heart className={cn("h-5 w-5", isLiked && "fill-current")} />
-              <span>{post.likes.length}</span>
-            </button>
-
-            <button
-              onClick={() => setSelectedPost(post)}
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              <MessageCircle className="h-5 w-5" />
-              <span>{post.comments.length}</span>
-            </button>
-          </div>
+          {showActions && (
+            <div className="flex items-center gap-4 pt-2 border-t border-border">
+              <button
+                onClick={() => setSelectedPost(post)}
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                <MessageCircle className="h-5 w-5" />
+                <span>Reply</span>
+              </button>
+            </div>
+          )}
         </CardContent>
       </Card>
     );
   };
 
-  // Comments View
+  // Replies View
   if (selectedPost) {
     return (
       <Layout>
@@ -199,50 +300,65 @@ export const Forum = () => {
               <span>Back</span>
             </button>
 
-            <PostCard post={selectedPost} />
+            <PostCard post={selectedPost} showActions={false} />
 
             <div className="mt-4">
               <h3 className="font-semibold text-foreground mb-3">
-                Comments ({selectedPost.comments.length})
+                Replies ({selectedPost.replies?.length || 0})
               </h3>
 
               <div className="space-y-3">
-                {selectedPost.comments.map(comment => (
-                  <div key={comment.id} className="bg-muted/50 rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center">
-                        <span className="text-primary font-semibold text-xs">
-                          {comment.userName.charAt(0).toUpperCase()}
-                        </span>
+                {selectedPost.replies?.map((reply) => {
+                  const isOwner = user?.id === reply.user_id;
+                  return (
+                    <div key={reply.id} className="bg-muted/50 rounded-lg p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center">
+                            <span className="text-primary font-semibold text-xs">
+                              {reply.user_name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <span className="font-medium text-sm text-foreground">{reply.user_name}</span>
+                          <span className="text-xs text-muted-foreground">{formatTimeAgo(reply.created_at)}</span>
+                        </div>
+                        {isOwner && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                            onClick={() => handleDeleteReply(reply.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        )}
                       </div>
-                      <span className="font-medium text-sm text-foreground">{comment.userName}</span>
-                      <span className="text-xs text-muted-foreground">{formatTimeAgo(comment.timestamp)}</span>
+                      <p className="text-sm text-foreground pl-9">{reply.content}</p>
                     </div>
-                    <p className="text-sm text-foreground pl-9">{comment.content}</p>
-                  </div>
-                ))}
+                  );
+                })}
 
-                {selectedPost.comments.length === 0 && (
+                {(!selectedPost.replies || selectedPost.replies.length === 0) && (
                   <p className="text-muted-foreground text-sm text-center py-4">
-                    No comments yet. Be the first to comment!
+                    No replies yet. Be the first to reply!
                   </p>
                 )}
               </div>
 
               <div className="mt-4 flex gap-2">
                 <Textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Write a comment..."
+                  value={newReply}
+                  onChange={(e) => setNewReply(e.target.value)}
+                  placeholder="Write a reply..."
                   className="flex-1 min-h-[44px] max-h-[120px] resize-none"
                 />
                 <Button
-                  onClick={() => handleAddComment(selectedPost.id)}
-                  disabled={!newComment.trim()}
+                  onClick={handleAddReply}
+                  disabled={!newReply.trim() || submitting}
                   size="icon"
                   className="h-11 w-11"
                 >
-                  <Send className="h-4 w-4" />
+                  {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 </Button>
               </div>
             </div>
@@ -256,13 +372,24 @@ export const Forum = () => {
     <Layout>
       <div className="min-h-screen bg-background pb-24">
         <div className="px-4 pt-6">
-          <h1 className="text-2xl font-bold text-primary mb-6">Forum</h1>
+          <h1 className="text-2xl font-bold text-primary mb-2">Guftagu</h1>
+          <p className="text-sm text-muted-foreground mb-6">Share and connect with the community</p>
 
-          <div className="space-y-4">
-            {posts.map(post => (
-              <PostCard key={post.id} post={post} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : posts.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground mb-4">No posts yet. Start the conversation!</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {posts.map((post) => (
+                <PostCard key={post.id} post={post} />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Floating Create Post Button */}
@@ -277,13 +404,14 @@ export const Forum = () => {
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Create Post</DialogTitle>
+              <DialogTitle>Share Your Thoughts</DialogTitle>
+              <DialogDescription>Post a message for the community to see and reply.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <Textarea
                 value={newPostContent}
                 onChange={(e) => setNewPostContent(e.target.value)}
-                placeholder="Share your thoughts with the community..."
+                placeholder="What's on your mind..."
                 className="min-h-[120px] resize-none"
                 maxLength={500}
               />
@@ -293,8 +421,9 @@ export const Forum = () => {
                 </span>
                 <Button
                   onClick={handleCreatePost}
-                  disabled={!newPostContent.trim()}
+                  disabled={!newPostContent.trim() || submitting}
                 >
+                  {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                   Post
                 </Button>
               </div>
