@@ -3,9 +3,11 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Package, ShoppingBag } from 'lucide-react';
 import { ProductForm } from '@/components/seller/ProductForm';
 import { ProductList } from '@/components/seller/ProductList';
+import { SellerOrders } from '@/components/seller/SellerOrders';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
@@ -105,28 +107,50 @@ export const SellerDashboard = () => {
       <div className="px-4 py-6 space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-primary">Seller Dashboard</h1>
-          <Button
-            onClick={handleAddProduct}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Product
-          </Button>
         </div>
 
-        {showForm && (
-          <ProductForm
-            product={editingProduct}
-            onClose={handleFormClose}
-          />
-        )}
+        <Tabs defaultValue="products" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="products" className="flex items-center gap-2">
+              <Package className="h-4 w-4" />
+              Products
+            </TabsTrigger>
+            <TabsTrigger value="orders" className="flex items-center gap-2">
+              <ShoppingBag className="h-4 w-4" />
+              Orders
+            </TabsTrigger>
+          </TabsList>
 
-        <ProductList
-          products={products}
-          loading={loading}
-          onEdit={handleEditProduct}
-          onDelete={handleDeleteProduct}
-        />
+          <TabsContent value="products" className="mt-4 space-y-4">
+            <div className="flex justify-end">
+              <Button
+                onClick={handleAddProduct}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Product
+              </Button>
+            </div>
+
+            {showForm && (
+              <ProductForm
+                product={editingProduct}
+                onClose={handleFormClose}
+              />
+            )}
+
+            <ProductList
+              products={products}
+              loading={loading}
+              onEdit={handleEditProduct}
+              onDelete={handleDeleteProduct}
+            />
+          </TabsContent>
+
+          <TabsContent value="orders" className="mt-4">
+            <SellerOrders />
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
   );

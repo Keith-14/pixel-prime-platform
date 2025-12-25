@@ -53,16 +53,40 @@ export const Forum = () => {
 
   const currentUserName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
 
-  // Fetch posts
+  // Fetch posts with their replies
   const fetchPosts = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: postsData, error: postsError } = await supabase
         .from('guftagu_posts')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setPosts(data || []);
+      if (postsError) throw postsError;
+
+      // Fetch all replies
+      const { data: repliesData, error: repliesError } = await supabase
+        .from('guftagu_replies')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (repliesError) throw repliesError;
+
+      // Group replies by post_id
+      const repliesByPost: Record<string, Reply[]> = {};
+      (repliesData || []).forEach((reply) => {
+        if (!repliesByPost[reply.post_id]) {
+          repliesByPost[reply.post_id] = [];
+        }
+        repliesByPost[reply.post_id].push(reply);
+      });
+
+      // Attach replies to posts
+      const postsWithReplies = (postsData || []).map((post) => ({
+        ...post,
+        replies: repliesByPost[post.id] || [],
+      }));
+
+      setPosts(postsWithReplies);
     } catch (error) {
       console.error('Error fetching posts:', error);
       toast.error('Failed to load posts');
@@ -70,24 +94,6 @@ export const Forum = () => {
       setLoading(false);
     }
   };
-
-  // Fetch replies for a post
-  const fetchReplies = async (postId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('guftagu_replies')
-        .select('*')
-        .eq('post_id', postId)
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching replies:', error);
-      return [];
-    }
-  };
-
   // Set up real-time subscriptions
   useEffect(() => {
     fetchPosts();
@@ -120,12 +126,11 @@ export const Forum = () => {
   useEffect(() => {
     if (!selectedPost) return;
 
-    const loadReplies = async () => {
-      const replies = await fetchReplies(selectedPost.id);
-      setSelectedPost((prev) => prev ? { ...prev, replies } : null);
-    };
-
-    loadReplies();
+    // Get current replies from posts state
+    const currentPost = posts.find(p => p.id === selectedPost.id);
+    if (currentPost && currentPost.replies) {
+      setSelectedPost(prev => prev ? { ...prev, replies: currentPost.replies } : null);
+    }
 
     const repliesChannel = supabase
       .channel(`guftagu-replies-${selectedPost.id}`)
@@ -133,13 +138,20 @@ export const Forum = () => {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'guftagu_replies', filter: `post_id=eq.${selectedPost.id}` },
         (payload) => {
+          const newReply = payload.new as Reply;
           setSelectedPost((prev) => {
             if (!prev) return null;
             return {
               ...prev,
-              replies: [...(prev.replies || []), payload.new as Reply]
+              replies: [...(prev.replies || []), newReply]
             };
           });
+          // Also update posts state
+          setPosts((prev) => prev.map(p => 
+            p.id === selectedPost.id 
+              ? { ...p, replies: [...(p.replies || []), newReply] }
+              : p
+          ));
         }
       )
       .on(
@@ -153,6 +165,12 @@ export const Forum = () => {
               replies: (prev.replies || []).filter((r) => r.id !== payload.old.id)
             };
           });
+          // Also update posts state
+          setPosts((prev) => prev.map(p => 
+            p.id === selectedPost.id 
+              ? { ...p, replies: (p.replies || []).filter((r) => r.id !== payload.old.id) }
+              : p
+          ));
         }
       )
       .subscribe();
@@ -160,7 +178,7 @@ export const Forum = () => {
     return () => {
       supabase.removeChannel(repliesChannel);
     };
-  }, [selectedPost?.id]);
+  }, [selectedPost?.id, posts]);
 
   const handleCreatePost = async () => {
     if (!newPostContent.trim() || !user) return;

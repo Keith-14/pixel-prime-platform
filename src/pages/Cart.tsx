@@ -2,16 +2,72 @@ import { Layout } from '@/components/Layout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
-import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft } from 'lucide-react';
+import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { useState } from 'react';
 
 export const Cart = () => {
   const { items, updateQuantity, removeFromCart, getTotalPrice, clearCart } = useCart();
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const [processing, setProcessing] = useState(false);
 
-  const handleProceedToPay = () => {
-    // We'll implement Stripe payment here
-    console.log('Proceeding to payment...');
+  const handleProceedToPay = async () => {
+    if (!user) {
+      toast.error('Please login to checkout');
+      navigate('/login');
+      return;
+    }
+
+    if (items.length === 0) return;
+
+    setProcessing(true);
+    try {
+      const total = getTotalPrice();
+      const tax = total * 0.1;
+      const shipping = total > 50 ? 0 : 5.99;
+      const totalAmount = total + tax + shipping;
+
+      // Create order
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          user_id: user.id,
+          total_amount: totalAmount,
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Create order items
+      const orderItems = items.map(item => ({
+        order_id: orderData.id,
+        product_id: item.id,
+        quantity: item.quantity,
+        price: item.price
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
+      // Clear cart and show success
+      clearCart();
+      toast.success('Order placed successfully!');
+      navigate('/shop');
+    } catch (error: any) {
+      console.error('Checkout error:', error);
+      toast.error('Failed to place order. Please try again.');
+    } finally {
+      setProcessing(false);
+    }
   };
 
   if (items.length === 0) {
@@ -42,8 +98,8 @@ export const Cart = () => {
   }
 
   const subtotal = getTotalPrice();
-  const tax = subtotal * 0.1; // 10% tax
-  const shipping = subtotal > 50 ? 0 : 5.99; // Free shipping over $50
+  const tax = subtotal * 0.1;
+  const shipping = subtotal > 50 ? 0 : 5.99;
   const total = subtotal + tax + shipping;
 
   return (
@@ -70,10 +126,14 @@ export const Cart = () => {
           {items.map((item) => (
             <Card key={item.id} className="p-4 rounded-2xl bg-card">
               <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-secondary rounded-xl flex items-center justify-center">
-                  <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
-                    <div className="w-4 h-4 bg-primary rounded-full"></div>
-                  </div>
+                <div className="w-16 h-16 bg-secondary rounded-xl flex items-center justify-center overflow-hidden">
+                  {item.image && item.image !== '/placeholder.svg' ? (
+                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
+                      <div className="w-4 h-4 bg-primary rounded-full"></div>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex-1">
@@ -143,9 +203,17 @@ export const Cart = () => {
         {/* Checkout Button */}
         <Button 
           onClick={handleProceedToPay}
+          disabled={processing}
           className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 text-lg font-semibold rounded-2xl"
         >
-          Proceed to Payment - ${total.toFixed(2)}
+          {processing ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin mr-2" />
+              Processing...
+            </>
+          ) : (
+            `Place Order - $${total.toFixed(2)}`
+          )}
         </Button>
 
         <div className="text-center">

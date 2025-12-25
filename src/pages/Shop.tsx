@@ -17,6 +17,7 @@ interface Product {
   image_url: string | null;
   category: string | null;
   inventory_quantity: number;
+  seller_id: string;
 }
 
 export const Shop = () => {
@@ -56,10 +57,11 @@ export const Shop = () => {
 
   const handleAddToCart = (product: Product) => {
     addToCart({
-      id: parseInt(product.id.substring(0, 8), 16), // Convert UUID to number for cart
+      id: product.id,
       name: product.name,
       price: product.price,
-      image: product.image_url || '/placeholder.svg'
+      image: product.image_url || '/placeholder.svg',
+      seller_id: (product as any).seller_id
     });
     toast({
       title: "Added to cart",
