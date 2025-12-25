@@ -2,49 +2,64 @@ import { Layout } from '@/components/Layout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ShoppingCart, Search, Filter } from 'lucide-react';
+import { ShoppingCart, Search, Filter, Loader2 } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
-const products = [
-  {
-    id: 1,
-    name: 'TASBIH',
-    price: 20.00,
-    image: '/placeholder-tasbih.png',
-  },
-  {
-    id: 2,
-    name: 'PRAYER RUG',
-    price: 35.00,
-    image: '/placeholder-rug.png',
-  },
-  {
-    id: 3,
-    name: 'QURAN',
-    price: 25.00,
-    image: '/placeholder-quran.png',
-  },
-  {
-    id: 4,
-    name: 'ISLAMIC BOOK',
-    price: 15.00,
-    image: '/placeholder-book.png',
-  },
-];
+interface Product {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  image_url: string | null;
+  category: string | null;
+  inventory_quantity: number;
+}
 
 export const Shop = () => {
   const { addToCart, getTotalItems } = useCart();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const handleAddToCart = (product: typeof products[0]) => {
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('is_active', true)
+        .gt('inventory_quantity', 0)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load products.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddToCart = (product: Product) => {
     addToCart({
-      id: product.id,
+      id: parseInt(product.id.substring(0, 8), 16), // Convert UUID to number for cart
       name: product.name,
       price: product.price,
-      image: product.image
+      image: product.image_url || '/placeholder.svg'
     });
     toast({
       title: "Added to cart",
@@ -55,6 +70,11 @@ export const Shop = () => {
   const handleCartClick = () => {
     navigate('/cart');
   };
+
+  const filteredProducts = products.filter(product =>
+    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    product.category?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <Layout>
@@ -79,6 +99,8 @@ export const Shop = () => {
             <Input 
               placeholder="Search products..." 
               className="pl-10 bg-card border-border rounded-full"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
           <Button variant="outline" className="rounded-full border-border">
@@ -87,31 +109,50 @@ export const Shop = () => {
           </Button>
         </div>
 
-        {/* Products Grid */}
-        <div className="grid grid-cols-2 gap-4">
-          {products.map((product) => (
-            <Card key={product.id} className="p-4 rounded-2xl bg-card">
-              <div className="aspect-square bg-secondary rounded-xl mb-3 flex items-center justify-center">
-                <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center">
-                  <div className="w-8 h-8 bg-primary rounded-full"></div>
+        {/* Loading State */}
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : filteredProducts.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">No products available yet.</p>
+          </div>
+        ) : (
+          /* Products Grid */
+          <div className="grid grid-cols-2 gap-4">
+            {filteredProducts.map((product) => (
+              <Card key={product.id} className="p-4 rounded-2xl bg-card">
+                <div className="aspect-square bg-secondary rounded-xl mb-3 flex items-center justify-center overflow-hidden">
+                  {product.image_url ? (
+                    <img 
+                      src={product.image_url} 
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center">
+                      <div className="w-8 h-8 bg-primary rounded-full"></div>
+                    </div>
+                  )}
                 </div>
-              </div>
-              <h3 className="font-semibold text-primary text-center mb-1">
-                {product.name}
-              </h3>
-              <p className="text-lg font-bold text-foreground text-center mb-3">
-                ${product.price.toFixed(2)}
-              </p>
-              <Button 
-                variant="outline" 
-                className="w-full rounded-full border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-                onClick={() => handleAddToCart(product)}
-              >
-                ADD TO CART
-              </Button>
-            </Card>
-          ))}
-        </div>
+                <h3 className="font-semibold text-primary text-center mb-1 truncate">
+                  {product.name}
+                </h3>
+                <p className="text-lg font-bold text-foreground text-center mb-3">
+                  ${product.price.toFixed(2)}
+                </p>
+                <Button 
+                  variant="outline" 
+                  className="w-full rounded-full border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                  onClick={() => handleAddToCart(product)}
+                >
+                  ADD TO CART
+                </Button>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </Layout>
   );
