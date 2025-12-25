@@ -3,7 +3,7 @@ import { Layout } from '@/components/Layout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Navigation, Search, MapPin, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Navigation, Search, MapPin, Loader2, AlertCircle, RefreshCw, UtensilsCrossed } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { toast } from 'sonner';
 import 'leaflet/dist/leaflet.css';
@@ -18,21 +18,25 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-interface Mosque {
+type PlaceType = 'mosque' | 'restaurant';
+
+interface Place {
   id: string;
   name: string;
   lat: number;
   lon: number;
   distance?: number;
   address?: string;
+  type: PlaceType;
 }
 
 export const Places = () => {
   const { location: userLocation, loading: locationLoading, error: locationError, refresh: refreshLocation } = useLocation();
-  const [mosques, setMosques] = useState<Mosque[]>([]);
+  const [places, setPlaces] = useState<Place[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showMap, setShowMap] = useState(false);
+  const [placeType, setPlaceType] = useState<PlaceType>('mosque');
 
   // Calculate distance between two points
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -47,12 +51,10 @@ export const Places = () => {
     return R * c;
   };
 
-  // Find nearby mosques using Overpass API
-  const findNearbyMosques = async (lat: number, lon: number) => {
-    setLoading(true);
-    try {
-      const radius = 10000; // 10km radius for better results
-      const overpassQuery = `
+  // Build Overpass query based on place type
+  const buildOverpassQuery = (lat: number, lon: number, radius: number, type: PlaceType) => {
+    if (type === 'mosque') {
+      return `
         [out:json][timeout:30];
         (
           node["amenity"="place_of_worship"]["religion"="muslim"](around:${radius},${lat},${lon});
@@ -63,6 +65,28 @@ export const Places = () => {
         );
         out center;
       `;
+    } else {
+      return `
+        [out:json][timeout:30];
+        (
+          node["amenity"="restaurant"]["diet:halal"="yes"](around:${radius},${lat},${lon});
+          node["amenity"="restaurant"]["cuisine"~"halal"](around:${radius},${lat},${lon});
+          node["amenity"="fast_food"]["diet:halal"="yes"](around:${radius},${lat},${lon});
+          node["amenity"="cafe"]["diet:halal"="yes"](around:${radius},${lat},${lon});
+          way["amenity"="restaurant"]["diet:halal"="yes"](around:${radius},${lat},${lon});
+          way["amenity"="restaurant"]["cuisine"~"halal"](around:${radius},${lat},${lon});
+        );
+        out center;
+      `;
+    }
+  };
+
+  // Find nearby places using Overpass API
+  const findNearbyPlaces = async (lat: number, lon: number, type: PlaceType) => {
+    setLoading(true);
+    try {
+      const radius = 10000; // 10km radius
+      const overpassQuery = buildOverpassQuery(lat, lon, radius, type);
 
       const response = await fetch('https://overpass-api.de/api/interpreter', {
         method: 'POST',
@@ -78,13 +102,15 @@ export const Places = () => {
 
       const data = await response.json();
       
+      const typeLabel = type === 'mosque' ? 'mosques' : 'halal restaurants';
+      
       if (!data.elements || data.elements.length === 0) {
-        setMosques([]);
-        toast.info('No mosques found in your area. Try expanding your search.');
+        setPlaces([]);
+        toast.info(`No ${typeLabel} found in your area. Try expanding your search.`);
         return;
       }
       
-      const mosquesList: Mosque[] = data.elements
+      const placesList: Place[] = data.elements
         .map((element: any) => {
           const elLat = element.lat || element.center?.lat;
           const elLon = element.lon || element.center?.lon;
@@ -93,55 +119,59 @@ export const Places = () => {
           
           const distance = calculateDistance(lat, lon, elLat, elLon);
           
+          const defaultName = type === 'mosque' ? 'Mosque' : 'Halal Restaurant';
+          
           return {
             id: element.id.toString(),
-            name: element.tags?.name || element.tags?.['name:en'] || element.tags?.['name:ar'] || 'Mosque',
+            name: element.tags?.name || element.tags?.['name:en'] || element.tags?.['name:ar'] || defaultName,
             lat: elLat,
             lon: elLon,
             distance,
             address: element.tags?.['addr:full'] || element.tags?.['addr:street'] || element.tags?.['addr:city'] || 'Address not available',
+            type,
           };
         })
-        .filter((mosque: Mosque | null): mosque is Mosque => mosque !== null)
-        .sort((a: Mosque, b: Mosque) => (a.distance || 0) - (b.distance || 0));
+        .filter((place: Place | null): place is Place => place !== null)
+        .sort((a: Place, b: Place) => (a.distance || 0) - (b.distance || 0));
 
-      setMosques(mosquesList);
+      setPlaces(placesList);
       
-      if (mosquesList.length > 0) {
-        toast.success(`Found ${mosquesList.length} mosque${mosquesList.length > 1 ? 's' : ''} nearby`);
+      if (placesList.length > 0) {
+        toast.success(`Found ${placesList.length} ${typeLabel} nearby`);
       } else {
-        toast.info('No mosques found in your area.');
+        toast.info(`No ${typeLabel} found in your area.`);
       }
     } catch (error) {
-      console.error('Error finding mosques:', error);
-      toast.error('Failed to find nearby mosques. Please try again.');
+      console.error('Error finding places:', error);
+      const typeLabel = type === 'mosque' ? 'mosques' : 'halal restaurants';
+      toast.error(`Failed to find nearby ${typeLabel}. Please try again.`);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch mosques when location is available
+  // Fetch places when location is available or place type changes
   useEffect(() => {
     if (userLocation && !locationLoading) {
-      findNearbyMosques(userLocation.latitude, userLocation.longitude);
+      findNearbyPlaces(userLocation.latitude, userLocation.longitude, placeType);
     }
-  }, [userLocation, locationLoading]);
+  }, [userLocation, locationLoading, placeType]);
 
-  // Filter mosques based on search query
-  const filteredMosques = mosques.filter(mosque =>
-    mosque.name.toLowerCase().includes(searchQuery.toLowerCase())
+  // Filter places based on search query
+  const filteredPlaces = places.filter(place =>
+    place.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Open directions in Google Maps
-  const openDirections = (mosque: Mosque) => {
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${mosque.lat},${mosque.lon}`;
+  const openDirections = (place: Place) => {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lon}`;
     window.open(url, '_blank');
   };
 
-  // Refresh mosques search
+  // Refresh places search
   const handleRefresh = () => {
     if (userLocation) {
-      findNearbyMosques(userLocation.latitude, userLocation.longitude);
+      findNearbyPlaces(userLocation.latitude, userLocation.longitude, placeType);
     } else {
       refreshLocation();
     }
@@ -149,13 +179,16 @@ export const Places = () => {
 
   const isLoading = loading || locationLoading;
 
+  const getPlaceIcon = (type: PlaceType) => type === 'mosque' ? '🕌' : '🍽️';
+  const getPlaceLabel = (type: PlaceType) => type === 'mosque' ? 'Mosques' : 'Halal Restaurants';
+
   return (
     <Layout>
       <div className="px-4 py-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-primary">Nearby Mosques</h1>
+            <h1 className="text-2xl font-bold text-primary">Nearby Places</h1>
             {userLocation && (
               <p className="text-xs text-muted-foreground mt-1">
                 📍 {userLocation.city}, {userLocation.country}
@@ -183,11 +216,33 @@ export const Places = () => {
           </div>
         </div>
 
+        {/* Place Type Toggle */}
+        <div className="flex gap-2">
+          <Button
+            variant={placeType === 'mosque' ? 'default' : 'outline'}
+            className={`flex-1 rounded-full ${placeType === 'mosque' ? 'bg-primary text-primary-foreground' : 'border-primary text-primary'}`}
+            onClick={() => setPlaceType('mosque')}
+            disabled={isLoading}
+          >
+            <span className="mr-2">🕌</span>
+            Mosques
+          </Button>
+          <Button
+            variant={placeType === 'restaurant' ? 'default' : 'outline'}
+            className={`flex-1 rounded-full ${placeType === 'restaurant' ? 'bg-primary text-primary-foreground' : 'border-primary text-primary'}`}
+            onClick={() => setPlaceType('restaurant')}
+            disabled={isLoading}
+          >
+            <UtensilsCrossed className="h-4 w-4 mr-2" />
+            Halal Food
+          </Button>
+        </div>
+
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input 
-            placeholder="Search mosques..." 
+            placeholder={`Search ${getPlaceLabel(placeType).toLowerCase()}...`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 bg-card border-border rounded-full"
@@ -199,7 +254,7 @@ export const Places = () => {
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin mr-2 text-primary" />
             <span className="text-foreground">
-              {locationLoading ? 'Getting your location...' : 'Finding mosques near you...'}
+              {locationLoading ? 'Getting your location...' : `Finding ${getPlaceLabel(placeType).toLowerCase()} near you...`}
             </span>
           </div>
         )}
@@ -232,17 +287,17 @@ export const Places = () => {
               <Marker position={[userLocation.latitude, userLocation.longitude]}>
                 <Popup>Your Location</Popup>
               </Marker>
-              {/* Mosque markers */}
-              {filteredMosques.map((mosque) => (
-                <Marker key={mosque.id} position={[mosque.lat, mosque.lon]}>
+              {/* Place markers */}
+              {filteredPlaces.map((place) => (
+                <Marker key={place.id} position={[place.lat, place.lon]}>
                   <Popup>
                     <div className="text-center">
-                      <h3 className="font-semibold">{mosque.name}</h3>
-                      <p className="text-sm text-muted-foreground">{mosque.distance?.toFixed(2)} km away</p>
+                      <h3 className="font-semibold">{place.name}</h3>
+                      <p className="text-sm text-muted-foreground">{place.distance?.toFixed(2)} km away</p>
                       <Button 
                         size="sm" 
                         className="mt-2 bg-primary text-primary-foreground"
-                        onClick={() => openDirections(mosque)}
+                        onClick={() => openDirections(place)}
                       >
                         Get Directions
                       </Button>
@@ -257,32 +312,32 @@ export const Places = () => {
         {/* Places Grid */}
         {!showMap && userLocation && !isLoading && (
           <div className="grid grid-cols-1 gap-4">
-            {filteredMosques.length === 0 ? (
+            {filteredPlaces.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">No mosques found nearby</p>
+                <p className="text-muted-foreground">No {getPlaceLabel(placeType).toLowerCase()} found nearby</p>
                 <Button onClick={handleRefresh} className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90">
                   <Search className="h-4 w-4 mr-2" />
                   Search Again
                 </Button>
               </div>
             ) : (
-              filteredMosques.map((mosque) => (
-                <Card key={mosque.id} className="p-4 rounded-2xl bg-card card-interactive">
+              filteredPlaces.map((place) => (
+                <Card key={place.id} className="p-4 rounded-2xl bg-card card-interactive">
                   <div className="flex items-start space-x-4">
                     <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center">
-                      <span className="text-2xl">🕌</span>
+                      <span className="text-2xl">{getPlaceIcon(place.type)}</span>
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-primary mb-1">{mosque.name}</h3>
-                      <p className="text-sm text-muted-foreground mb-2">{mosque.address}</p>
+                      <h3 className="font-semibold text-primary mb-1">{place.name}</h3>
+                      <p className="text-sm text-muted-foreground mb-2">{place.address}</p>
                       <p className="text-xs text-muted-foreground mb-3">
-                        {mosque.distance?.toFixed(2)} km away
+                        {place.distance?.toFixed(2)} km away
                       </p>
                       <Button 
                         variant="outline" 
                         size="sm"
                         className="rounded-full border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-                        onClick={() => openDirections(mosque)}
+                        onClick={() => openDirections(place)}
                       >
                         <Navigation className="h-4 w-4 mr-2" />
                         Directions
