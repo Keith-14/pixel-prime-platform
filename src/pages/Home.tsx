@@ -21,12 +21,12 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { useLocation } from '@/hooks/useLocation';
+import { useGlobalLocation } from '@/contexts/LocationContext';
 
 export const Home = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { location, loading: locationLoading, error: locationError, refresh: refreshLocation } = useLocation();
+  const { location, loading: locationLoading, error: locationError, refresh: refreshLocation } = useGlobalLocation();
   const [userName, setUserName] = useState<string>('');
   const [currentDate, setCurrentDate] = useState('');
   const [currentTime, setCurrentTime] = useState('');
