@@ -26,7 +26,7 @@ export const PrayerOverviewCard = ({
   const activePrayer = normalizePrayerName(currentPrayerName);
 
   return (
-    <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-primary via-primary/95 to-primary/85 px-5 py-6 text-primary-foreground shadow-lg">
+    <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-[hsl(210,80%,50%)] via-[hsl(215,75%,45%)] to-[hsl(220,70%,38%)] px-5 py-6 text-white shadow-lg">
       <div className="relative z-10 flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-medium uppercase tracking-widest text-primary-foreground/70">
