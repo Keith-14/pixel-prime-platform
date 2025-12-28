@@ -3,6 +3,7 @@ import { PrayerOverviewCard } from '@/components/home/PrayerOverviewCard';
 import { QuickActionsRow } from '@/components/home/QuickActionsRow';
 import { DailyDuaCard } from '@/components/home/DailyDuaCard';
 import { TodaysVerseCard } from '@/components/home/TodaysVerseCard';
+import { IslamicNewsCard } from '@/components/home/IslamicNewsCard';
 import {
   Clock,
   BookOpen,
@@ -218,6 +219,11 @@ export const Home = () => {
         {/* All quick actions icons */}
         <section aria-label="Quick actions">
           <QuickActionsRow items={quickActions} />
+        </section>
+
+        {/* Islamic World News */}
+        <section aria-label="Islamic news">
+          <IslamicNewsCard />
         </section>
 
         {/* Daily Dua */}
