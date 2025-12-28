@@ -24,11 +24,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useGlobalLocation } from '@/contexts/LocationContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export const Home = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { location, loading: locationLoading, error: locationError, refresh: refreshLocation } = useGlobalLocation();
+  const { t } = useLanguage();
   const [userName, setUserName] = useState<string>('');
   const [currentDate, setCurrentDate] = useState('');
   const [currentTime, setCurrentTime] = useState('');
@@ -84,7 +86,7 @@ export const Home = () => {
         const nextMins = nextPrayerTime % 60;
         return {
           name: `${name} Time`,
-          nextTime: `Next prayer at ${nextHours.toString().padStart(2, '0')}:${nextMins
+          nextTime: `${t('home.next_prayer_at')} ${nextHours.toString().padStart(2, '0')}:${nextMins
             .toString()
             .padStart(2, '0')}`,
         };
@@ -145,20 +147,20 @@ export const Home = () => {
     const interval = setInterval(updateTimeAndPrayer, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [t]);
 
   const quickActions = [
-    { label: 'Qibla', Icon: Compass, onClick: () => navigate('/qibla') },
-    { label: 'Quran', Icon: BookOpen, onClick: () => navigate('/quran') },
-    { label: 'Track', Icon: BarChart3, onClick: () => navigate('/progress') },
-    { label: 'Mood', Icon: Heart, onClick: () => navigate('/makkah-live') },
-    { label: 'Prayer', Icon: Clock, onClick: () => navigate('/prayer-times') },
-    { label: 'Zakat', Icon: Calculator, onClick: () => navigate('/zakat') },
-    { label: 'Store', Icon: Search, onClick: () => navigate('/shop') },
-    { label: 'Progress', Icon: MapPin, onClick: () => navigate('/progress') },
+    { label: t('action.mood'), Icon: Heart, onClick: () => navigate('/makkah-live') },
+    { label: t('action.track'), Icon: BarChart3, onClick: () => navigate('/progress') },
+    { label: t('action.quran'), Icon: BookOpen, onClick: () => navigate('/quran') },
+    { label: t('action.qibla'), Icon: Compass, onClick: () => navigate('/qibla') },
+    { label: t('action.progress'), Icon: MapPin, onClick: () => navigate('/progress') },
+    { label: t('action.store'), Icon: Search, onClick: () => navigate('/shop') },
+    { label: t('action.zakat'), Icon: Calculator, onClick: () => navigate('/zakat') },
+    { label: t('action.prayer'), Icon: Clock, onClick: () => navigate('/prayer-times') },
   ];
 
-  const greeting = userName ? `As-Salaam-Alaikum, ${userName}` : 'As-Salaam-Alaikum';
+  const greeting = userName ? `${t('home.greeting')}, ${userName}` : t('home.greeting');
 
   return (
     <Layout showHeader={false}>
@@ -189,20 +191,20 @@ export const Home = () => {
               <p className="text-sm text-muted-foreground">
                 {greeting}
               </p>
-              <h1 className="text-2xl font-semibold text-foreground tracking-tight">Barakah Home</h1>
+              <h1 className="text-2xl font-semibold text-foreground tracking-tight">{t('home.title')}</h1>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <MapPin className="h-3 w-3 text-primary" strokeWidth={2.5} />
                 {locationLoading ? (
                   <span className="flex items-center gap-1.5">
                     <Loader2 className="h-3 w-3 animate-spin" />
-                    Getting location...
+                    {t('home.getting_location')}
                   </span>
                 ) : locationError ? (
                   <button 
                     onClick={refreshLocation}
                     className="text-destructive hover:underline"
                   >
-                    {locationError} Tap to retry
+                    {locationError} {t('home.tap_retry')}
                   </button>
                 ) : (
                   <span className="line-clamp-1">{location?.city}, {location?.country}</span>
@@ -262,17 +264,18 @@ export const Home = () => {
 const SideMenuContent = ({ onClose }: { onClose: () => void }) => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
 
   const menuItems = [
-    { label: 'Home', path: '/' },
-    { label: 'Prayer Times', path: '/prayer-times' },
-    { label: 'Qibla', path: '/qibla' },
-    { label: 'Quran', path: '/quran' },
-    { label: 'Makkah Live', path: '/makkah-live' },
-    { label: 'Zakat Calculator', path: '/zakat' },
-    { label: 'Shop', path: '/shop' },
-    { label: 'Progress', path: '/progress' },
-    { label: 'Account', path: '/account' },
+    { labelKey: 'menu.home', path: '/' },
+    { labelKey: 'menu.prayer_times', path: '/prayer-times' },
+    { labelKey: 'menu.qibla', path: '/qibla' },
+    { labelKey: 'menu.quran', path: '/quran' },
+    { labelKey: 'menu.makkah_live', path: '/makkah-live' },
+    { labelKey: 'menu.zakat', path: '/zakat' },
+    { labelKey: 'menu.shop', path: '/shop' },
+    { labelKey: 'menu.progress', path: '/progress' },
+    { labelKey: 'menu.account', path: '/account' },
   ];
 
   return (
@@ -298,7 +301,7 @@ const SideMenuContent = ({ onClose }: { onClose: () => void }) => {
             }}
             className="w-full text-left px-4 py-3.5 rounded-xl text-foreground hover:bg-primary/5 transition-colors duration-200 font-medium"
           >
-            {item.label}
+            {t(item.labelKey)}
           </button>
         ))}
       </nav>
@@ -308,7 +311,7 @@ const SideMenuContent = ({ onClose }: { onClose: () => void }) => {
             onClick={() => signOut()}
             className="w-full text-left px-4 py-3.5 rounded-xl text-destructive hover:bg-destructive/5 transition-colors duration-200 font-medium"
           >
-            Sign Out
+            {t('menu.sign_out')}
           </button>
         </div>
       )}

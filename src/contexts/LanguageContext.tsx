@@ -51,6 +51,19 @@ const translations: Record<Language, Record<string, string>> = {
     'home.title': 'Barakah Home',
     'home.getting_location': 'Getting location...',
     'home.tap_retry': 'Tap to retry',
+    'home.current_time': 'Current Time',
+    'home.next_prayer': 'Next Prayer',
+    'home.next_prayer_at': 'Next prayer at',
+    
+    // Prayer names
+    'prayer.fajr': 'Fajr',
+    'prayer.dhuhr': 'Dhuhr',
+    'prayer.asr': 'Asr',
+    'prayer.maghrib': 'Maghrib',
+    'prayer.isha': 'Isha',
+    'prayer.upcoming': 'Upcoming',
+    'prayer.time': 'Time',
+    'prayer.next': 'Next',
     
     // Quick actions
     'action.qibla': 'Qibla',
@@ -61,6 +74,13 @@ const translations: Record<Language, Record<string, string>> = {
     'action.zakat': 'Zakat',
     'action.store': 'Store',
     'action.progress': 'Progress',
+    
+    // Bottom Navigation
+    'nav.home': 'Home',
+    'nav.quran': 'Quran',
+    'nav.guftagu': 'Guftagu',
+    'nav.places': 'Places',
+    'nav.account': 'Account',
     
     // Menu
     'menu.home': 'Home',
@@ -121,6 +141,19 @@ const translations: Record<Language, Record<string, string>> = {
     'home.title': 'برکت ہوم',
     'home.getting_location': 'مقام حاصل کیا جا رہا ہے...',
     'home.tap_retry': 'دوبارہ کوشش کریں',
+    'home.current_time': 'موجودہ وقت',
+    'home.next_prayer': 'اگلی نماز',
+    'home.next_prayer_at': 'اگلی نماز',
+    
+    // Prayer names
+    'prayer.fajr': 'فجر',
+    'prayer.dhuhr': 'ظہر',
+    'prayer.asr': 'عصر',
+    'prayer.maghrib': 'مغرب',
+    'prayer.isha': 'عشاء',
+    'prayer.upcoming': 'آنے والی',
+    'prayer.time': 'وقت',
+    'prayer.next': 'اگلی',
     
     // Quick actions
     'action.qibla': 'قبلہ',
@@ -131,6 +164,13 @@ const translations: Record<Language, Record<string, string>> = {
     'action.zakat': 'زکوٰۃ',
     'action.store': 'سٹور',
     'action.progress': 'پیش رفت',
+    
+    // Bottom Navigation
+    'nav.home': 'ہوم',
+    'nav.quran': 'قرآن',
+    'nav.guftagu': 'گفتگو',
+    'nav.places': 'مقامات',
+    'nav.account': 'اکاؤنٹ',
     
     // Menu
     'menu.home': 'ہوم',
@@ -191,6 +231,19 @@ const translations: Record<Language, Record<string, string>> = {
     'home.title': 'بركة الرئيسية',
     'home.getting_location': 'جارٍ تحديد الموقع...',
     'home.tap_retry': 'انقر لإعادة المحاولة',
+    'home.current_time': 'الوقت الحالي',
+    'home.next_prayer': 'الصلاة التالية',
+    'home.next_prayer_at': 'الصلاة التالية',
+    
+    // Prayer names
+    'prayer.fajr': 'الفجر',
+    'prayer.dhuhr': 'الظهر',
+    'prayer.asr': 'العصر',
+    'prayer.maghrib': 'المغرب',
+    'prayer.isha': 'العشاء',
+    'prayer.upcoming': 'القادمة',
+    'prayer.time': 'وقت',
+    'prayer.next': 'التالية',
     
     // Quick actions
     'action.qibla': 'القبلة',
@@ -201,6 +254,13 @@ const translations: Record<Language, Record<string, string>> = {
     'action.zakat': 'الزكاة',
     'action.store': 'المتجر',
     'action.progress': 'التقدم',
+    
+    // Bottom Navigation
+    'nav.home': 'الرئيسية',
+    'nav.quran': 'القرآن',
+    'nav.guftagu': 'حوار',
+    'nav.places': 'الأماكن',
+    'nav.account': 'الحساب',
     
     // Menu
     'menu.home': 'الرئيسية',
