@@ -7,32 +7,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { User, Briefcase, Plane } from 'lucide-react';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 type UserRole = 'normal_user' | 'seller' | 'travel_partner';
-
-const profileOptions = [
-  {
-    role: 'normal_user' as UserRole,
-    icon: User,
-    title: 'Normal User',
-    description: 'Browse and purchase products & tours',
-    color: 'bg-sage'
-  },
-  {
-    role: 'seller' as UserRole,
-    icon: Briefcase,
-    title: 'Seller',
-    description: 'List and sell your products',
-    color: 'bg-sage-dark'
-  },
-  {
-    role: 'travel_partner' as UserRole,
-    icon: Plane,
-    title: 'Travel Partner',
-    description: 'Offer tour packages to users',
-    color: 'bg-sage-dark'
-  }
-];
 
 export const Register = () => {
   const [step, setStep] = useState<'profile' | 'details'>('profile');
@@ -45,6 +22,31 @@ export const Register = () => {
   
   const navigate = useNavigate();
   const { signUp, signIn } = useAuth();
+  const { t } = useLanguage();
+
+  const profileOptions = [
+    {
+      role: 'normal_user' as UserRole,
+      icon: User,
+      titleKey: 'login.normal_user',
+      descKey: 'login.normal_user_desc',
+      color: 'bg-sage'
+    },
+    {
+      role: 'seller' as UserRole,
+      icon: Briefcase,
+      titleKey: 'login.seller',
+      descKey: 'login.seller_desc',
+      color: 'bg-sage-dark'
+    },
+    {
+      role: 'travel_partner' as UserRole,
+      icon: Plane,
+      titleKey: 'login.travel_partner',
+      descKey: 'login.travel_partner_desc',
+      color: 'bg-sage-dark'
+    }
+  ];
 
   const handleRoleSelect = (role: UserRole) => {
     setSelectedRole(role);
@@ -120,6 +122,11 @@ export const Register = () => {
     }
   };
 
+  const getSelectedRoleTitle = () => {
+    const option = profileOptions.find(p => p.role === selectedRole);
+    return option ? t(option.titleKey) : '';
+  };
+
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center max-w-md mx-auto relative overflow-hidden">
       {/* Language Selector */}
@@ -177,7 +184,7 @@ export const Register = () => {
           
           <h1 className="text-3xl font-bold text-sage mb-1">BARAKAH</h1>
           <p className="text-xs text-sage/80 font-medium tracking-wide">
-            FAITH. LIFESTYLE. COMMUNITY.
+            {t('login.tagline')}
           </p>
         </div>
 
@@ -185,13 +192,13 @@ export const Register = () => {
         {step === 'profile' && !isSignIn && (
           <div className="space-y-4">
             <div className="text-center mb-6">
-              <h2 className="text-xl font-semibold text-sage mb-2">Choose Your Profile</h2>
+              <h2 className="text-xl font-semibold text-sage mb-2">{t('login.choose_profile')}</h2>
               <p className="text-sm text-sage/70">
-                Select the type of account you want to create
+                {t('login.select_account_type')}
               </p>
             </div>
 
-            {profileOptions.map(({ role, icon: Icon, title, description, color }) => (
+            {profileOptions.map(({ role, icon: Icon, titleKey, descKey, color }) => (
               <Card 
                 key={role}
                 onClick={() => handleRoleSelect(role)}
@@ -202,8 +209,8 @@ export const Register = () => {
                     <Icon className="h-6 w-6" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-foreground">{title}</h3>
-                    <p className="text-sm text-muted-foreground">{description}</p>
+                    <h3 className="font-semibold text-foreground">{t(titleKey)}</h3>
+                    <p className="text-sm text-muted-foreground">{t(descKey)}</p>
                   </div>
                 </div>
               </Card>
@@ -211,12 +218,12 @@ export const Register = () => {
 
             <div className="text-center pt-4">
               <p className="text-sm text-sage/70">
-                Already have an account?{' '}
+                {t('login.already_have_account')}{' '}
                 <button 
                   onClick={() => setIsSignIn(true)}
                   className="text-sage font-semibold underline"
                 >
-                  Sign In
+                  {t('login.sign_in')}
                 </button>
               </p>
             </div>
@@ -228,12 +235,12 @@ export const Register = () => {
           <div className="space-y-6">
             <div className="text-center">
               <h2 className="text-lg font-semibold text-sage mb-2">
-                {isSignIn ? 'Welcome Back' : 'Create Your Account'}
+                {isSignIn ? t('login.welcome_back') : t('login.create_your_account')}
               </h2>
               <p className="text-sm text-sage/70">
                 {isSignIn 
-                  ? 'Enter your credentials to sign in' 
-                  : `Sign up as ${profileOptions.find(p => p.role === selectedRole)?.title}`
+                  ? t('login.enter_credentials')
+                  : `${t('login.sign_up_as')} ${getSelectedRoleTitle()}`
                 }
               </p>
             </div>
@@ -242,7 +249,7 @@ export const Register = () => {
               {!isSignIn && (
                 <Input
                   type="text"
-                  placeholder="Full Name"
+                  placeholder={t('login.full_name')}
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   className="bg-background border-sage/30 rounded-xl h-12 text-center placeholder:text-sage/50"
@@ -251,7 +258,7 @@ export const Register = () => {
               
               <Input
                 type="email"
-                placeholder="yourname@email.com"
+                placeholder={t('login.email_placeholder')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="bg-background border-sage/30 rounded-xl h-12 text-center placeholder:text-sage/50"
@@ -259,7 +266,7 @@ export const Register = () => {
 
               <Input
                 type="password"
-                placeholder="Password"
+                placeholder={t('login.password')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="bg-background border-sage/30 rounded-xl h-12 text-center placeholder:text-sage/50"
@@ -270,7 +277,7 @@ export const Register = () => {
                 disabled={loading}
                 className="w-full bg-sage hover:bg-sage-dark text-primary-foreground rounded-xl h-12 font-medium"
               >
-                {loading ? 'Please wait...' : isSignIn ? 'Sign In' : 'Create Account'}
+                {loading ? t('login.please_wait') : isSignIn ? t('login.sign_in') : t('login.create_account_btn')}
               </Button>
 
               <Button 
@@ -278,13 +285,13 @@ export const Register = () => {
                 variant="ghost"
                 className="w-full rounded-xl h-12 font-medium"
               >
-                Back
+                {t('login.back')}
               </Button>
 
               {isSignIn && (
                 <div className="text-center pt-2">
                   <p className="text-sm text-sage/70">
-                    Don't have an account?{' '}
+                    {t('login.dont_have_account')}{' '}
                     <button 
                       onClick={() => {
                         setIsSignIn(false);
@@ -292,7 +299,7 @@ export const Register = () => {
                       }}
                       className="text-sage font-semibold underline"
                     >
-                      Sign Up
+                      {t('login.sign_up')}
                     </button>
                   </p>
                 </div>
@@ -300,9 +307,9 @@ export const Register = () => {
             </div>
 
             <p className="text-xs text-sage/60 text-center px-4 leading-relaxed">
-              By continuing, you agree to our{' '}
-              <span className="underline">Terms of Service</span> and{' '}
-              <span className="underline">Privacy Policy</span>
+              {t('login.terms')}{' '}
+              <span className="underline">{t('login.terms_of_service')}</span> {t('login.and')}{' '}
+              <span className="underline">{t('login.privacy_policy')}</span>
             </p>
           </div>
         )}
