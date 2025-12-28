@@ -4,6 +4,7 @@ import { QuickActionsRow } from '@/components/home/QuickActionsRow';
 import { DailyDuaCard } from '@/components/home/DailyDuaCard';
 import { TodaysVerseCard } from '@/components/home/TodaysVerseCard';
 import { IslamicNewsCard } from '@/components/home/IslamicNewsCard';
+import { BarakahLogo } from '@/components/BarakahLogo';
 import {
   Clock,
   BookOpen,
@@ -183,30 +184,33 @@ export const Home = () => {
 
         {/* Welcome + Prayer overview */}
         <section className="space-y-5" aria-label="Welcome and prayer overview">
-          <div className="space-y-1.5">
-            <p className="text-sm text-muted-foreground">
-              {greeting}
-            </p>
-            <h1 className="text-2xl font-semibold text-foreground tracking-tight">Barakah Home</h1>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <MapPin className="h-3 w-3 text-primary" strokeWidth={2.5} />
-              {locationLoading ? (
-                <span className="flex items-center gap-1.5">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  Getting location...
-                </span>
-              ) : locationError ? (
-                <button 
-                  onClick={refreshLocation}
-                  className="text-destructive hover:underline"
-                >
-                  {locationError} Tap to retry
-                </button>
-              ) : (
-                <span className="line-clamp-1">{location?.city}, {location?.country}</span>
-              )}
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1.5 flex-1">
+              <p className="text-sm text-muted-foreground">
+                {greeting}
+              </p>
+              <h1 className="text-2xl font-semibold text-foreground tracking-tight">Barakah Home</h1>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <MapPin className="h-3 w-3 text-primary" strokeWidth={2.5} />
+                {locationLoading ? (
+                  <span className="flex items-center gap-1.5">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Getting location...
+                  </span>
+                ) : locationError ? (
+                  <button 
+                    onClick={refreshLocation}
+                    className="text-destructive hover:underline"
+                  >
+                    {locationError} Tap to retry
+                  </button>
+                ) : (
+                  <span className="line-clamp-1">{location?.city}, {location?.country}</span>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">{currentDate}</p>
             </div>
-            <p className="text-xs text-muted-foreground">{currentDate}</p>
+            <BarakahLogo size="md" className="shrink-0" />
           </div>
 
           <PrayerOverviewCard
