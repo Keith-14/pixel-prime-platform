@@ -129,6 +129,28 @@ export const useSalahTracker = () => {
     setWeeklyLogs(data || []);
   }, [user]);
 
+  // Helper to parse date string to local Date object
+  const parseLocalDate = (dateStr: string): Date => {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  };
+
+  // Helper to get date difference in days
+  const getDayDifference = (date1: Date, date2: Date): number => {
+    const d1 = new Date(date1);
+    d1.setHours(0, 0, 0, 0);
+    const d2 = new Date(date2);
+    d2.setHours(0, 0, 0, 0);
+    return Math.round((d1.getTime() - d2.getTime()) / (1000 * 60 * 60 * 24));
+  };
+
+  // Check if all prayers are completed for a log
+  const isFullyCompleted = (log: SalahLog): boolean => {
+    return log.fajr && log.dhuhr && log.asr && log.maghrib && log.isha;
+  };
+
   const calculateStreak = useCallback(async () => {
     if (!user) return;
 
@@ -138,33 +160,80 @@ export const useSalahTracker = () => {
       .select('*')
       .eq('user_id', user.id)
       .order('date', { ascending: false })
-      .limit(100);
+      .limit(365); // Check up to a year of data
 
-    if (error || !logs) return;
+    if (error) {
+      console.error('Error fetching logs for streak:', error);
+      return;
+    }
 
     let currentStreak = 0;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const todayStr = getToday();
 
-    for (let i = 0; i < logs.length; i++) {
-      const log = logs[i];
-      // Parse date string as local date (not UTC)
-      const [year, month, day] = log.date.split('-').map(Number);
-      const logDate = new Date(year, month - 1, day);
-      logDate.setHours(0, 0, 0, 0);
+    if (!logs || logs.length === 0) {
+      // No logs at all, streak is 0
+      currentStreak = 0;
+    } else {
+      // Create a map of date -> log for quick lookup
+      const logMap = new Map<string, SalahLog>();
+      logs.forEach(log => logMap.set(log.date, log));
 
-      const expectedDate = new Date(today);
-      expectedDate.setDate(today.getDate() - i);
-      expectedDate.setHours(0, 0, 0, 0);
+      // Check if today is fully completed
+      const todayLog = logMap.get(todayStr);
+      const todayCompleted = todayLog && isFullyCompleted(todayLog);
 
-      // Check if all prayers are completed for this day
-      const allCompleted = log.fajr && log.dhuhr && log.asr && log.maghrib && log.isha;
+      // Get yesterday's date
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+      const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+      const yesterdayLog = logMap.get(yesterdayStr);
+      const yesterdayCompleted = yesterdayLog && isFullyCompleted(yesterdayLog);
 
-      // Check if this log matches the expected consecutive day
-      if (logDate.getTime() === expectedDate.getTime() && allCompleted) {
-        currentStreak++;
+      if (todayCompleted) {
+        // Today is completed, count streak starting from today
+        currentStreak = 1;
+        
+        // Count backwards from yesterday
+        let checkDate = new Date(today);
+        checkDate.setDate(checkDate.getDate() - 1);
+        
+        while (true) {
+          const checkDateStr = `${checkDate.getFullYear()}-${String(checkDate.getMonth() + 1).padStart(2, '0')}-${String(checkDate.getDate()).padStart(2, '0')}`;
+          const log = logMap.get(checkDateStr);
+          
+          if (log && isFullyCompleted(log)) {
+            currentStreak++;
+            checkDate.setDate(checkDate.getDate() - 1);
+          } else {
+            break;
+          }
+        }
+      } else if (yesterdayCompleted) {
+        // Today not complete yet, but yesterday was - show streak from yesterday
+        // This maintains the streak display until the user completes today or misses it
+        currentStreak = 1;
+        
+        // Count backwards from day before yesterday
+        let checkDate = new Date(yesterday);
+        checkDate.setDate(checkDate.getDate() - 1);
+        
+        while (true) {
+          const checkDateStr = `${checkDate.getFullYear()}-${String(checkDate.getMonth() + 1).padStart(2, '0')}-${String(checkDate.getDate()).padStart(2, '0')}`;
+          const log = logMap.get(checkDateStr);
+          
+          if (log && isFullyCompleted(log)) {
+            currentStreak++;
+            checkDate.setDate(checkDate.getDate() - 1);
+          } else {
+            break;
+          }
+        }
       } else {
-        break;
+        // Neither today nor yesterday is complete - streak is 0
+        // This handles the "missed day reset" rule
+        currentStreak = 0;
       }
     }
 
@@ -176,31 +245,30 @@ export const useSalahTracker = () => {
       .maybeSingle();
 
     const longestStreak = Math.max(currentStreak, existingStreak?.longest_streak || 0);
+    const updateData = {
+      current_streak: currentStreak,
+      longest_streak: longestStreak,
+      last_updated: todayStr,
+    };
 
     if (existingStreak) {
       await supabase
         .from('salah_streaks')
-        .update({
-          current_streak: currentStreak,
-          longest_streak: longestStreak,
-          last_updated: getToday(),
-        })
+        .update(updateData)
         .eq('user_id', user.id);
     } else {
       await supabase
         .from('salah_streaks')
         .insert({
           user_id: user.id,
-          current_streak: currentStreak,
-          longest_streak: longestStreak,
-          last_updated: getToday(),
+          ...updateData,
         });
     }
 
     setStreak({
       current_streak: currentStreak,
       longest_streak: longestStreak,
-      last_updated: getToday(),
+      last_updated: todayStr,
     });
   }, [user]);
 
