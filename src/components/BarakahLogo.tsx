@@ -11,19 +11,24 @@ export const BarakahLogo = ({ className = '', size = 'md' }: BarakahLogoProps) =
   };
 
   return (
-    <div className={`${sizeClasses[size]} ${className}`}>
-      <svg viewBox="0 0 80 100" className="w-full h-full text-primary">
-        {/* Prayer beads circle with glow effect */}
+    <div className={`${sizeClasses[size]} ${className} float`}>
+      <svg viewBox="0 0 80 100" className="w-full h-full text-primary drop-shadow-[0_0_15px_hsl(45_85%_58%/0.4)]">
+        {/* Premium glow filter */}
         <defs>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+          <filter id="logoGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
             <feMerge>
               <feMergeNode in="coloredBlur"/>
               <feMergeNode in="SourceGraphic"/>
             </feMerge>
           </filter>
+          <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="hsl(45 80% 72%)" />
+            <stop offset="50%" stopColor="hsl(45 85% 58%)" />
+            <stop offset="100%" stopColor="hsl(42 90% 48%)" />
+          </linearGradient>
         </defs>
-        <g fill="currentColor" filter="url(#glow)">
+        <g fill="url(#goldGradient)" filter="url(#logoGlow)">
           {/* Top bead */}
           <circle cx="40" cy="8" r="6" />
           {/* Main circle of beads */}

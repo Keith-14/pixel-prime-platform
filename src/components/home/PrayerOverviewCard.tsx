@@ -41,20 +41,23 @@ export const PrayerOverviewCard = ({
     return prayer ? prayer.label : t('prayer.upcoming');
   };
 
-  // Get active prayer index for the curve
   const activePrayerIndex = PRAYER_NAMES.findIndex(p => p.key === activePrayer);
 
   return (
-    <Card className="relative overflow-hidden border border-primary/30 bg-card/80 backdrop-blur-sm p-5 shadow-lg">
-      {/* Ambient glow at horizon */}
-      <div className="absolute inset-x-0 bottom-1/3 h-24 bg-[radial-gradient(ellipse_at_center,hsl(45_70%_50%/0.15),transparent_70%)]" />
+    <Card className="relative overflow-hidden glass-gold p-5 shine-effect border-glow">
+      {/* Gradient overlays for depth */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-emerald-dark/10 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-40 h-40 bg-[radial-gradient(circle_at_top_right,hsl(45_85%_58%/0.15),transparent_60%)] pointer-events-none" />
+      
+      {/* Ambient horizon glow */}
+      <div className="absolute inset-x-0 bottom-1/4 h-20 bg-[radial-gradient(ellipse_at_center,hsl(45_85%_55%/0.2),transparent_70%)] pointer-events-none" />
       
       <div className="relative z-10 flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary/80">
             {t('home.next_prayer')}
           </p>
-          <p className="mt-2 text-2xl font-bold tracking-tight text-foreground">
+          <p className="mt-2 text-3xl font-bold tracking-tight text-gold-gradient">
             {getDisplayPrayerName()}
           </p>
           <p className="mt-2 text-xs text-muted-foreground max-w-[180px] leading-relaxed">
@@ -63,59 +66,75 @@ export const PrayerOverviewCard = ({
         </div>
 
         <div className="text-right flex items-start gap-3">
-          <Moon className="h-10 w-10 text-primary mt-1" strokeWidth={1.5} />
+          <div className="relative">
+            <div className="absolute inset-0 bg-primary/30 rounded-full blur-xl animate-pulse" />
+            <Moon className="h-12 w-12 text-primary relative z-10 float drop-shadow-[0_0_15px_hsl(45_85%_58%/0.5)]" strokeWidth={1} fill="hsl(45 85% 58% / 0.1)" />
+          </div>
           <div>
-            <p className="text-3xl font-bold tabular-nums tracking-tight text-primary">
+            <p className="text-4xl font-bold tabular-nums tracking-tight text-gold-gradient drop-shadow-[0_0_20px_hsl(45_85%_58%/0.3)]">
               {currentTime || "--:--:--"}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Prayer timeline with curve */}
-      <div className="relative z-10 mt-6">
-        {/* Curved line SVG */}
+      {/* Prayer timeline with premium curve */}
+      <div className="relative z-10 mt-8">
+        {/* Curved line SVG with glow */}
         <svg 
-          className="absolute inset-x-0 top-0 h-12 w-full" 
-          viewBox="0 0 320 48" 
+          className="absolute inset-x-0 top-0 h-14 w-full" 
+          viewBox="0 0 320 56" 
           preserveAspectRatio="none"
         >
+          <defs>
+            <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="hsl(45 85% 58% / 0.2)" />
+              <stop offset="50%" stopColor="hsl(45 85% 58% / 0.6)" />
+              <stop offset="100%" stopColor="hsl(45 85% 58% / 0.2)" />
+            </linearGradient>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
           <path
-            d="M 10 40 Q 80 5, 160 5 Q 240 5, 310 40"
+            d="M 10 45 Q 80 8, 160 8 Q 240 8, 310 45"
             fill="none"
-            stroke="hsl(45 70% 55% / 0.4)"
+            stroke="url(#lineGradient)"
             strokeWidth="2"
+            filter="url(#glow)"
           />
-          {/* Glowing dot on curve based on active prayer */}
-          {activePrayerIndex >= 0 && (
-            <circle
-              cx={10 + (activePrayerIndex * 75)}
-              cy={activePrayerIndex === 2 ? 5 : activePrayerIndex === 1 || activePrayerIndex === 3 ? 15 : 35}
-              r="6"
-              fill="hsl(45 70% 55%)"
-              className="animate-pulse"
-              style={{ filter: 'drop-shadow(0 0 8px hsl(45 70% 55%))' }}
-            />
-          )}
+          {/* Animated dots on curve */}
+          {PRAYER_NAMES.map((_, index) => {
+            const x = 10 + (index * 75);
+            const y = index === 2 ? 8 : index === 1 || index === 3 ? 20 : 42;
+            const isActivePrayer = index === activePrayerIndex;
+            return (
+              <circle
+                key={index}
+                cx={x}
+                cy={y}
+                r={isActivePrayer ? 8 : 4}
+                fill={isActivePrayer ? "hsl(45 85% 58%)" : "hsl(45 85% 58% / 0.3)"}
+                filter={isActivePrayer ? "url(#glow)" : undefined}
+                className={isActivePrayer ? "animate-pulse" : ""}
+              />
+            );
+          })}
         </svg>
 
         {/* Prayer labels */}
-        <div className="flex items-end justify-between pt-10 px-2">
-          {PRAYER_NAMES.map(({ key, label }, index) => (
-            <div key={key} className="flex flex-col items-center gap-1.5">
+        <div className="flex items-end justify-between pt-14 px-1">
+          {PRAYER_NAMES.map(({ key, label }) => (
+            <div key={key} className="flex flex-col items-center gap-1">
               <span
                 className={cn(
-                  "h-2 w-2 rounded-full transition-all duration-300",
+                  "text-[10px] tracking-wider transition-all duration-300 font-medium",
                   activePrayer === key 
-                    ? "bg-primary scale-125 shadow-[0_0_8px_hsl(45_70%_55%)]" 
-                    : "bg-muted-foreground/40"
-                )}
-              />
-              <span
-                className={cn(
-                  "text-[10px] tracking-wide transition-all duration-300",
-                  activePrayer === key 
-                    ? "font-bold text-foreground" 
+                    ? "text-primary font-bold text-xs" 
                     : "text-muted-foreground"
                 )}
               >

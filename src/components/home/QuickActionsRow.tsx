@@ -18,12 +18,15 @@ export const QuickActionsRow = ({ items }: QuickActionsRowProps) => {
           key={label}
           type="button"
           onClick={onClick}
-          className="flex flex-col items-center justify-center rounded-2xl bg-card/80 backdrop-blur-sm border border-primary/30 px-2 py-4 text-foreground shadow-sm transition-all duration-200 hover:bg-card hover:border-primary/50 hover:shadow-[0_0_20px_-5px_hsl(45_70%_55%/0.3)] active:scale-[0.98]"
+          className="group relative flex flex-col items-center justify-center rounded-2xl glass-gold px-2 py-4 text-foreground transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_30px_-5px_hsl(45_85%_58%/0.3)] active:scale-[0.98] shine-effect border-glow"
         >
-          <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Icon className="h-6 w-6" strokeWidth={1.5} />
+          {/* Hover glow effect */}
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          
+          <span className="relative flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 group-hover:border-primary/40 transition-all duration-300 group-hover:shadow-[0_0_20px_-3px_hsl(45_85%_58%/0.4)]">
+            <Icon className="h-6 w-6 text-primary transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_hsl(45_85%_58%/0.5)]" strokeWidth={1.5} />
           </span>
-          <span className="mt-2 text-[10px] font-semibold uppercase tracking-wider text-primary">{label}</span>
+          <span className="relative mt-2.5 text-[10px] font-bold uppercase tracking-wider text-primary/90 group-hover:text-primary transition-colors duration-300">{label}</span>
         </button>
       ))}
     </div>
