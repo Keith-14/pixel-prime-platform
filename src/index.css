@@ -2,113 +2,115 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+/* Definition of the design system - Dark Atmospheric Islamic Theme
 All colors MUST be HSL.
 */
 
 @layer base {
   :root {
-    --background: 200 20% 98%;
-    --foreground: 210 25% 15%;
+    --background: 120 15% 6%;
+    --foreground: 45 40% 85%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 210 25% 15%;
+    --card: 120 20% 10%;
+    --card-foreground: 45 40% 85%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 210 25% 15%;
+    --popover: 120 20% 10%;
+    --popover-foreground: 45 40% 85%;
 
-    --primary: 207 70% 45%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 45 70% 55%;
+    --primary-foreground: 120 15% 6%;
 
-    --secondary: 200 25% 94%;
-    --secondary-foreground: 207 70% 35%;
+    --secondary: 120 25% 15%;
+    --secondary-foreground: 45 40% 85%;
 
-    --muted: 200 15% 95%;
-    --muted-foreground: 210 10% 50%;
+    --muted: 120 15% 15%;
+    --muted-foreground: 45 20% 55%;
 
-    --accent: 207 50% 92%;
-    --accent-foreground: 210 25% 15%;
+    --accent: 120 30% 18%;
+    --accent-foreground: 45 40% 85%;
 
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 200 20% 90%;
-    --input: 200 20% 92%;
-    --ring: 207 70% 45%;
+    --border: 120 30% 20%;
+    --input: 120 20% 15%;
+    --ring: 45 70% 55%;
 
-    /* Custom Islamic app colors - refined */
-    --sage: 207 70% 45%;
-    --sage-light: 207 50% 94%;
-    --sage-dark: 207 75% 32%;
-    --cream: 200 20% 98%;
-    --cream-dark: 200 15% 94%;
+    /* Custom Islamic theme colors */
+    --gold: 45 70% 55%;
+    --gold-light: 45 60% 70%;
+    --gold-dark: 45 80% 40%;
+    --emerald: 140 50% 35%;
+    --emerald-light: 140 40% 45%;
+    --emerald-dark: 140 60% 20%;
     
-    /* Premium Gradients */
-    --gradient-sage: linear-gradient(145deg, hsl(207 70% 48%), hsl(207 75% 38%));
-    --gradient-subtle: linear-gradient(180deg, hsl(var(--background)), hsl(200 15% 96%));
-    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(200 20% 99%));
+    /* Atmospheric gradients */
+    --gradient-dark: linear-gradient(180deg, hsl(120 15% 4%), hsl(120 20% 8%));
+    --gradient-card: linear-gradient(145deg, hsl(120 25% 12%), hsl(120 20% 8%));
+    --gradient-gold: linear-gradient(145deg, hsl(45 70% 55%), hsl(45 80% 40%));
+    --gradient-glow: radial-gradient(ellipse at center, hsl(45 70% 50% / 0.15), transparent 70%);
     
-    /* Premium Shadows */
-    --shadow-sm: 0 1px 2px 0 hsl(207 20% 10% / 0.03);
-    --shadow-md: 0 4px 12px -2px hsl(207 20% 10% / 0.06);
-    --shadow-lg: 0 8px 24px -4px hsl(207 20% 10% / 0.08);
-    --shadow-sage: 0 4px 16px -4px hsl(var(--sage) / 0.25);
+    /* Atmospheric shadows */
+    --shadow-glow: 0 0 30px -5px hsl(45 70% 50% / 0.2);
+    --shadow-card: 0 4px 20px -4px hsl(0 0% 0% / 0.5);
+    --shadow-gold: 0 0 20px -5px hsl(45 70% 55% / 0.4);
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
-    --sidebar-background: 0 0% 99%;
-    --sidebar-foreground: 210 20% 25%;
-    --sidebar-primary: 207 70% 45%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 200 20% 96%;
-    --sidebar-accent-foreground: 210 20% 25%;
-    --sidebar-border: 200 20% 92%;
-    --sidebar-ring: 207 70% 50%;
+    --sidebar-background: 120 20% 8%;
+    --sidebar-foreground: 45 40% 85%;
+    --sidebar-primary: 45 70% 55%;
+    --sidebar-primary-foreground: 120 15% 6%;
+    --sidebar-accent: 120 25% 15%;
+    --sidebar-accent-foreground: 45 40% 85%;
+    --sidebar-border: 120 30% 20%;
+    --sidebar-ring: 45 70% 55%;
   }
 
   .dark {
-    --background: 220 20% 8%;
-    --foreground: 210 20% 95%;
+    --background: 120 15% 6%;
+    --foreground: 45 40% 85%;
 
-    --card: 220 18% 11%;
-    --card-foreground: 210 20% 95%;
+    --card: 120 20% 10%;
+    --card-foreground: 45 40% 85%;
 
-    --popover: 220 18% 11%;
-    --popover-foreground: 210 20% 95%;
+    --popover: 120 20% 10%;
+    --popover-foreground: 45 40% 85%;
 
-    --primary: 207 65% 55%;
-    --primary-foreground: 220 20% 8%;
+    --primary: 45 70% 55%;
+    --primary-foreground: 120 15% 6%;
 
-    --secondary: 220 15% 18%;
-    --secondary-foreground: 210 20% 90%;
+    --secondary: 120 25% 15%;
+    --secondary-foreground: 45 40% 85%;
 
-    --muted: 220 15% 15%;
-    --muted-foreground: 210 15% 60%;
+    --muted: 120 15% 15%;
+    --muted-foreground: 45 20% 55%;
 
-    --accent: 220 15% 18%;
-    --accent-foreground: 210 20% 95%;
+    --accent: 120 30% 18%;
+    --accent-foreground: 45 40% 85%;
 
     --destructive: 0 62% 45%;
-    --destructive-foreground: 210 20% 95%;
+    --destructive-foreground: 45 40% 85%;
 
-    --border: 220 15% 18%;
-    --input: 220 15% 18%;
-    --ring: 207 65% 55%;
+    --border: 120 30% 20%;
+    --input: 120 20% 15%;
+    --ring: 45 70% 55%;
 
-    --sage: 207 65% 55%;
-    --sage-light: 207 40% 25%;
-    --sage-dark: 207 70% 45%;
-    --cream: 220 20% 8%;
-    --cream-dark: 220 15% 12%;
+    --gold: 45 70% 55%;
+    --gold-light: 45 60% 70%;
+    --gold-dark: 45 80% 40%;
+    --emerald: 140 50% 35%;
+    --emerald-light: 140 40% 45%;
+    --emerald-dark: 140 60% 20%;
 
-    --sidebar-background: 220 18% 10%;
-    --sidebar-foreground: 210 20% 90%;
-    --sidebar-primary: 207 65% 55%;
-    --sidebar-primary-foreground: 220 20% 8%;
-    --sidebar-accent: 220 15% 15%;
-    --sidebar-accent-foreground: 210 20% 90%;
-    --sidebar-border: 220 15% 15%;
-    --sidebar-ring: 207 65% 55%;
+    --sidebar-background: 120 20% 8%;
+    --sidebar-foreground: 45 40% 85%;
+    --sidebar-primary: 45 70% 55%;
+    --sidebar-primary-foreground: 120 15% 6%;
+    --sidebar-accent: 120 25% 15%;
+    --sidebar-accent-foreground: 45 40% 85%;
+    --sidebar-border: 120 30% 20%;
+    --sidebar-ring: 45 70% 55%;
   }
 }
 
@@ -135,6 +137,31 @@ All colors MUST be HSL.
   .transition-slow {
     transition: all 350ms cubic-bezier(0.4, 0, 0.2, 1);
   }
+  
+  /* Glow effects */
+  .glow-gold {
+    box-shadow: 0 0 20px -5px hsl(45 70% 55% / 0.4);
+  }
+  
+  .glow-soft {
+    box-shadow: 0 0 30px -5px hsl(45 70% 50% / 0.2);
+  }
+  
+  /* Starry background */
+  .bg-stars {
+    background-image: 
+      radial-gradient(1px 1px at 20px 30px, hsl(45 60% 70% / 0.3), transparent),
+      radial-gradient(1px 1px at 40px 70px, hsl(45 60% 70% / 0.2), transparent),
+      radial-gradient(1px 1px at 50px 160px, hsl(45 60% 70% / 0.3), transparent),
+      radial-gradient(1px 1px at 90px 40px, hsl(45 60% 70% / 0.2), transparent),
+      radial-gradient(1px 1px at 130px 80px, hsl(45 60% 70% / 0.3), transparent),
+      radial-gradient(1px 1px at 160px 120px, hsl(45 60% 70% / 0.2), transparent),
+      radial-gradient(1.5px 1.5px at 200px 50px, hsl(45 60% 70% / 0.4), transparent),
+      radial-gradient(1px 1px at 250px 100px, hsl(45 60% 70% / 0.2), transparent),
+      radial-gradient(1px 1px at 300px 150px, hsl(45 60% 70% / 0.3), transparent),
+      radial-gradient(1.5px 1.5px at 350px 30px, hsl(45 60% 70% / 0.3), transparent);
+    background-size: 400px 200px;
+  }
 
   /* Interactive hover states */
   .hover-lift {
@@ -143,7 +170,7 @@ All colors MUST be HSL.
   
   .hover-lift:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 0 20px -5px hsl(45 70% 55% / 0.3);
   }
   
   .hover-scale {
@@ -178,7 +205,7 @@ All colors MUST be HSL.
   
   .card-interactive:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 25px -5px hsl(45 70% 55% / 0.2);
   }
   
   .card-interactive:active {
@@ -193,5 +220,13 @@ All colors MUST be HSL.
   .btn-press:active {
     transform: scale(0.97);
     opacity: 0.9;
+  }
+
+  /* Gold text gradient */
+  .text-gold-gradient {
+    background: linear-gradient(145deg, hsl(45 70% 65%), hsl(45 80% 50%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 }

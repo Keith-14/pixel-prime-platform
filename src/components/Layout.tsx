@@ -33,9 +33,13 @@ export const Layout = ({ children, showNavigation = true, showHeader = true }: L
 
   return (
     <div className="min-h-screen bg-background flex flex-col max-w-md mx-auto relative overflow-hidden">
-      {/* Clean subtle gradient background */}
+      {/* Atmospheric starry background */}
+      <div className="fixed inset-0 pointer-events-none bg-stars opacity-60" />
+      
+      {/* Ambient glow effects */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.02] via-transparent to-primary/[0.01]" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-[radial-gradient(ellipse_at_center,hsl(45_70%_50%/0.08),transparent_60%)]" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-32 bg-gradient-to-t from-background to-transparent" />
       </div>
       
       {showHeader && <TopHeader onMenuClick={handleMenuClick} />}

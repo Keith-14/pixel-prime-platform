@@ -18,7 +18,7 @@ export const BottomNavigation = () => {
 
   return (
     <nav className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md z-30 px-4 pb-4">
-      <div className="bg-card/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-lg">
+      <div className="bg-card/90 backdrop-blur-xl border border-primary/30 rounded-2xl shadow-lg">
         <div className="flex justify-around py-2">
           {navItems.map(({ icon: Icon, labelKey, path }) => {
             const isActive = location.pathname === path;
@@ -35,7 +35,7 @@ export const BottomNavigation = () => {
               >
                 <div className={cn(
                   "p-2 rounded-xl transition-all duration-200",
-                  isActive && "bg-primary/10"
+                  isActive && "bg-primary/15 glow-soft"
                 )}>
                   <Icon className={cn(
                     "h-5 w-5 transition-all duration-200",
@@ -44,7 +44,7 @@ export const BottomNavigation = () => {
                 </div>
                 <span className={cn(
                   "mt-1 transition-all duration-200",
-                  isActive && "font-semibold"
+                  isActive && "font-semibold text-primary"
                 )}>{t(labelKey)}</span>
               </button>
             );

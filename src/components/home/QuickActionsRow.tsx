@@ -18,12 +18,12 @@ export const QuickActionsRow = ({ items }: QuickActionsRowProps) => {
           key={label}
           type="button"
           onClick={onClick}
-          className="flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-[hsl(205,90%,95%)] via-[hsl(210,85%,92%)] to-[hsl(215,80%,88%)] border border-[hsl(210,60%,85%)]/50 px-2 py-3.5 text-foreground shadow-sm transition-all duration-200 hover:shadow-md hover:from-[hsl(205,90%,92%)] hover:to-[hsl(215,80%,85%)] active:scale-[0.98]"
+          className="flex flex-col items-center justify-center rounded-2xl bg-card/80 backdrop-blur-sm border border-primary/30 px-2 py-4 text-foreground shadow-sm transition-all duration-200 hover:bg-card hover:border-primary/50 hover:shadow-[0_0_20px_-5px_hsl(45_70%_55%/0.3)] active:scale-[0.98]"
         >
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/60 text-[hsl(210,80%,50%)]">
-            <Icon className="h-5 w-5" strokeWidth={2} />
+          <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Icon className="h-6 w-6" strokeWidth={1.5} />
           </span>
-          <span className="mt-2 text-[11px] font-medium text-[hsl(210,50%,40%)]">{label}</span>
+          <span className="mt-2 text-[10px] font-semibold uppercase tracking-wider text-primary">{label}</span>
         </button>
       ))}
     </div>

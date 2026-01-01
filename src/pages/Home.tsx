@@ -170,17 +170,17 @@ export const Home = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="text-foreground hover:bg-primary/10 rounded-xl h-10 w-10"
+            className="text-foreground hover:bg-primary/10 hover:text-primary rounded-xl h-10 w-10 border border-transparent hover:border-primary/30"
             onClick={() => setIsMenuOpen(true)}
           >
-            <Menu className="h-5 w-5" strokeWidth={2} />
+            <Menu className="h-5 w-5" strokeWidth={1.5} />
           </Button>
           <Button 
             variant="ghost" 
             size="icon" 
-            className="text-foreground hover:bg-primary/10 rounded-xl h-10 w-10"
+            className="text-foreground hover:bg-primary/10 hover:text-primary rounded-xl h-10 w-10 border border-transparent hover:border-primary/30"
           >
-            <Bell className="h-5 w-5" strokeWidth={2} />
+            <Bell className="h-5 w-5" strokeWidth={1.5} />
           </Button>
         </div>
 
@@ -191,9 +191,9 @@ export const Home = () => {
               <p className="text-sm text-muted-foreground">
                 {greeting}
               </p>
-              <h1 className="text-2xl font-semibold text-foreground tracking-tight">{t('home.title')}</h1>
+              <h1 className="text-2xl font-bold text-primary tracking-tight">{t('home.title')}</h1>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <MapPin className="h-3 w-3 text-primary" strokeWidth={2.5} />
+                <MapPin className="h-3 w-3 text-primary" strokeWidth={2} />
                 {locationLoading ? (
                   <span className="flex items-center gap-1.5">
                     <Loader2 className="h-3 w-3 animate-spin" />
@@ -248,9 +248,9 @@ export const Home = () => {
         className={`fixed inset-0 z-50 ${isMenuOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
         onClick={() => setIsMenuOpen(false)}
       >
-        <div className={`absolute inset-0 bg-foreground/20 backdrop-blur-sm transition-opacity duration-300 ${isMenuOpen ? 'opacity-100' : 'opacity-0'}`} />
+        <div className={`absolute inset-0 bg-background/80 backdrop-blur-sm transition-opacity duration-300 ${isMenuOpen ? 'opacity-100' : 'opacity-0'}`} />
         <div 
-          className={`absolute left-0 top-0 h-full w-80 bg-card shadow-2xl transition-transform duration-300 ease-out ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
+          className={`absolute left-0 top-0 h-full w-80 bg-card border-r border-primary/30 shadow-2xl transition-transform duration-300 ease-out ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
           onClick={(e) => e.stopPropagation()}
         >
           <SideMenuContent onClose={() => setIsMenuOpen(false)} />
@@ -280,13 +280,13 @@ const SideMenuContent = ({ onClose }: { onClose: () => void }) => {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-6 py-5 bg-primary text-primary-foreground">
-        <h2 className="text-xl font-semibold tracking-tight">Barakah</h2>
+      <div className="flex items-center justify-between px-6 py-5 bg-gradient-to-r from-primary/20 to-primary/10 border-b border-primary/30">
+        <h2 className="text-xl font-semibold tracking-tight text-primary">Barakah</h2>
         <Button 
           variant="ghost" 
           size="icon" 
           onClick={onClose}
-          className="hover:bg-primary-foreground/10 rounded-xl h-10 w-10 text-primary-foreground"
+          className="hover:bg-primary/10 rounded-xl h-10 w-10 text-primary border border-primary/30"
         >
           ✕
         </Button>
@@ -299,7 +299,7 @@ const SideMenuContent = ({ onClose }: { onClose: () => void }) => {
               navigate(item.path);
               onClose();
             }}
-            className="w-full text-left px-4 py-3.5 rounded-xl text-foreground hover:bg-primary/5 transition-colors duration-200 font-medium"
+            className="w-full text-left px-4 py-3.5 rounded-xl text-foreground hover:bg-primary/10 hover:text-primary transition-colors duration-200 font-medium"
           >
             {t(item.labelKey)}
           </button>
@@ -309,7 +309,7 @@ const SideMenuContent = ({ onClose }: { onClose: () => void }) => {
         <div className="px-3 pb-6">
           <button
             onClick={() => signOut()}
-            className="w-full text-left px-4 py-3.5 rounded-xl text-destructive hover:bg-destructive/5 transition-colors duration-200 font-medium"
+            className="w-full text-left px-4 py-3.5 rounded-xl text-destructive hover:bg-destructive/10 transition-colors duration-200 font-medium"
           >
             {t('menu.sign_out')}
           </button>

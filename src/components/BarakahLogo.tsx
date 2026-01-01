@@ -13,8 +13,17 @@ export const BarakahLogo = ({ className = '', size = 'md' }: BarakahLogoProps) =
   return (
     <div className={`${sizeClasses[size]} ${className}`}>
       <svg viewBox="0 0 80 100" className="w-full h-full text-primary">
-        {/* Prayer beads circle */}
-        <g fill="currentColor">
+        {/* Prayer beads circle with glow effect */}
+        <defs>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+        <g fill="currentColor" filter="url(#glow)">
           {/* Top bead */}
           <circle cx="40" cy="8" r="6" />
           {/* Main circle of beads */}
