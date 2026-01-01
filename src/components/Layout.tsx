@@ -33,13 +33,26 @@ export const Layout = ({ children, showNavigation = true, showHeader = true }: L
 
   return (
     <div className="min-h-screen bg-background flex flex-col max-w-md mx-auto relative overflow-hidden">
-      {/* Atmospheric starry background */}
-      <div className="fixed inset-0 pointer-events-none bg-stars opacity-60" />
-      
-      {/* Ambient glow effects */}
+      {/* Multi-layer atmospheric background */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-[radial-gradient(ellipse_at_center,hsl(45_70%_50%/0.08),transparent_60%)]" />
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-32 bg-gradient-to-t from-background to-transparent" />
+        {/* Base gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[hsl(140_25%_7%)] via-[hsl(140_20%_5%)] to-[hsl(140_15%_3%)]" />
+        
+        {/* Starry layer */}
+        <div className="absolute inset-0 bg-stars opacity-70" />
+        
+        {/* Top gold glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-[radial-gradient(ellipse_at_top,hsl(45_85%_58%/0.12),transparent_60%)]" />
+        
+        {/* Center horizon glow */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-full h-[300px] bg-[radial-gradient(ellipse_at_center,hsl(45_85%_50%/0.08),transparent_70%)]" />
+        
+        {/* Subtle emerald accent */}
+        <div className="absolute bottom-0 left-0 w-1/2 h-[400px] bg-[radial-gradient(ellipse_at_bottom_left,hsl(145_55%_30%/0.08),transparent_60%)]" />
+        <div className="absolute bottom-0 right-0 w-1/2 h-[400px] bg-[radial-gradient(ellipse_at_bottom_right,hsl(145_55%_30%/0.08),transparent_60%)]" />
+        
+        {/* Bottom fade */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
       </div>
       
       {showHeader && <TopHeader onMenuClick={handleMenuClick} />}

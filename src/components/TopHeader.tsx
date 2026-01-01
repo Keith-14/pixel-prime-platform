@@ -11,7 +11,7 @@ export const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
       <Button 
         variant="ghost" 
         size="icon" 
-        className="text-foreground hover:bg-primary/10 hover:text-primary rounded-xl h-10 w-10 border border-transparent hover:border-primary/30"
+        className="text-foreground hover:bg-primary/15 hover:text-primary rounded-xl h-10 w-10 border border-transparent hover:border-primary/40 hover:shadow-[0_0_15px_-5px_hsl(45_85%_58%/0.3)] transition-all duration-300"
         onClick={onMenuClick}
       >
         <Menu className="h-5 w-5" strokeWidth={1.5} />
@@ -20,7 +20,7 @@ export const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
       <Button 
         variant="ghost" 
         size="icon" 
-        className="text-foreground hover:bg-primary/10 hover:text-primary rounded-xl h-10 w-10 border border-transparent hover:border-primary/30"
+        className="text-foreground hover:bg-primary/15 hover:text-primary rounded-xl h-10 w-10 border border-transparent hover:border-primary/40 hover:shadow-[0_0_15px_-5px_hsl(45_85%_58%/0.3)] transition-all duration-300"
       >
         <Bell className="h-5 w-5" strokeWidth={1.5} />
       </Button>

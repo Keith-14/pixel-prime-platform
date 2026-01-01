@@ -5,24 +5,24 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium ring-offset-background transition-all duration-[200ms] ease-[cubic-bezier(0.4,0,0.2,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.97] active:opacity-90",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold ring-offset-background transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.97]",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_20px_-5px_hsl(45_70%_55%/0.4)]",
+        default: "bg-gradient-to-r from-primary via-primary to-[hsl(42_90%_48%)] text-primary-foreground shadow-[0_0_20px_-5px_hsl(45_85%_58%/0.5)] hover:shadow-[0_0_30px_-5px_hsl(45_85%_58%/0.6)] hover:brightness-110",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 hover:shadow-md",
+          "bg-gradient-to-r from-destructive to-[hsl(0_62%_40%)] text-destructive-foreground shadow-md hover:shadow-lg hover:brightness-110",
         outline:
-          "border border-primary/30 bg-transparent text-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/50",
+          "border border-primary/40 bg-transparent text-foreground hover:bg-primary/15 hover:text-primary hover:border-primary/60 hover:shadow-[0_0_20px_-5px_hsl(45_85%_58%/0.25)]",
         secondary:
-          "bg-secondary text-secondary-foreground border border-primary/20 hover:bg-secondary/80 hover:border-primary/30",
-        ghost: "hover:bg-primary/10 hover:text-primary",
+          "bg-gradient-to-r from-secondary to-[hsl(140_25%_10%)] text-secondary-foreground border border-primary/25 hover:border-primary/40 hover:shadow-[0_0_15px_-5px_hsl(45_85%_58%/0.2)]",
+        ghost: "hover:bg-primary/15 hover:text-primary",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-10 px-4 py-2",
+        default: "h-11 px-5 py-2",
         sm: "h-9 rounded-lg px-3",
-        lg: "h-11 rounded-xl px-8",
+        lg: "h-12 rounded-xl px-8",
         icon: "h-10 w-10",
       },
     },
