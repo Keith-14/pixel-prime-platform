@@ -129,24 +129,29 @@ export const Register = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center max-w-md mx-auto relative overflow-hidden">
-      {/* Background with sage green gradient #6a8b74 */}
+      {/* Background with sage green tint #6a8b74 */}
       <div className="fixed inset-0 pointer-events-none">
-        {/* Deep black base */}
-        <div className="absolute inset-0 bg-[#0a0a0a]" />
-        
-        {/* Sage green gradient at top - fading into black */}
+        {/* Dark green-tinted base */}
         <div 
-          className="absolute top-0 left-0 right-0 h-[70%]"
+          className="absolute inset-0"
           style={{ 
-            background: 'linear-gradient(180deg, rgba(106, 139, 116, 0.3) 0%, rgba(106, 139, 116, 0.15) 25%, rgba(106, 139, 116, 0.05) 50%, transparent 100%)' 
+            background: 'linear-gradient(180deg, rgba(40, 55, 45, 1) 0%, rgba(25, 35, 28, 1) 50%, rgba(15, 20, 16, 1) 100%)' 
           }}
         />
         
-        {/* Subtle radial glow at top-right corner for depth */}
+        {/* Sage green overlay for the tint */}
         <div 
-          className="absolute -top-10 -right-10 w-[350px] h-[350px]"
+          className="absolute inset-0"
           style={{ 
-            background: 'radial-gradient(circle, rgba(106, 139, 116, 0.25) 0%, transparent 70%)' 
+            background: 'rgba(106, 139, 116, 0.08)' 
+          }}
+        />
+        
+        {/* Subtle lighter glow at top center */}
+        <div 
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[50%]"
+          style={{ 
+            background: 'radial-gradient(ellipse at top, rgba(106, 139, 116, 0.15) 0%, transparent 70%)' 
           }}
         />
       </div>
