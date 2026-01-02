@@ -78,7 +78,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Bottom Navigation
     'nav.home': 'Home',
     'nav.quran': 'Quran',
-    'nav.guftagu': 'Guftagu',
+    'nav.guftagu': 'Ummah',
     'nav.places': 'Places',
     'nav.account': 'Account',
     
@@ -168,7 +168,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Bottom Navigation
     'nav.home': 'ہوم',
     'nav.quran': 'قرآن',
-    'nav.guftagu': 'گفتگو',
+    'nav.guftagu': 'امہ',
     'nav.places': 'مقامات',
     'nav.account': 'اکاؤنٹ',
     
@@ -258,7 +258,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Bottom Navigation
     'nav.home': 'الرئيسية',
     'nav.quran': 'القرآن',
-    'nav.guftagu': 'حوار',
+    'nav.guftagu': 'الأمة',
     'nav.places': 'الأماكن',
     'nav.account': 'الحساب',
     
