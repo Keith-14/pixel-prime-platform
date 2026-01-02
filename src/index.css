@@ -110,11 +110,11 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Amiri', 'Scheherazade New', serif;
+    font-family: 'El Messiri', sans-serif;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Scheherazade New', 'Amiri', serif;
+    font-family: 'Aref Ruqaa', serif;
   }
 }
 
