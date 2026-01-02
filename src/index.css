@@ -110,11 +110,12 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'El Messiri', sans-serif;
+    font-family: 'Reem Kufi', 'Amiri', sans-serif;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Aref Ruqaa', serif;
+    font-family: 'Reem Kufi', serif;
+    font-weight: 600;
   }
 }
 

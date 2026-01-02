@@ -19,8 +19,8 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				'arabic': ['"Aref Ruqaa"', 'serif'],
-				'body': ['"El Messiri"', 'sans-serif'],
+				'arabic': ['"Reem Kufi"', 'sans-serif'],
+				'body': ['"Reem Kufi"', '"Amiri"', 'sans-serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
