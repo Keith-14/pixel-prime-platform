@@ -5,121 +5,237 @@ export const LoadingScreen = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Auto redirect after 3 seconds
+    // Auto redirect after 4 seconds to give time for animation
     const timer = setTimeout(() => {
       navigate('/login');
-    }, 3000);
+    }, 4000);
 
     return () => clearTimeout(timer);
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-cream flex items-center justify-center max-w-md mx-auto relative overflow-hidden">
-      {/* Islamic pattern background - more prominent for loading screen */}
-      <div className="absolute inset-0 opacity-40">
+    <div className="min-h-screen flex items-center justify-center max-w-md mx-auto relative overflow-hidden">
+      {/* Dark sage gradient background */}
+      <div className="fixed inset-0 pointer-events-none">
         <div 
           className="absolute inset-0"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23B8A082' fill-opacity='0.6'%3E%3Cpath d='M50 50c0-27.614-22.386-50-50-50v50h50zM0 50v50h50c0-27.614-22.386-50-50-50z'/%3E%3C/g%3E%3C/svg%3E")`,
-            backgroundSize: '100px 100px'
+          style={{ 
+            background: 'linear-gradient(180deg, rgba(40, 55, 45, 1) 0%, rgba(25, 35, 28, 1) 50%, rgba(15, 20, 16, 1) 100%)' 
           }}
         />
-        {/* Additional decorative Islamic geometric pattern */}
         <div 
           className="absolute inset-0"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%236B8E7A' fill-opacity='0.2'%3E%3Cpath d='M30 60c16.569 0 30-13.431 30-30s-13.431-30-30-30-30 13.431-30 30 13.431 30 30 30zm30 0c16.569 0 30-13.431 30-30s-13.431-30-30-30-30 13.431-30 30 13.431 30 30 30z'/%3E%3C/g%3E%3C/svg%3E")`,
-            backgroundSize: '120px 120px'
+          style={{ background: 'rgba(106, 139, 116, 0.08)' }}
+        />
+        <div 
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[50%]"
+          style={{ 
+            background: 'radial-gradient(ellipse at top, rgba(106, 139, 116, 0.15) 0%, transparent 70%)' 
           }}
         />
       </div>
 
-      {/* Islamic dome/arch silhouette */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="relative">
-          {/* Main dome shape */}
-          <svg 
-            width="350" 
-            height="500" 
-            viewBox="0 0 350 500" 
-            className="text-sage/60"
-            style={{
-              filter: 'drop-shadow(0 10px 30px rgba(107, 142, 122, 0.3))'
-            }}
-          >
-            {/* Islamic arch/dome silhouette */}
-            <path 
-              d="M50 450 L50 200 Q50 50 175 50 Q300 50 300 200 L300 450 Z" 
-              fill="currentColor" 
-              fillOpacity="0.8"
-            />
-            {/* Decorative arch details */}
-            <path 
-              d="M70 430 L70 200 Q70 70 175 70 Q280 70 280 200 L280 430" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeOpacity="0.6"
-            />
-            <path 
-              d="M90 410 L90 200 Q90 90 175 90 Q260 90 260 200 L260 410" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="1" 
-              strokeOpacity="0.4"
-            />
-          </svg>
-        </div>
-      </div>
-
-      {/* Content overlay */}
+      {/* Content */}
       <div className="relative z-10 text-center">
-        {/* Prayer beads icon - larger for splash screen */}
-        <div className="w-32 h-32 mx-auto mb-8 flex items-center justify-center">
-          <svg width="100" height="120" viewBox="0 0 100 120" className="text-cream animate-pulse">
-            {/* Prayer beads circle with enhanced design */}
-            <g fill="currentColor">
-              {/* Top bead */}
-              <circle cx="50" cy="10" r="7" />
-              {/* Main circle of beads - larger */}
-              <circle cx="75" cy="30" r="6" />
-              <circle cx="85" cy="55" r="6" />
-              <circle cx="75" cy="80" r="6" />
-              <circle cx="50" cy="92" r="6" />
-              <circle cx="25" cy="80" r="6" />
-              <circle cx="15" cy="55" r="6" />
-              <circle cx="25" cy="30" r="6" />
-              <circle cx="50" cy="18" r="6" />
-              {/* Inner circle beads */}
-              <circle cx="57" cy="25" r="5" />
-              <circle cx="65" cy="38" r="5" />
-              <circle cx="65" cy="52" r="5" />
-              <circle cx="65" cy="66" r="5" />
-              <circle cx="57" cy="78" r="5" />
-              <circle cx="43" cy="78" r="5" />
-              <circle cx="35" cy="66" r="5" />
-              <circle cx="35" cy="52" r="5" />
-              <circle cx="35" cy="38" r="5" />
-              <circle cx="43" cy="25" r="5" />
-              {/* Hanging tassel beads */}
-              <circle cx="50" cy="105" r="5" />
-              <circle cx="50" cy="114" r="4" />
+        {/* Hand holding tasbeeh animation */}
+        <div className="w-64 h-64 mx-auto mb-6 relative">
+          <svg 
+            viewBox="0 0 200 200" 
+            className="w-full h-full"
+          >
+            {/* Tasbeeh string */}
+            <ellipse 
+              cx="100" 
+              cy="85" 
+              rx="55" 
+              ry="45" 
+              fill="none" 
+              stroke="rgba(180, 160, 130, 0.4)" 
+              strokeWidth="2"
+            />
+            
+            {/* Tasbeeh beads - animated counting effect */}
+            {[...Array(16)].map((_, i) => {
+              const angle = (i * 22.5) - 90; // Distribute beads around ellipse
+              const rx = 55;
+              const ry = 45;
+              const x = 100 + rx * Math.cos((angle * Math.PI) / 180);
+              const y = 85 + ry * Math.sin((angle * Math.PI) / 180);
+              
+              return (
+                <circle
+                  key={i}
+                  cx={x}
+                  cy={y}
+                  r={6}
+                  fill="rgba(180, 160, 130, 0.9)"
+                  className="bead-glow"
+                  style={{
+                    animation: `beadPulse 2s ease-in-out infinite`,
+                    animationDelay: `${i * 0.125}s`,
+                  }}
+                />
+              );
+            })}
+            
+            {/* Tassel */}
+            <line x1="100" y1="130" x2="100" y2="155" stroke="rgba(180, 160, 130, 0.6)" strokeWidth="2" />
+            <circle cx="100" cy="160" r="5" fill="rgba(180, 160, 130, 0.8)" />
+            <circle cx="100" cy="172" r="4" fill="rgba(180, 160, 130, 0.7)" />
+            <circle cx="100" cy="182" r="3" fill="rgba(180, 160, 130, 0.6)" />
+            
+            {/* Hand silhouette - thumb on left */}
+            <g className="hand-counting">
+              {/* Palm */}
+              <path
+                d="M75 110 
+                   Q65 105 60 95
+                   Q55 85 62 75
+                   L68 78
+                   Q64 85 66 92
+                   Q68 98 75 102
+                   Z"
+                fill="rgba(139, 115, 85, 0.85)"
+                className="thumb"
+              />
+              
+              {/* Main hand/fingers holding beads */}
+              <path
+                d="M120 75
+                   Q135 80 140 95
+                   Q145 110 135 125
+                   L125 120
+                   Q132 108 130 95
+                   Q128 85 118 80
+                   Z"
+                fill="rgba(139, 115, 85, 0.85)"
+              />
+              
+              {/* Index finger - moving */}
+              <path
+                d="M115 60
+                   Q125 55 135 58
+                   Q145 62 148 75
+                   Q150 85 145 90
+                   L138 85
+                   Q142 78 140 70
+                   Q138 62 130 60
+                   Q122 58 118 62
+                   Z"
+                fill="rgba(139, 115, 85, 0.9)"
+                style={{
+                  transformOrigin: '130px 75px',
+                  animation: 'fingerMove 1s ease-in-out infinite',
+                }}
+              />
+              
+              {/* Thumb pushing bead */}
+              <ellipse
+                cx="72"
+                cy="88"
+                rx="12"
+                ry="8"
+                fill="rgba(139, 115, 85, 0.9)"
+                style={{
+                  transformOrigin: '72px 88px',
+                  animation: 'thumbPush 1s ease-in-out infinite',
+                }}
+              />
             </g>
+            
+            {/* Highlight bead being counted */}
+            <circle
+              cx="45"
+              cy="85"
+              r="7"
+              fill="rgba(200, 180, 140, 1)"
+              style={{
+                animation: 'activeBead 1s ease-in-out infinite',
+              }}
+            />
           </svg>
         </div>
         
-        <h1 className="text-5xl font-bold text-sage mb-3">BARAKAH</h1>
-        <p className="text-base text-sage/90 font-medium tracking-widest">
-          FAITH. LIFESTYLE. COMMUNITY.
+        <h1 className="text-5xl font-arabic font-bold text-[#c9b896] mb-3 tracking-wide">BARAKAH</h1>
+        <p className="text-sm text-[#a89a7d] font-body tracking-[0.3em]">
+          FAITH • LIFESTYLE • COMMUNITY
         </p>
 
-        {/* Loading indicator */}
-        <div className="mt-12">
-          <div className="w-16 h-1 bg-sage/30 rounded-full mx-auto overflow-hidden">
-            <div className="h-full bg-sage rounded-full animate-pulse"></div>
-          </div>
+        {/* Loading dots */}
+        <div className="mt-10 flex justify-center gap-2">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="w-2 h-2 rounded-full bg-[#6a8b74]"
+              style={{
+                animation: 'loadingDot 1.4s ease-in-out infinite',
+                animationDelay: `${i * 0.2}s`,
+              }}
+            />
+          ))}
         </div>
       </div>
+
+      <style>{`
+        @keyframes beadPulse {
+          0%, 100% {
+            opacity: 0.7;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.15);
+          }
+        }
+        
+        @keyframes fingerMove {
+          0%, 100% {
+            transform: rotate(0deg);
+          }
+          50% {
+            transform: rotate(-8deg);
+          }
+        }
+        
+        @keyframes thumbPush {
+          0%, 100% {
+            transform: translateX(0);
+          }
+          50% {
+            transform: translateX(4px);
+          }
+        }
+        
+        @keyframes activeBead {
+          0%, 100% {
+            transform: translateY(0) scale(1);
+            filter: drop-shadow(0 0 4px rgba(200, 180, 140, 0.5));
+          }
+          50% {
+            transform: translateY(-3px) scale(1.1);
+            filter: drop-shadow(0 0 8px rgba(200, 180, 140, 0.8));
+          }
+        }
+        
+        @keyframes loadingDot {
+          0%, 80%, 100% {
+            transform: scale(0.8);
+            opacity: 0.5;
+          }
+          40% {
+            transform: scale(1.2);
+            opacity: 1;
+          }
+        }
+        
+        .bead-glow {
+          filter: drop-shadow(0 0 3px rgba(180, 160, 130, 0.4));
+        }
+        
+        .hand-counting {
+          filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
+        }
+      `}</style>
     </div>
   );
 };
