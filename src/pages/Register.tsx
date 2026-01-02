@@ -129,37 +129,26 @@ export const Register = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center max-w-md mx-auto relative overflow-hidden">
-      {/* Watercolor atmospheric background - Sage Green #6a8b74 */}
+      {/* Background with sage green gradient #6a8b74 */}
       <div className="fixed inset-0 pointer-events-none">
         {/* Deep black base */}
-        <div className="absolute inset-0 bg-[#080808]" />
+        <div className="absolute inset-0 bg-[#0a0a0a]" />
         
-        {/* Large watercolor wash - top right */}
+        {/* Sage green gradient at top - fading into black */}
         <div 
-          className="absolute -top-10 -right-10 w-[450px] h-[450px] rounded-full blur-[100px]"
-          style={{ background: 'radial-gradient(circle, rgba(106, 139, 116, 0.35) 0%, rgba(106, 139, 116, 0.15) 50%, transparent 70%)' }}
+          className="absolute top-0 left-0 right-0 h-[70%]"
+          style={{ 
+            background: 'linear-gradient(180deg, rgba(106, 139, 116, 0.3) 0%, rgba(106, 139, 116, 0.15) 25%, rgba(106, 139, 116, 0.05) 50%, transparent 100%)' 
+          }}
         />
         
-        {/* Watercolor wash - top left */}
+        {/* Subtle radial glow at top-right corner for depth */}
         <div 
-          className="absolute top-20 -left-20 w-[350px] h-[350px] rounded-full blur-[80px]"
-          style={{ background: 'radial-gradient(circle, rgba(106, 139, 116, 0.28) 0%, rgba(90, 120, 100, 0.12) 50%, transparent 70%)' }}
+          className="absolute -top-10 -right-10 w-[350px] h-[350px]"
+          style={{ 
+            background: 'radial-gradient(circle, rgba(106, 139, 116, 0.25) 0%, transparent 70%)' 
+          }}
         />
-        
-        {/* Large central wash */}
-        <div 
-          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[350px] rounded-full blur-[120px]"
-          style={{ background: 'radial-gradient(ellipse, rgba(106, 139, 116, 0.22) 0%, rgba(106, 139, 116, 0.08) 60%, transparent 80%)' }}
-        />
-        
-        {/* Bottom watercolor wash */}
-        <div 
-          className="absolute -bottom-20 left-1/3 w-[400px] h-[400px] rounded-full blur-[100px]"
-          style={{ background: 'radial-gradient(circle, rgba(106, 139, 116, 0.3) 0%, rgba(90, 120, 100, 0.1) 50%, transparent 70%)' }}
-        />
-        
-        {/* Subtle noise texture overlay */}
-        <div className="absolute inset-0 opacity-[0.04] bg-[url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noise%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noise)%22/%3E%3C/svg%3E')]" />
       </div>
 
       {/* Language Selector */}
