@@ -128,27 +128,43 @@ export const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-cream flex items-center justify-center max-w-md mx-auto relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center max-w-md mx-auto relative overflow-hidden">
+      {/* Watercolor atmospheric background - Sage Green #6a8b74 */}
+      <div className="fixed inset-0 pointer-events-none">
+        {/* Deep black base */}
+        <div className="absolute inset-0 bg-[#080808]" />
+        
+        {/* Large watercolor wash - top right */}
+        <div 
+          className="absolute -top-10 -right-10 w-[450px] h-[450px] rounded-full blur-[100px]"
+          style={{ background: 'radial-gradient(circle, rgba(106, 139, 116, 0.35) 0%, rgba(106, 139, 116, 0.15) 50%, transparent 70%)' }}
+        />
+        
+        {/* Watercolor wash - top left */}
+        <div 
+          className="absolute top-20 -left-20 w-[350px] h-[350px] rounded-full blur-[80px]"
+          style={{ background: 'radial-gradient(circle, rgba(106, 139, 116, 0.28) 0%, rgba(90, 120, 100, 0.12) 50%, transparent 70%)' }}
+        />
+        
+        {/* Large central wash */}
+        <div 
+          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[350px] rounded-full blur-[120px]"
+          style={{ background: 'radial-gradient(ellipse, rgba(106, 139, 116, 0.22) 0%, rgba(106, 139, 116, 0.08) 60%, transparent 80%)' }}
+        />
+        
+        {/* Bottom watercolor wash */}
+        <div 
+          className="absolute -bottom-20 left-1/3 w-[400px] h-[400px] rounded-full blur-[100px]"
+          style={{ background: 'radial-gradient(circle, rgba(106, 139, 116, 0.3) 0%, rgba(90, 120, 100, 0.1) 50%, transparent 70%)' }}
+        />
+        
+        {/* Subtle noise texture overlay */}
+        <div className="absolute inset-0 opacity-[0.04] bg-[url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noise%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noise)%22/%3E%3C/svg%3E')]" />
+      </div>
+
       {/* Language Selector */}
       <div className="absolute top-4 right-4 z-20">
         <LanguageSelector />
-      </div>
-      {/* Islamic pattern background */}
-      <div className="absolute inset-0 opacity-30">
-        <div 
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23B8A082' fill-opacity='0.4'%3E%3Cpath d='M30 30c0-16.569-13.431-30-30-30v30h30zM0 30v30h30c0-16.569-13.431-30-30-30z'/%3E%3C/g%3E%3C/svg%3E")`,
-            backgroundSize: '60px 60px'
-          }}
-        />
-        <div 
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%236B8E7A' fill-opacity='0.15'%3E%3Cpath d='M20 40c11.046 0 20-8.954 20-20s-8.954-20-20-20-20 8.954-20 20 8.954 20 20 20zm20 0c11.046 0 20-8.954 20-20s-8.954-20-20-20-20 8.954-20 20 8.954 20 20 20z'/%3E%3C/g%3E%3C/svg%3E")`,
-            backgroundSize: '80px 80px'
-          }}
-        />
       </div>
 
       <div className="relative z-10 w-full px-6">
