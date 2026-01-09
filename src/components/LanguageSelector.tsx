@@ -25,10 +25,10 @@ export const LanguageSelector = () => {
         <Button
           variant="outline"
           size="sm"
-          className="gap-2 rounded-xl bg-white/90 border-sage/30 hover:bg-white !text-sage"
+          className="gap-2 rounded-xl bg-foreground/95 border-primary/25 text-primary hover:bg-foreground hover:text-primary"
         >
-          <Globe className="h-4 w-4 !text-sage" />
-          <span className="text-sm font-medium !text-sage">{currentLang?.nativeLabel}</span>
+          <Globe className="h-4 w-4 text-primary" />
+          <span className="text-sm font-medium text-primary">{currentLang?.nativeLabel}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent 
