@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { User, Briefcase, Plane } from 'lucide-react';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { BarakahLogo } from '@/components/BarakahLogo';
 
 type UserRole = 'normal_user' | 'seller' | 'travel_partner';
 
@@ -165,31 +166,7 @@ export const Register = () => {
         {/* Logo and Branding */}
         <div className="text-center mb-8">
           <div className="w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-            <svg width="64" height="80" viewBox="0 0 80 100" className="text-sage">
-              <g fill="currentColor">
-                <circle cx="40" cy="8" r="6" />
-                <circle cx="60" cy="25" r="5" />
-                <circle cx="68" cy="45" r="5" />
-                <circle cx="60" cy="65" r="5" />
-                <circle cx="40" cy="75" r="5" />
-                <circle cx="20" cy="65" r="5" />
-                <circle cx="12" cy="45" r="5" />
-                <circle cx="20" cy="25" r="5" />
-                <circle cx="40" cy="15" r="5" />
-                <circle cx="45" cy="20" r="4" />
-                <circle cx="50" cy="30" r="4" />
-                <circle cx="50" cy="40" r="4" />
-                <circle cx="50" cy="50" r="4" />
-                <circle cx="45" cy="60" r="4" />
-                <circle cx="35" cy="60" r="4" />
-                <circle cx="30" cy="50" r="4" />
-                <circle cx="30" cy="40" r="4" />
-                <circle cx="30" cy="30" r="4" />
-                <circle cx="35" cy="20" r="4" />
-                <circle cx="40" cy="85" r="4" />
-                <circle cx="40" cy="92" r="3" />
-              </g>
-            </svg>
+            <BarakahLogo size="lg" />
           </div>
           
           <h1 className="text-3xl font-bold text-sage mb-1">BARAKAH</h1>
@@ -215,8 +192,8 @@ export const Register = () => {
                 className="p-4 rounded-2xl cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-sage"
               >
                 <div className="flex items-center space-x-4">
-                  <div className={`${color} text-primary-foreground p-3 rounded-xl`}>
-                    <Icon className="h-6 w-6" />
+                  <div className={`${color} p-3 rounded-xl`}>
+                    <Icon className="h-6 w-6 text-white" />
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold text-foreground">{t(titleKey)}</h3>
