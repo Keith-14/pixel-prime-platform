@@ -69,15 +69,15 @@ const translations: Record<Language, Record<string, string>> = {
     'action.qibla': 'Qibla',
     'action.quran': 'Quran',
     'action.track': 'Track',
-    'action.mood': 'Mood',
+    'action.makkah_live': 'Makkah Live',
     'action.prayer': 'Prayer',
     'action.zakat': 'Zakat',
     'action.store': 'Store',
-    'action.progress': 'Progress',
+    'action.travel': 'Travel',
     
     // Bottom Navigation
     'nav.home': 'Home',
-    'nav.quran': 'Quran',
+    'nav.store': 'Store',
     'nav.guftagu': 'Ummah',
     'nav.places': 'Places',
     'nav.account': 'Account',
@@ -99,6 +99,7 @@ const translations: Record<Language, Record<string, string>> = {
     'language.english': 'English',
     'language.urdu': 'Urdu',
     'language.arabic': 'Arabic',
+    'languageSelector.title': 'Language',
   },
   ur: {
     // Login/Register page
@@ -159,15 +160,15 @@ const translations: Record<Language, Record<string, string>> = {
     'action.qibla': 'قبلہ',
     'action.quran': 'قرآن',
     'action.track': 'ٹریک',
-    'action.mood': 'موڈ',
+    'action.makkah_live': 'مکہ لائیو',
     'action.prayer': 'نماز',
     'action.zakat': 'زکوٰۃ',
     'action.store': 'سٹور',
-    'action.progress': 'پیش رفت',
+    'action.travel': 'سفر',
     
     // Bottom Navigation
     'nav.home': 'ہوم',
-    'nav.quran': 'قرآن',
+    'nav.store': 'سٹور',
     'nav.guftagu': 'امہ',
     'nav.places': 'مقامات',
     'nav.account': 'اکاؤنٹ',
@@ -189,6 +190,7 @@ const translations: Record<Language, Record<string, string>> = {
     'language.english': 'انگریزی',
     'language.urdu': 'اردو',
     'language.arabic': 'عربی',
+    'languageSelector.title': 'زبان',
   },
   ar: {
     // Login/Register page
@@ -249,15 +251,15 @@ const translations: Record<Language, Record<string, string>> = {
     'action.qibla': 'القبلة',
     'action.quran': 'القرآن',
     'action.track': 'تتبع',
-    'action.mood': 'المزاج',
+    'action.makkah_live': 'مكة مباشر',
     'action.prayer': 'الصلاة',
     'action.zakat': 'الزكاة',
     'action.store': 'المتجر',
-    'action.progress': 'التقدم',
+    'action.travel': 'السفر',
     
     // Bottom Navigation
     'nav.home': 'الرئيسية',
-    'nav.quran': 'القرآن',
+    'nav.store': 'المتجر',
     'nav.guftagu': 'الأمة',
     'nav.places': 'الأماكن',
     'nav.account': 'الحساب',
@@ -279,6 +281,7 @@ const translations: Record<Language, Record<string, string>> = {
     'language.english': 'الإنجليزية',
     'language.urdu': 'الأردية',
     'language.arabic': 'العربية',
+    'languageSelector.title': 'اللغة',
   },
 };
 

@@ -1,4 +1,4 @@
-import { Home, BookOpen, Users, MapPin, User } from 'lucide-react';
+import { Home, ShoppingBag, Users, MapPin, User } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -10,7 +10,7 @@ export const BottomNavigation = () => {
 
   const navItems = [
     { icon: Home, labelKey: 'nav.home', path: '/' },
-    { icon: BookOpen, labelKey: 'nav.quran', path: '/quran' },
+    { icon: ShoppingBag, labelKey: 'nav.store', path: '/shop' },
     { icon: Users, labelKey: 'nav.guftagu', path: '/forum' },
     { icon: MapPin, labelKey: 'nav.places', path: '/places' },
     { icon: User, labelKey: 'nav.account', path: '/account' },
