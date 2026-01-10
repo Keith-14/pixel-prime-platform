@@ -150,11 +150,11 @@ export const Home = () => {
   }, [t]);
 
   const quickActions = [
-    { label: t('action.mood'), Icon: Heart, onClick: () => navigate('/makkah-live') },
+    { label: t('action.makkah_live'), Icon: Heart, onClick: () => navigate('/makkah-live') },
     { label: t('action.track'), Icon: BarChart3, onClick: () => navigate('/progress') },
     { label: t('action.quran'), Icon: BookOpen, onClick: () => navigate('/quran') },
     { label: t('action.qibla'), Icon: Compass, onClick: () => navigate('/qibla') },
-    { label: t('action.progress'), Icon: MapPin, onClick: () => navigate('/progress') },
+    { label: t('action.travel'), Icon: MapPin, onClick: () => navigate('/hajj') },
     { label: t('action.store'), Icon: Search, onClick: () => navigate('/shop') },
     { label: t('action.zakat'), Icon: Calculator, onClick: () => navigate('/zakat') },
     { label: t('action.prayer'), Icon: Clock, onClick: () => navigate('/prayer-times') },
@@ -264,7 +264,7 @@ export const Home = () => {
 const SideMenuContent = ({ onClose }: { onClose: () => void }) => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
 
   const menuItems = [
     { labelKey: 'menu.home', path: '/' },
@@ -276,6 +276,12 @@ const SideMenuContent = ({ onClose }: { onClose: () => void }) => {
     { labelKey: 'menu.shop', path: '/shop' },
     { labelKey: 'menu.progress', path: '/progress' },
     { labelKey: 'menu.account', path: '/account' },
+  ];
+
+  const languages = [
+    { code: 'en' as const, label: 'English' },
+    { code: 'ur' as const, label: 'اردو' },
+    { code: 'ar' as const, label: 'العربية' },
   ];
 
   return (
@@ -291,7 +297,7 @@ const SideMenuContent = ({ onClose }: { onClose: () => void }) => {
           ✕
         </Button>
       </div>
-      <nav className="flex-1 py-3 px-3">
+      <nav className="flex-1 py-3 px-3 overflow-y-auto">
         {menuItems.map((item) => (
           <button
             key={item.path}
@@ -304,6 +310,26 @@ const SideMenuContent = ({ onClose }: { onClose: () => void }) => {
             {t(item.labelKey)}
           </button>
         ))}
+
+        {/* Language Selection */}
+        <div className="mt-4 pt-4 border-t border-primary/15">
+          <p className="px-4 text-xs uppercase tracking-wider text-muted-foreground mb-2">{t('languageSelector.title')}</p>
+          <div className="flex gap-2 px-4">
+            {languages.map((lang) => (
+              <button
+                key={lang.code}
+                onClick={() => setLanguage(lang.code)}
+                className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                  language === lang.code
+                    ? 'bg-primary/15 text-primary border border-primary/30'
+                    : 'text-muted-foreground hover:bg-primary/8 hover:text-primary border border-transparent'
+                }`}
+              >
+                {lang.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </nav>
       {user && (
         <div className="px-3 pb-6">
