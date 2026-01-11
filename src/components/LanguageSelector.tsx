@@ -12,6 +12,11 @@ const languages: { code: Language; label: string; nativeLabel: string }[] = [
   { code: 'en', label: 'English', nativeLabel: 'English' },
   { code: 'ur', label: 'Urdu', nativeLabel: 'اردو' },
   { code: 'ar', label: 'Arabic', nativeLabel: 'العربية' },
+  { code: 'tr', label: 'Turkish', nativeLabel: 'Türkçe' },
+  { code: 'id', label: 'Indonesian', nativeLabel: 'Bahasa Indonesia' },
+  { code: 'ms', label: 'Malay', nativeLabel: 'Bahasa Melayu' },
+  { code: 'ta', label: 'Tamil', nativeLabel: 'தமிழ்' },
+  { code: 'bn', label: 'Bengali', nativeLabel: 'বাংলা' },
 ];
 
 export const LanguageSelector = () => {
