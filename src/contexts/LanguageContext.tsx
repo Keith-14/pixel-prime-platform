@@ -78,7 +78,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Bottom Navigation
     'nav.home': 'Home',
     'nav.store': 'Store',
-    'nav.guftagu': 'Ummah',
+    'nav.guftagu': 'Guftagu',
     'nav.places': 'Places',
     'nav.account': 'Account',
     
@@ -174,7 +174,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Bottom Navigation
     'nav.home': 'ہوم',
     'nav.store': 'سٹور',
-    'nav.guftagu': 'امہ',
+    'nav.guftagu': 'گفتگو',
     'nav.places': 'مقامات',
     'nav.account': 'اکاؤنٹ',
     
@@ -270,7 +270,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Bottom Navigation
     'nav.home': 'الرئيسية',
     'nav.store': 'المتجر',
-    'nav.guftagu': 'الأمة',
+    'nav.guftagu': 'گفتگو',
     'nav.places': 'الأماكن',
     'nav.account': 'الحساب',
     
@@ -366,7 +366,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Bottom Navigation
     'nav.home': 'Ana Sayfa',
     'nav.store': 'Mağaza',
-    'nav.guftagu': 'Ümmet',
+    'nav.guftagu': 'Guftagu',
     'nav.places': 'Yerler',
     'nav.account': 'Hesap',
     
@@ -462,7 +462,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Bottom Navigation
     'nav.home': 'Beranda',
     'nav.store': 'Toko',
-    'nav.guftagu': 'Umat',
+    'nav.guftagu': 'Guftagu',
     'nav.places': 'Tempat',
     'nav.account': 'Akun',
     
@@ -558,7 +558,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Bottom Navigation
     'nav.home': 'Utama',
     'nav.store': 'Kedai',
-    'nav.guftagu': 'Ummah',
+    'nav.guftagu': 'Guftagu',
     'nav.places': 'Tempat',
     'nav.account': 'Akaun',
     
@@ -654,7 +654,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Bottom Navigation
     'nav.home': 'முகப்பு',
     'nav.store': 'கடை',
-    'nav.guftagu': 'உம்மா',
+    'nav.guftagu': 'Guftagu',
     'nav.places': 'இடங்கள்',
     'nav.account': 'கணக்கு',
     
@@ -750,7 +750,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Bottom Navigation
     'nav.home': 'হোম',
     'nav.store': 'দোকান',
-    'nav.guftagu': 'উম্মাহ',
+    'nav.guftagu': 'Guftagu',
     'nav.places': 'স্থান',
     'nav.account': 'অ্যাকাউন্ট',
     
