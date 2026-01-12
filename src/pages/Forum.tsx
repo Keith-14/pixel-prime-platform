@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
-import { MessageCircle, Plus, Send, ArrowLeft, Loader2, Trash2, Heart, RefreshCw } from 'lucide-react';
+import { MessageCircle, Plus, Send, ArrowLeft, Loader2, Trash2, Heart, RefreshCw, Sparkles, Users, TrendingUp } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -48,6 +48,20 @@ const formatTimeAgo = (dateStr: string): string => {
   if (diffMins < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
   return `${diffDays}d ago`;
+};
+
+// Avatar gradient colors based on first letter
+const getAvatarGradient = (name: string) => {
+  const colors = [
+    'from-emerald-500 to-teal-600',
+    'from-primary to-amber-500',
+    'from-rose-500 to-pink-600',
+    'from-violet-500 to-purple-600',
+    'from-blue-500 to-cyan-600',
+    'from-orange-500 to-red-500',
+  ];
+  const index = name.charCodeAt(0) % colors.length;
+  return colors[index];
 };
 
 export const Forum = () => {
@@ -394,30 +408,46 @@ export const Forum = () => {
     }
   };
 
-  const PostCard = ({ post, showActions = true }: { post: Post; showActions?: boolean }) => {
+  // Calculate stats
+  const totalLikes = posts.reduce((acc, p) => acc + (p.likeCount || 0), 0);
+  const totalReplies = posts.reduce((acc, p) => acc + (p.replies?.length || 0), 0);
+
+  const PostCard = ({ post, showActions = true, index = 0 }: { post: Post; showActions?: boolean; index?: number }) => {
     const isOwner = user?.id === post.user_id;
     const isLiking = likingPosts.has(post.id);
+    const avatarGradient = getAvatarGradient(post.user_name);
 
     return (
-      <Card className="bg-card/60 backdrop-blur-sm border-primary/10 shadow-md hover:shadow-lg transition-shadow duration-300">
+      <Card 
+        className="group relative overflow-hidden bg-card/70 backdrop-blur-xl border-primary/10 shadow-lg hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 animate-fade-in"
+        style={{ animationDelay: `${index * 80}ms` }}
+      >
+        {/* Decorative gradient line at top */}
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        
         <CardContent className="p-5">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-full bg-gradient-to-br from-primary/25 to-primary/10 flex items-center justify-center ring-2 ring-primary/20">
-                <span className="text-primary font-bold text-sm">
+              <div className={`relative w-12 h-12 rounded-full bg-gradient-to-br ${avatarGradient} flex items-center justify-center shadow-lg`}>
+                <span className="text-white font-bold text-lg drop-shadow-sm">
                   {post.user_name.charAt(0).toUpperCase()}
                 </span>
+                {/* Online indicator */}
+                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-card" />
               </div>
               <div className="space-y-0.5">
-                <p className="font-semibold text-foreground">{post.user_name}</p>
-                <p className="text-xs text-muted-foreground/70">{formatTimeAgo(post.created_at)}</p>
+                <p className="font-semibold text-foreground tracking-tight">{post.user_name}</p>
+                <p className="text-xs text-muted-foreground/60 flex items-center gap-1">
+                  <span className="inline-block w-1 h-1 rounded-full bg-primary/40" />
+                  {formatTimeAgo(post.created_at)}
+                </p>
               </div>
             </div>
             {isOwner && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10"
+                className="h-8 w-8 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all duration-300"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDeletePost(post.id);
@@ -428,34 +458,41 @@ export const Forum = () => {
             )}
           </div>
 
-          <p className="text-foreground/90 mb-5 leading-relaxed text-[15px]">{post.content}</p>
+          <p className="text-foreground/90 mb-5 leading-relaxed text-[15px] whitespace-pre-wrap">{post.content}</p>
 
           {showActions && (
-            <div className="flex items-center gap-5 pt-3 border-t border-primary/10">
+            <div className="flex items-center gap-6 pt-4 border-t border-primary/5">
               <button
                 onClick={() => handleToggleLike(post.id, post.isLiked || false)}
                 disabled={isLiking}
-                className={`flex items-center gap-2 text-sm transition-all duration-200 group ${
+                className={`flex items-center gap-2 text-sm transition-all duration-300 group/like ${
                   post.isLiked 
-                    ? 'text-red-500' 
-                    : 'text-muted-foreground hover:text-red-500'
+                    ? 'text-rose-500' 
+                    : 'text-muted-foreground/70 hover:text-rose-500'
                 }`}
               >
-                <Heart 
-                  className={`h-5 w-5 transition-all duration-300 ${
-                    post.isLiked 
-                      ? 'fill-red-500 scale-110' 
-                      : 'group-hover:scale-110'
-                  } ${isLiking ? 'animate-pulse' : ''}`} 
-                />
-                <span className="font-medium">{post.likeCount || 0}</span>
+                <div className={`relative ${post.isLiked ? 'animate-scale-in' : ''}`}>
+                  <Heart 
+                    className={`h-5 w-5 transition-all duration-300 ${
+                      post.isLiked 
+                        ? 'fill-rose-500 scale-110' 
+                        : 'group-hover/like:scale-110'
+                    } ${isLiking ? 'animate-pulse' : ''}`} 
+                  />
+                  {post.isLiked && (
+                    <div className="absolute inset-0 animate-ping">
+                      <Heart className="h-5 w-5 fill-rose-500 opacity-50" />
+                    </div>
+                  )}
+                </div>
+                <span className="font-medium tabular-nums">{post.likeCount || 0}</span>
               </button>
               <button
                 onClick={() => setSelectedPost(post)}
-                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-all duration-200 group"
+                className="flex items-center gap-2 text-sm text-muted-foreground/70 hover:text-primary transition-all duration-300 group/reply"
               >
-                <MessageCircle className="h-5 w-5 group-hover:scale-110 transition-transform" />
-                <span className="font-medium">{post.replies?.length || 0}</span>
+                <MessageCircle className="h-5 w-5 group-hover/reply:scale-110 transition-transform duration-300" />
+                <span className="font-medium tabular-nums">{post.replies?.length || 0}</span>
               </button>
             </div>
           )}
@@ -466,82 +503,134 @@ export const Forum = () => {
 
   // Replies View
   if (selectedPost) {
+    const avatarGradient = getAvatarGradient(selectedPost.user_name);
+    
     return (
       <Layout>
-        <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20 pb-24">
-          <div className="px-4 pt-6">
+        <div className="min-h-screen pb-24">
+          {/* Hero gradient background */}
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
+          
+          <div className="relative px-4 pt-6">
             <button
               onClick={() => setSelectedPost(null)}
-              className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-5"
+              className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-6 group"
             >
-              <ArrowLeft className="h-5 w-5" />
-              <span className="font-medium">Back</span>
+              <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform duration-300" />
+              <span className="font-medium">Back to Guftagu</span>
             </button>
 
-            <PostCard post={selectedPost} showActions={false} />
+            {/* Original Post - Enhanced */}
+            <Card className="relative overflow-hidden bg-card/80 backdrop-blur-xl border-primary/15 shadow-xl mb-6">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-emerald-400 to-primary" />
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4 mb-5">
+                  <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${avatarGradient} flex items-center justify-center shadow-lg ring-2 ring-primary/20`}>
+                    <span className="text-white font-bold text-xl drop-shadow-sm">
+                      {selectedPost.user_name.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-bold text-lg text-foreground">{selectedPost.user_name}</p>
+                    <p className="text-sm text-muted-foreground/60">{formatTimeAgo(selectedPost.created_at)}</p>
+                  </div>
+                </div>
+                <p className="text-foreground/90 text-[16px] leading-relaxed whitespace-pre-wrap">{selectedPost.content}</p>
+                
+                {/* Stats bar */}
+                <div className="flex items-center gap-4 mt-5 pt-4 border-t border-primary/10">
+                  <div className="flex items-center gap-1.5 text-rose-500">
+                    <Heart className="h-4 w-4 fill-rose-500" />
+                    <span className="text-sm font-medium">{selectedPost.likeCount || 0} likes</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-primary">
+                    <MessageCircle className="h-4 w-4" />
+                    <span className="text-sm font-medium">{selectedPost.replies?.length || 0} replies</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-            <div className="mt-6">
-              <h3 className="font-semibold text-primary mb-4 flex items-center gap-2">
-                <MessageCircle className="h-4 w-4" />
-                Replies ({selectedPost.replies?.length || 0})
+            {/* Replies Section */}
+            <div className="mb-6">
+              <h3 className="font-bold text-lg text-foreground mb-4 flex items-center gap-2">
+                <MessageCircle className="h-5 w-5 text-primary" />
+                Replies
               </h3>
 
               <div className="space-y-3">
-                {selectedPost.replies?.map((reply) => {
+                {selectedPost.replies?.map((reply, index) => {
                   const isOwner = user?.id === reply.user_id;
+                  const replyGradient = getAvatarGradient(reply.user_name);
+                  
                   return (
-                    <div key={reply.id} className="bg-card/40 backdrop-blur-sm rounded-xl p-4 border border-primary/5">
-                      <div className="flex items-center justify-between mb-2.5">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center ring-1 ring-primary/15">
-                            <span className="text-primary font-bold text-xs">
+                    <div 
+                      key={reply.id} 
+                      className="bg-card/50 backdrop-blur-sm rounded-2xl p-4 border border-primary/5 animate-fade-in hover:bg-card/70 transition-colors duration-300"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${replyGradient} flex items-center justify-center shadow-md`}>
+                            <span className="text-white font-bold text-sm">
                               {reply.user_name.charAt(0).toUpperCase()}
                             </span>
                           </div>
-                          <span className="font-semibold text-sm text-foreground">{reply.user_name}</span>
-                          <span className="text-xs text-muted-foreground/60">• {formatTimeAgo(reply.created_at)}</span>
+                          <div>
+                            <span className="font-semibold text-sm text-foreground">{reply.user_name}</span>
+                            <span className="text-xs text-muted-foreground/50 ml-2">• {formatTimeAgo(reply.created_at)}</span>
+                          </div>
                         </div>
                         {isOwner && (
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7 text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10"
+                            className="h-7 w-7 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10"
                             onClick={() => handleDeleteReply(reply.id)}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         )}
                       </div>
-                      <p className="text-sm text-foreground/85 pl-10 leading-relaxed">{reply.content}</p>
+                      <p className="text-sm text-foreground/85 leading-relaxed pl-12">{reply.content}</p>
                     </div>
                   );
                 })}
 
                 {(!selectedPost.replies || selectedPost.replies.length === 0) && (
-                  <div className="text-center py-8 bg-card/20 rounded-xl border border-dashed border-primary/10">
-                    <MessageCircle className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
-                    <p className="text-muted-foreground/70 text-sm">
-                      No replies yet. Be the first to reply!
-                    </p>
+                  <div className="text-center py-12 bg-card/30 rounded-2xl border border-dashed border-primary/10">
+                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                      <MessageCircle className="h-8 w-8 text-primary/40" />
+                    </div>
+                    <p className="text-muted-foreground/70 font-medium mb-1">No replies yet</p>
+                    <p className="text-sm text-muted-foreground/50">Be the first to reply!</p>
                   </div>
                 )}
               </div>
 
-              <div className="mt-5 flex gap-3">
-                <Textarea
-                  value={newReply}
-                  onChange={(e) => setNewReply(e.target.value)}
-                  placeholder="Write a reply..."
-                  className="flex-1 min-h-[48px] max-h-[120px] resize-none bg-card/50 border-primary/15 focus:border-primary/30"
-                />
-                <Button
-                  onClick={handleAddReply}
-                  disabled={!newReply.trim() || submitting}
-                  size="icon"
-                  className="h-12 w-12 rounded-xl shadow-lg shadow-primary/20"
-                >
-                  {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                </Button>
+              {/* Reply Input */}
+              <div className="mt-6 flex gap-3">
+                <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getAvatarGradient(currentUserName)} flex items-center justify-center shadow-md shrink-0`}>
+                  <span className="text-white font-bold text-sm">
+                    {currentUserName.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex-1 flex gap-2">
+                  <Textarea
+                    value={newReply}
+                    onChange={(e) => setNewReply(e.target.value)}
+                    placeholder="Write a reply..."
+                    className="flex-1 min-h-[48px] max-h-[120px] resize-none bg-card/60 border-primary/10 focus:border-primary/30 rounded-xl"
+                  />
+                  <Button
+                    onClick={handleAddReply}
+                    disabled={!newReply.trim() || submitting}
+                    size="icon"
+                    className="h-12 w-12 rounded-xl shadow-lg shadow-primary/20 shrink-0"
+                  >
+                    {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -554,11 +643,14 @@ export const Forum = () => {
     <Layout>
       <div 
         ref={containerRef}
-        className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20 pb-24 overflow-auto"
+        className="min-h-screen pb-24 overflow-auto"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
+        {/* Hero gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/8 via-primary/3 to-transparent pointer-events-none" />
+        
         {/* Pull to refresh indicator */}
         <div 
           className="flex items-center justify-center transition-all duration-200 overflow-hidden"
@@ -575,28 +667,68 @@ export const Forum = () => {
           />
         </div>
 
-        <div className="px-4 pt-6">
-          {/* Header with accent */}
+        <div className="relative px-4 pt-6">
+          {/* Enhanced Header */}
           <div className="mb-8">
-            <h1 className="text-2xl font-bold text-primary mb-1.5 tracking-tight">Guftagu</h1>
-            <p className="text-sm text-muted-foreground/80">Share and connect with the community</p>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="relative">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center shadow-lg shadow-primary/25">
+                  <MessageCircle className="h-6 w-6 text-primary-foreground" />
+                </div>
+                <Sparkles className="absolute -top-1 -right-1 h-4 w-4 text-amber-400 animate-pulse" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-primary tracking-tight">Guftagu</h1>
+                <p className="text-sm text-muted-foreground/70">Share & connect with the community</p>
+              </div>
+            </div>
+            
+            {/* Stats Row */}
+            {!loading && posts.length > 0 && (
+              <div className="flex items-center gap-4 mt-4 animate-fade-in">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/60 backdrop-blur-sm border border-primary/10">
+                  <Users className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium text-foreground/80">{posts.length} posts</span>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/60 backdrop-blur-sm border border-primary/10">
+                  <Heart className="h-4 w-4 text-rose-500" />
+                  <span className="text-sm font-medium text-foreground/80">{totalLikes} likes</span>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/60 backdrop-blur-sm border border-primary/10">
+                  <TrendingUp className="h-4 w-4 text-emerald-500" />
+                  <span className="text-sm font-medium text-foreground/80">{totalReplies} replies</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-16">
-              <Loader2 className="h-8 w-8 animate-spin text-primary mb-3" />
-              <p className="text-sm text-muted-foreground/60">Loading posts...</p>
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="relative">
+                <div className="w-16 h-16 rounded-full bg-primary/10 animate-pulse" />
+                <Loader2 className="h-8 w-8 animate-spin text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+              </div>
+              <p className="text-sm text-muted-foreground/60 mt-4">Loading conversations...</p>
             </div>
           ) : posts.length === 0 ? (
-            <div className="text-center py-16 bg-card/30 rounded-2xl border border-dashed border-primary/10">
-              <MessageCircle className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
-              <p className="text-muted-foreground/70 mb-1">No posts yet</p>
-              <p className="text-sm text-muted-foreground/50">Start the conversation!</p>
+            <div className="text-center py-20 bg-card/30 backdrop-blur-sm rounded-3xl border border-dashed border-primary/10">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mx-auto mb-5">
+                <MessageCircle className="h-10 w-10 text-primary/40" />
+              </div>
+              <p className="text-lg font-semibold text-foreground/80 mb-2">No conversations yet</p>
+              <p className="text-sm text-muted-foreground/60 mb-6">Start the first Guftagu!</p>
+              <Button 
+                onClick={() => setIsCreateDialogOpen(true)}
+                className="shadow-lg shadow-primary/20"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Start a conversation
+              </Button>
             </div>
           ) : (
             <div className="space-y-4">
-              {posts.map((post) => (
-                <PostCard key={post.id} post={post} />
+              {posts.map((post, index) => (
+                <PostCard key={post.id} post={post} index={index} />
               ))}
             </div>
           )}
@@ -606,7 +738,7 @@ export const Forum = () => {
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button
-              className="fixed bottom-24 right-4 h-14 w-14 rounded-full shadow-xl shadow-primary/30 hover:shadow-primary/40 hover:scale-105 transition-all duration-200"
+              className="fixed bottom-24 right-4 h-14 w-14 rounded-full shadow-xl shadow-primary/30 hover:shadow-primary/40 hover:scale-105 transition-all duration-300 z-50"
               size="icon"
             >
               <Plus className="h-6 w-6" />
@@ -614,27 +746,39 @@ export const Forum = () => {
           </DialogTrigger>
           <DialogContent className="sm:max-w-md bg-card/95 backdrop-blur-xl border-primary/15">
             <DialogHeader>
-              <DialogTitle className="text-primary">Share Your Thoughts</DialogTitle>
-              <DialogDescription className="text-muted-foreground/70">Post a message for the community to see and reply.</DialogDescription>
+              <DialogTitle className="text-xl text-primary flex items-center gap-2">
+                <Sparkles className="h-5 w-5" />
+                Share Your Thoughts
+              </DialogTitle>
+              <DialogDescription className="text-muted-foreground/70">
+                Post a message for the community to see and engage with.
+              </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
-              <Textarea
-                value={newPostContent}
-                onChange={(e) => setNewPostContent(e.target.value)}
-                placeholder="What's on your mind..."
-                className="min-h-[120px] resize-none bg-background/50 border-primary/15 focus:border-primary/30"
-                maxLength={500}
-              />
+            <div className="space-y-4 mt-2">
+              <div className="flex items-start gap-3">
+                <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getAvatarGradient(currentUserName)} flex items-center justify-center shadow-md shrink-0`}>
+                  <span className="text-white font-bold text-sm">
+                    {currentUserName.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <Textarea
+                  value={newPostContent}
+                  onChange={(e) => setNewPostContent(e.target.value)}
+                  placeholder="What's on your mind..."
+                  className="flex-1 min-h-[120px] resize-none bg-background/50 border-primary/10 focus:border-primary/30 rounded-xl"
+                  maxLength={500}
+                />
+              </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground/60">
+                <span className="text-xs text-muted-foreground/60 tabular-nums">
                   {newPostContent.length}/500
                 </span>
                 <Button
                   onClick={handleCreatePost}
                   disabled={!newPostContent.trim() || submitting}
-                  className="shadow-lg shadow-primary/20"
+                  className="shadow-lg shadow-primary/20 px-6"
                 >
-                  {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
                   Post
                 </Button>
               </div>
