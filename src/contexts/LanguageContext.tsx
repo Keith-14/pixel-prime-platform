@@ -68,19 +68,44 @@ const translations: Record<Language, Record<string, string>> = {
     // Quick actions
     'action.qibla': 'Qibla',
     'action.quran': 'Quran',
-    'action.track': 'Track',
+    'action.mood': 'Mood',
     'action.makkah_live': 'Makkah Live',
     'action.prayer': 'Prayer',
     'action.zakat': 'Zakat',
-    'action.store': 'Store',
+    'action.news': 'News',
     'action.travel': 'Travel',
     
     // Bottom Navigation
     'nav.home': 'Home',
-    'nav.store': 'Store',
+    'nav.news': 'News',
     'nav.guftagu': 'Guftagu',
     'nav.places': 'Places',
     'nav.account': 'Account',
+    
+    // News page
+    'news.title': 'Islamic News',
+    'news.subtitle': 'Stay informed with the latest updates',
+    'news.load_more': 'Load More',
+    'news.category.all': 'All',
+    'news.category.world': 'World',
+    'news.category.education': 'Education',
+    'news.category.community': 'Community',
+    'news.category.charity': 'Charity',
+    'news.category.business': 'Business',
+    
+    // Mood page
+    'mood.title': 'How Are You?',
+    'mood.subtitle': 'Select your mood for guidance',
+    'mood.how_feeling': 'How are you feeling today?',
+    'mood.very_low': 'Very Low',
+    'mood.low': 'Low',
+    'mood.neutral': 'Okay',
+    'mood.good': 'Good',
+    'mood.excellent': 'Great',
+    'mood.scale_low': 'Low',
+    'mood.scale_high': 'High',
+    'mood.try_again': 'Back',
+    'mood.new_quote': 'New Quote',
     
     // Menu
     'menu.home': 'Home',
@@ -164,19 +189,44 @@ const translations: Record<Language, Record<string, string>> = {
     // Quick actions
     'action.qibla': 'قبلہ',
     'action.quran': 'قرآن',
-    'action.track': 'ٹریک',
+    'action.mood': 'موڈ',
     'action.makkah_live': 'مکہ لائیو',
     'action.prayer': 'نماز',
     'action.zakat': 'زکوٰۃ',
-    'action.store': 'سٹور',
+    'action.news': 'خبریں',
     'action.travel': 'سفر',
     
     // Bottom Navigation
     'nav.home': 'ہوم',
-    'nav.store': 'سٹور',
+    'nav.news': 'خبریں',
     'nav.guftagu': 'گفتگو',
     'nav.places': 'مقامات',
     'nav.account': 'اکاؤنٹ',
+    
+    // News page
+    'news.title': 'اسلامی خبریں',
+    'news.subtitle': 'تازہ ترین اپڈیٹس سے آگاہ رہیں',
+    'news.load_more': 'مزید لوڈ کریں',
+    'news.category.all': 'سب',
+    'news.category.world': 'دنیا',
+    'news.category.education': 'تعلیم',
+    'news.category.community': 'کمیونٹی',
+    'news.category.charity': 'خیرات',
+    'news.category.business': 'کاروبار',
+    
+    // Mood page
+    'mood.title': 'آپ کیسے ہیں؟',
+    'mood.subtitle': 'رہنمائی کے لیے اپنا موڈ منتخب کریں',
+    'mood.how_feeling': 'آج آپ کا موڈ کیسا ہے؟',
+    'mood.very_low': 'بہت کم',
+    'mood.low': 'کم',
+    'mood.neutral': 'ٹھیک',
+    'mood.good': 'اچھا',
+    'mood.excellent': 'بہترین',
+    'mood.scale_low': 'کم',
+    'mood.scale_high': 'زیادہ',
+    'mood.try_again': 'واپس',
+    'mood.new_quote': 'نیا اقتباس',
     
     // Menu
     'menu.home': 'ہوم',
@@ -260,19 +310,44 @@ const translations: Record<Language, Record<string, string>> = {
     // Quick actions
     'action.qibla': 'القبلة',
     'action.quran': 'القرآن',
-    'action.track': 'تتبع',
+    'action.mood': 'المزاج',
     'action.makkah_live': 'مكة مباشر',
     'action.prayer': 'الصلاة',
     'action.zakat': 'الزكاة',
-    'action.store': 'المتجر',
+    'action.news': 'الأخبار',
     'action.travel': 'السفر',
     
     // Bottom Navigation
     'nav.home': 'الرئيسية',
-    'nav.store': 'المتجر',
+    'nav.news': 'الأخبار',
     'nav.guftagu': 'گفتگو',
     'nav.places': 'الأماكن',
     'nav.account': 'الحساب',
+    
+    // News page
+    'news.title': 'الأخبار الإسلامية',
+    'news.subtitle': 'ابق على اطلاع بآخر التحديثات',
+    'news.load_more': 'تحميل المزيد',
+    'news.category.all': 'الكل',
+    'news.category.world': 'العالم',
+    'news.category.education': 'التعليم',
+    'news.category.community': 'المجتمع',
+    'news.category.charity': 'الخيرية',
+    'news.category.business': 'الأعمال',
+    
+    // Mood page
+    'mood.title': 'كيف حالك؟',
+    'mood.subtitle': 'اختر مزاجك للإرشاد',
+    'mood.how_feeling': 'كيف تشعر اليوم؟',
+    'mood.very_low': 'منخفض جداً',
+    'mood.low': 'منخفض',
+    'mood.neutral': 'عادي',
+    'mood.good': 'جيد',
+    'mood.excellent': 'ممتاز',
+    'mood.scale_low': 'منخفض',
+    'mood.scale_high': 'مرتفع',
+    'mood.try_again': 'رجوع',
+    'mood.new_quote': 'اقتباس جديد',
     
     // Menu
     'menu.home': 'الرئيسية',
@@ -356,19 +431,44 @@ const translations: Record<Language, Record<string, string>> = {
     // Quick actions
     'action.qibla': 'Kıble',
     'action.quran': 'Kuran',
-    'action.track': 'Takip',
+    'action.mood': 'Ruh Hali',
     'action.makkah_live': 'Mekke Canlı',
     'action.prayer': 'Namaz',
     'action.zakat': 'Zekat',
-    'action.store': 'Mağaza',
+    'action.news': 'Haberler',
     'action.travel': 'Seyahat',
     
     // Bottom Navigation
     'nav.home': 'Ana Sayfa',
-    'nav.store': 'Mağaza',
+    'nav.news': 'Haberler',
     'nav.guftagu': 'Guftagu',
     'nav.places': 'Yerler',
     'nav.account': 'Hesap',
+    
+    // News page
+    'news.title': 'İslami Haberler',
+    'news.subtitle': 'En son güncellemelerden haberdar olun',
+    'news.load_more': 'Daha Fazla Yükle',
+    'news.category.all': 'Tümü',
+    'news.category.world': 'Dünya',
+    'news.category.education': 'Eğitim',
+    'news.category.community': 'Topluluk',
+    'news.category.charity': 'Hayır',
+    'news.category.business': 'İş',
+    
+    // Mood page
+    'mood.title': 'Nasılsınız?',
+    'mood.subtitle': 'Rehberlik için ruh halinizi seçin',
+    'mood.how_feeling': 'Bugün nasıl hissediyorsunuz?',
+    'mood.very_low': 'Çok Düşük',
+    'mood.low': 'Düşük',
+    'mood.neutral': 'Normal',
+    'mood.good': 'İyi',
+    'mood.excellent': 'Harika',
+    'mood.scale_low': 'Düşük',
+    'mood.scale_high': 'Yüksek',
+    'mood.try_again': 'Geri',
+    'mood.new_quote': 'Yeni Alıntı',
     
     // Menu
     'menu.home': 'Ana Sayfa',
@@ -452,19 +552,44 @@ const translations: Record<Language, Record<string, string>> = {
     // Quick actions
     'action.qibla': 'Kiblat',
     'action.quran': 'Quran',
-    'action.track': 'Lacak',
+    'action.mood': 'Suasana',
     'action.makkah_live': 'Mekah Live',
     'action.prayer': 'Shalat',
     'action.zakat': 'Zakat',
-    'action.store': 'Toko',
+    'action.news': 'Berita',
     'action.travel': 'Perjalanan',
     
     // Bottom Navigation
     'nav.home': 'Beranda',
-    'nav.store': 'Toko',
+    'nav.news': 'Berita',
     'nav.guftagu': 'Guftagu',
     'nav.places': 'Tempat',
     'nav.account': 'Akun',
+    
+    // News page
+    'news.title': 'Berita Islam',
+    'news.subtitle': 'Tetap terinformasi dengan pembaruan terbaru',
+    'news.load_more': 'Muat Lebih Banyak',
+    'news.category.all': 'Semua',
+    'news.category.world': 'Dunia',
+    'news.category.education': 'Pendidikan',
+    'news.category.community': 'Komunitas',
+    'news.category.charity': 'Amal',
+    'news.category.business': 'Bisnis',
+    
+    // Mood page
+    'mood.title': 'Bagaimana Kabarmu?',
+    'mood.subtitle': 'Pilih suasana hati untuk bimbingan',
+    'mood.how_feeling': 'Bagaimana perasaanmu hari ini?',
+    'mood.very_low': 'Sangat Rendah',
+    'mood.low': 'Rendah',
+    'mood.neutral': 'Biasa',
+    'mood.good': 'Baik',
+    'mood.excellent': 'Sangat Baik',
+    'mood.scale_low': 'Rendah',
+    'mood.scale_high': 'Tinggi',
+    'mood.try_again': 'Kembali',
+    'mood.new_quote': 'Kutipan Baru',
     
     // Menu
     'menu.home': 'Beranda',
@@ -548,19 +673,44 @@ const translations: Record<Language, Record<string, string>> = {
     // Quick actions
     'action.qibla': 'Kiblat',
     'action.quran': 'Quran',
-    'action.track': 'Jejak',
+    'action.mood': 'Suasana',
     'action.makkah_live': 'Mekah Live',
     'action.prayer': 'Solat',
     'action.zakat': 'Zakat',
-    'action.store': 'Kedai',
+    'action.news': 'Berita',
     'action.travel': 'Perjalanan',
     
     // Bottom Navigation
     'nav.home': 'Utama',
-    'nav.store': 'Kedai',
+    'nav.news': 'Berita',
     'nav.guftagu': 'Guftagu',
     'nav.places': 'Tempat',
     'nav.account': 'Akaun',
+    
+    // News page
+    'news.title': 'Berita Islam',
+    'news.subtitle': 'Terus mendapat maklumat dengan kemas kini terkini',
+    'news.load_more': 'Muat Lagi',
+    'news.category.all': 'Semua',
+    'news.category.world': 'Dunia',
+    'news.category.education': 'Pendidikan',
+    'news.category.community': 'Komuniti',
+    'news.category.charity': 'Amal',
+    'news.category.business': 'Perniagaan',
+    
+    // Mood page
+    'mood.title': 'Apa Khabar?',
+    'mood.subtitle': 'Pilih suasana hati untuk bimbingan',
+    'mood.how_feeling': 'Bagaimana perasaan anda hari ini?',
+    'mood.very_low': 'Sangat Rendah',
+    'mood.low': 'Rendah',
+    'mood.neutral': 'Biasa',
+    'mood.good': 'Baik',
+    'mood.excellent': 'Sangat Baik',
+    'mood.scale_low': 'Rendah',
+    'mood.scale_high': 'Tinggi',
+    'mood.try_again': 'Kembali',
+    'mood.new_quote': 'Petikan Baru',
     
     // Menu
     'menu.home': 'Utama',
@@ -644,19 +794,44 @@ const translations: Record<Language, Record<string, string>> = {
     // Quick actions
     'action.qibla': 'கிப்லா',
     'action.quran': 'குர்ஆன்',
-    'action.track': 'கண்காணி',
+    'action.mood': 'மனநிலை',
     'action.makkah_live': 'மக்கா நேரலை',
     'action.prayer': 'தொழுகை',
     'action.zakat': 'ஜகாத்',
-    'action.store': 'கடை',
+    'action.news': 'செய்திகள்',
     'action.travel': 'பயணம்',
     
     // Bottom Navigation
     'nav.home': 'முகப்பு',
-    'nav.store': 'கடை',
+    'nav.news': 'செய்திகள்',
     'nav.guftagu': 'Guftagu',
     'nav.places': 'இடங்கள்',
     'nav.account': 'கணக்கு',
+    
+    // News page
+    'news.title': 'இஸ்லாமிய செய்திகள்',
+    'news.subtitle': 'சமீபத்திய புதுப்பிப்புகளுடன் தகவல் பெறுங்கள்',
+    'news.load_more': 'மேலும் ஏற்று',
+    'news.category.all': 'அனைத்தும்',
+    'news.category.world': 'உலகம்',
+    'news.category.education': 'கல்வி',
+    'news.category.community': 'சமூகம்',
+    'news.category.charity': 'தர்மம்',
+    'news.category.business': 'வணிகம்',
+    
+    // Mood page
+    'mood.title': 'எப்படி இருக்கிறீர்கள்?',
+    'mood.subtitle': 'வழிகாட்டுதலுக்கு உங்கள் மனநிலையைத் தேர்ந்தெடுக்கவும்',
+    'mood.how_feeling': 'இன்று எப்படி உணர்கிறீர்கள்?',
+    'mood.very_low': 'மிகக் குறைவு',
+    'mood.low': 'குறைவு',
+    'mood.neutral': 'சாதாரண',
+    'mood.good': 'நல்ல',
+    'mood.excellent': 'சிறந்த',
+    'mood.scale_low': 'குறைவு',
+    'mood.scale_high': 'அதிகம்',
+    'mood.try_again': 'பின்',
+    'mood.new_quote': 'புதிய மேற்கோள்',
     
     // Menu
     'menu.home': 'முகப்பு',
@@ -740,19 +915,44 @@ const translations: Record<Language, Record<string, string>> = {
     // Quick actions
     'action.qibla': 'কিবলা',
     'action.quran': 'কুরআন',
-    'action.track': 'ট্র্যাক',
+    'action.mood': 'মেজাজ',
     'action.makkah_live': 'মক্কা লাইভ',
     'action.prayer': 'নামাজ',
     'action.zakat': 'যাকাত',
-    'action.store': 'দোকান',
+    'action.news': 'সংবাদ',
     'action.travel': 'ভ্রমণ',
     
     // Bottom Navigation
     'nav.home': 'হোম',
-    'nav.store': 'দোকান',
+    'nav.news': 'সংবাদ',
     'nav.guftagu': 'Guftagu',
     'nav.places': 'স্থান',
     'nav.account': 'অ্যাকাউন্ট',
+    
+    // News page
+    'news.title': 'ইসলামিক সংবাদ',
+    'news.subtitle': 'সর্বশেষ আপডেটের সাথে অবগত থাকুন',
+    'news.load_more': 'আরো লোড করুন',
+    'news.category.all': 'সব',
+    'news.category.world': 'বিশ্ব',
+    'news.category.education': 'শিক্ষা',
+    'news.category.community': 'সম্প্রদায়',
+    'news.category.charity': 'দাতব্য',
+    'news.category.business': 'ব্যবসা',
+    
+    // Mood page
+    'mood.title': 'আপনি কেমন আছেন?',
+    'mood.subtitle': 'নির্দেশনার জন্য আপনার মেজাজ নির্বাচন করুন',
+    'mood.how_feeling': 'আজ আপনি কেমন অনুভব করছেন?',
+    'mood.very_low': 'খুব কম',
+    'mood.low': 'কম',
+    'mood.neutral': 'স্বাভাবিক',
+    'mood.good': 'ভালো',
+    'mood.excellent': 'দারুণ',
+    'mood.scale_low': 'কম',
+    'mood.scale_high': 'বেশি',
+    'mood.try_again': 'পেছনে',
+    'mood.new_quote': 'নতুন উক্তি',
     
     // Menu
     'menu.home': 'হোম',
