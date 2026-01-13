@@ -6,8 +6,8 @@ import { useState } from 'react';
 const prayerTimes = [
   { name: 'FAJR', time: '04:52', icon: Sunrise, label: 'DAWN PRAYER' },
   { name: 'DHUHR', time: '12:45', icon: Sun, label: 'MIDDAY PRAYER' },
-  { name: 'ASR', time: '17:17', icon: SunDim, label: 'AFTERNOON PRAYER' },
   { name: 'MAGHRIB', time: '19:18', icon: Sunset, label: 'SUNSET PRAYER' },
+  { name: 'ASR', time: '17:17', icon: SunDim, label: 'AFTERNOON PRAYER' },
   { name: "ISHA'A", time: '20:38', icon: Moon, label: 'NIGHT PRAYER' },
 ];
 
@@ -34,16 +34,6 @@ const prayerGuidelines = [
     notes: 'The midday prayer. On Fridays, Dhuhr is replaced by Jummah prayer for men, which consists of 2 Fard rakaat preceded by a sermon.',
   },
   {
-    name: 'Asr',
-    icon: SunDim,
-    timeWindow: 'From when shadow equals object height until sunset',
-    rakaat: [
-      { type: 'Sunnah', count: 4, note: 'Ghair Muakkadah (Non-emphasized)' },
-      { type: 'Fard', count: 4, note: 'Obligatory' },
-    ],
-    notes: 'The afternoon prayer. It is highly recommended to pray Asr before the sun starts to turn yellow.',
-  },
-  {
     name: 'Maghrib',
     icon: Sunset,
     timeWindow: 'From sunset until twilight disappears',
@@ -52,6 +42,16 @@ const prayerGuidelines = [
       { type: 'Sunnah', count: 2, note: 'Muakkadah (After Fard)' },
     ],
     notes: 'The sunset prayer. It should be prayed promptly after sunset and should not be delayed.',
+  },
+  {
+    name: 'Asr',
+    icon: SunDim,
+    timeWindow: 'From when shadow equals object height until sunset',
+    rakaat: [
+      { type: 'Sunnah', count: 4, note: 'Ghair Muakkadah (Non-emphasized)' },
+      { type: 'Fard', count: 4, note: 'Obligatory' },
+    ],
+    notes: 'The afternoon prayer. It is highly recommended to pray Asr before the sun starts to turn yellow.',
   },
   {
     name: "Isha'a",

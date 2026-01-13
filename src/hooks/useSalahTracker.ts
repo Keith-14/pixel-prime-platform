@@ -26,8 +26,8 @@ interface PrayerStatus {
   completed: boolean;
 }
 
-const PRAYER_KEYS: Array<'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha'> = [
-  'fajr', 'dhuhr', 'asr', 'maghrib', 'isha'
+const PRAYER_KEYS: Array<'fajr' | 'dhuhr' | 'maghrib' | 'asr' | 'isha'> = [
+  'fajr', 'dhuhr', 'maghrib', 'asr', 'isha'
 ];
 
 export const useSalahTracker = () => {
@@ -50,8 +50,8 @@ export const useSalahTracker = () => {
     return [
       { name: 'FAJR', key: 'fajr', completed: todayLog?.fajr ?? false },
       { name: 'DHUHR', key: 'dhuhr', completed: todayLog?.dhuhr ?? false },
-      { name: 'ASR', key: 'asr', completed: todayLog?.asr ?? false },
       { name: 'MAGHRIB', key: 'maghrib', completed: todayLog?.maghrib ?? false },
+      { name: 'ASR', key: 'asr', completed: todayLog?.asr ?? false },
       { name: "ISHA'A", key: 'isha', completed: todayLog?.isha ?? false },
     ];
   }, [todayLog]);

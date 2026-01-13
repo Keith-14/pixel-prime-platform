@@ -151,11 +151,11 @@ export const Home = () => {
 
   const quickActions = [
     { label: t('action.makkah_live'), Icon: Heart, onClick: () => navigate('/makkah-live') },
-    { label: t('action.track'), Icon: BarChart3, onClick: () => navigate('/progress') },
+    { label: t('action.mood'), Icon: BarChart3, onClick: () => navigate('/mood') },
     { label: t('action.quran'), Icon: BookOpen, onClick: () => navigate('/quran') },
     { label: t('action.qibla'), Icon: Compass, onClick: () => navigate('/qibla') },
     { label: t('action.travel'), Icon: MapPin, onClick: () => navigate('/hajj') },
-    { label: t('action.store'), Icon: Search, onClick: () => navigate('/shop') },
+    { label: t('action.news'), Icon: Search, onClick: () => navigate('/news') },
     { label: t('action.zakat'), Icon: Calculator, onClick: () => navigate('/zakat') },
     { label: t('action.prayer'), Icon: Clock, onClick: () => navigate('/prayer-times') },
   ];
