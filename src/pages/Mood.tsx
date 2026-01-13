@@ -237,8 +237,9 @@ export const Mood = () => {
                 {t('mood.try_again')}
               </Button>
               <Button
+                variant="ghost"
                 onClick={handleNewQuote}
-                className="bg-primary/15 text-primary hover:bg-primary/25 rounded-full border border-primary/20"
+                className="text-muted-foreground hover:text-foreground hover:bg-primary/8 rounded-full"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 {t('mood.new_quote')}
