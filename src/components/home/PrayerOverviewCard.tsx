@@ -19,8 +19,8 @@ export const PrayerOverviewCard = ({
   const PRAYER_NAMES = [
     { key: 'fajr', label: t('prayer.fajr') },
     { key: 'dhuhr', label: t('prayer.dhuhr') },
-    { key: 'maghrib', label: t('prayer.maghrib') },
     { key: 'asr', label: t('prayer.asr') },
+    { key: 'maghrib', label: t('prayer.maghrib') },
     { key: 'isha', label: t('prayer.isha') },
   ];
 
