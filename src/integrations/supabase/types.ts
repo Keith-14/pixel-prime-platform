@@ -66,6 +66,7 @@ export type Database = {
       }
       guftagu_posts: {
         Row: {
+          category: string | null
           content: string
           created_at: string
           id: string
@@ -73,6 +74,7 @@ export type Database = {
           user_name: string
         }
         Insert: {
+          category?: string | null
           content: string
           created_at?: string
           id?: string
@@ -80,6 +82,7 @@ export type Database = {
           user_name: string
         }
         Update: {
+          category?: string | null
           content?: string
           created_at?: string
           id?: string

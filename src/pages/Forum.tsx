@@ -4,10 +4,22 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
-import { MessageCircle, Plus, Send, ArrowLeft, Loader2, Trash2, Heart, RefreshCw, Sparkles, Users, TrendingUp } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MessageCircle, Plus, Send, ArrowLeft, Loader2, Trash2, Heart, RefreshCw, Sparkles, Users, TrendingUp, Hash, AtSign } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+
+// Post categories
+const CATEGORIES = [
+  { id: 'all', label: 'All', icon: Sparkles },
+  { id: 'general', label: 'General', icon: MessageCircle },
+  { id: 'dua', label: 'Dua Requests', icon: Heart },
+  { id: 'knowledge', label: 'Knowledge', icon: Hash },
+  { id: 'advice', label: 'Advice', icon: Users },
+  { id: 'inspiration', label: 'Inspiration', icon: TrendingUp },
+];
 
 interface Reply {
   id: string;
@@ -30,6 +42,7 @@ interface Post {
   user_name: string;
   content: string;
   created_at: string;
+  category?: string;
   replies?: Reply[];
   likes?: Like[];
   likeCount?: number;
@@ -64,17 +77,41 @@ const getAvatarGradient = (name: string) => {
   return colors[index];
 };
 
+// Helper function to render content with @mentions highlighted
+const renderContentWithMentions = (content: string) => {
+  const mentionRegex = /@(\w+)/g;
+  const parts = content.split(mentionRegex);
+  
+  return parts.map((part, index) => {
+    // Every odd index is a captured username
+    if (index % 2 === 1) {
+      return (
+        <span key={index} className="text-primary font-semibold hover:underline cursor-pointer">
+          @{part}
+        </span>
+      );
+    }
+    return part;
+  });
+};
+
 export const Forum = () => {
   const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [newPostContent, setNewPostContent] = useState('');
+  const [newPostCategory, setNewPostCategory] = useState('general');
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [newReply, setNewReply] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [likingPosts, setLikingPosts] = useState<Set<string>>(new Set());
+  const [allUserNames, setAllUserNames] = useState<string[]>([]);
+  const [showMentionSuggestions, setShowMentionSuggestions] = useState(false);
+  const [mentionSearch, setMentionSearch] = useState('');
+  const [mentionTarget, setMentionTarget] = useState<'post' | 'reply'>('post');
   
   // Pull to refresh state
   const [pullDistance, setPullDistance] = useState(0);
@@ -84,6 +121,11 @@ export const Forum = () => {
   const PULL_THRESHOLD = 80;
 
   const currentUserName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
+
+  // Get filtered posts based on selected category
+  const filteredPosts = selectedCategory === 'all' 
+    ? posts 
+    : posts.filter(post => post.category === selectedCategory);
 
   // Fetch posts with their replies and likes
   const fetchPosts = useCallback(async (showLoader = true) => {
@@ -175,9 +217,31 @@ export const Forum = () => {
     setIsPulling(false);
   }, [pullDistance, refreshing, fetchPosts]);
 
+  // Fetch all unique usernames for mentions
+  const fetchUserNames = useCallback(async () => {
+    try {
+      const { data: postsData } = await supabase
+        .from('guftagu_posts')
+        .select('user_name');
+      
+      const { data: repliesData } = await supabase
+        .from('guftagu_replies')
+        .select('user_name');
+
+      const allNames = new Set<string>();
+      postsData?.forEach(p => allNames.add(p.user_name));
+      repliesData?.forEach(r => allNames.add(r.user_name));
+      
+      setAllUserNames(Array.from(allNames));
+    } catch (error) {
+      console.error('Error fetching usernames:', error);
+    }
+  }, []);
+
   // Set up real-time subscriptions
   useEffect(() => {
     fetchPosts();
+    fetchUserNames();
 
     // Subscribe to new posts
     const postsChannel = supabase
@@ -216,7 +280,48 @@ export const Forum = () => {
       supabase.removeChannel(postsChannel);
       supabase.removeChannel(likesChannel);
     };
-  }, [fetchPosts]);
+  }, [fetchPosts, fetchUserNames]);
+
+  // Handle mention input
+  const handleContentChange = (value: string, target: 'post' | 'reply') => {
+    if (target === 'post') {
+      setNewPostContent(value);
+    } else {
+      setNewReply(value);
+    }
+    
+    // Check for @mention trigger
+    const lastAtIndex = value.lastIndexOf('@');
+    if (lastAtIndex !== -1) {
+      const textAfterAt = value.slice(lastAtIndex + 1);
+      const hasSpaceAfter = textAfterAt.includes(' ');
+      
+      if (!hasSpaceAfter && textAfterAt.length >= 0) {
+        setMentionSearch(textAfterAt.toLowerCase());
+        setShowMentionSuggestions(true);
+        setMentionTarget(target);
+        return;
+      }
+    }
+    setShowMentionSuggestions(false);
+  };
+
+  const insertMention = (username: string) => {
+    const currentContent = mentionTarget === 'post' ? newPostContent : newReply;
+    const lastAtIndex = currentContent.lastIndexOf('@');
+    const newContent = currentContent.slice(0, lastAtIndex) + '@' + username + ' ';
+    
+    if (mentionTarget === 'post') {
+      setNewPostContent(newContent);
+    } else {
+      setNewReply(newContent);
+    }
+    setShowMentionSuggestions(false);
+  };
+
+  const filteredSuggestions = allUserNames
+    .filter(name => name.toLowerCase().includes(mentionSearch) && name !== currentUserName)
+    .slice(0, 5);
 
   // Subscribe to replies when a post is selected
   useEffect(() => {
@@ -285,11 +390,13 @@ export const Forum = () => {
         user_id: user.id,
         user_name: currentUserName,
         content: newPostContent.trim(),
+        category: newPostCategory,
       });
 
       if (error) throw error;
 
       setNewPostContent('');
+      setNewPostCategory('general');
       setIsCreateDialogOpen(false);
       toast.success('Post shared!');
     } catch (error) {
@@ -458,7 +565,17 @@ export const Forum = () => {
             )}
           </div>
 
-          <p className="text-foreground/90 mb-5 leading-relaxed text-[15px] whitespace-pre-wrap">{post.content}</p>
+          {/* Category badge */}
+          {post.category && post.category !== 'general' && (
+            <div className="mb-3">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                <Hash className="h-3 w-3" />
+                {CATEGORIES.find(c => c.id === post.category)?.label || post.category}
+              </span>
+            </div>
+          )}
+
+          <p className="text-foreground/90 mb-5 leading-relaxed text-[15px] whitespace-pre-wrap">{renderContentWithMentions(post.content)}</p>
 
           {showActions && (
             <div className="flex items-center gap-6 pt-4 border-t border-primary/5">
@@ -535,7 +652,16 @@ export const Forum = () => {
                     <p className="text-sm text-muted-foreground/60">{formatTimeAgo(selectedPost.created_at)}</p>
                   </div>
                 </div>
-                <p className="text-foreground/90 text-[16px] leading-relaxed whitespace-pre-wrap">{selectedPost.content}</p>
+                {/* Category badge */}
+                {selectedPost.category && selectedPost.category !== 'general' && (
+                  <div className="mb-3">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                      <Hash className="h-3 w-3" />
+                      {CATEGORIES.find(c => c.id === selectedPost.category)?.label || selectedPost.category}
+                    </span>
+                  </div>
+                )}
+                <p className="text-foreground/90 text-[16px] leading-relaxed whitespace-pre-wrap">{renderContentWithMentions(selectedPost.content)}</p>
                 
                 {/* Stats bar */}
                 <div className="flex items-center gap-4 mt-5 pt-4 border-t border-primary/10">
@@ -592,7 +718,7 @@ export const Forum = () => {
                           </Button>
                         )}
                       </div>
-                      <p className="text-sm text-foreground/85 leading-relaxed pl-12">{reply.content}</p>
+                      <p className="text-sm text-foreground/85 leading-relaxed pl-12">{renderContentWithMentions(reply.content)}</p>
                     </div>
                   );
                 })}
@@ -616,12 +742,29 @@ export const Forum = () => {
                   </span>
                 </div>
                 <div className="flex-1 flex gap-2">
-                  <Textarea
-                    value={newReply}
-                    onChange={(e) => setNewReply(e.target.value)}
-                    placeholder="Write a reply..."
-                    className="flex-1 min-h-[48px] max-h-[120px] resize-none bg-card/60 border-primary/10 focus:border-primary/30 rounded-xl"
-                  />
+                  <div className="relative flex-1">
+                    <Textarea
+                      value={newReply}
+                      onChange={(e) => handleContentChange(e.target.value, 'reply')}
+                      placeholder="Write a reply... Use @ to tag users"
+                      className="min-h-[48px] max-h-[120px] resize-none bg-card/60 border-primary/10 focus:border-primary/30 rounded-xl"
+                    />
+                    {/* Mention suggestions for reply */}
+                    {showMentionSuggestions && mentionTarget === 'reply' && filteredSuggestions.length > 0 && (
+                      <div className="absolute bottom-full left-0 right-0 mb-1 bg-card border border-primary/20 rounded-lg shadow-lg overflow-hidden z-50">
+                        {filteredSuggestions.map((name) => (
+                          <button
+                            key={name}
+                            onClick={() => insertMention(name)}
+                            className="w-full px-3 py-2 text-left text-sm hover:bg-primary/10 flex items-center gap-2 transition-colors"
+                          >
+                            <AtSign className="h-3 w-3 text-primary" />
+                            <span className="font-medium">{name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <Button
                     onClick={handleAddReply}
                     disabled={!newReply.trim() || submitting}
@@ -700,6 +843,25 @@ export const Forum = () => {
                 </div>
               </div>
             )}
+
+            {/* Category Filter Tabs */}
+            <div className="flex gap-2 overflow-x-auto pb-2 mt-4 scrollbar-hide">
+              {CATEGORIES.map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  onClick={() => setSelectedCategory(id)}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-300",
+                    selectedCategory === id
+                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                      : "bg-card/60 text-muted-foreground hover:bg-card hover:text-foreground border border-primary/10"
+                  )}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {loading ? (
@@ -710,12 +872,14 @@ export const Forum = () => {
               </div>
               <p className="text-sm text-muted-foreground/60 mt-4">Loading conversations...</p>
             </div>
-          ) : posts.length === 0 ? (
+          ) : filteredPosts.length === 0 ? (
             <div className="text-center py-20 bg-card/30 backdrop-blur-sm rounded-3xl border border-dashed border-primary/10">
               <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mx-auto mb-5">
                 <MessageCircle className="h-10 w-10 text-primary/40" />
               </div>
-              <p className="text-lg font-semibold text-foreground/80 mb-2">No conversations yet</p>
+              <p className="text-lg font-semibold text-foreground/80 mb-2">
+                {selectedCategory === 'all' ? 'No conversations yet' : `No ${CATEGORIES.find(c => c.id === selectedCategory)?.label} posts yet`}
+              </p>
               <p className="text-sm text-muted-foreground/60 mb-6">Start the first Guftagu!</p>
               <Button 
                 onClick={() => setIsCreateDialogOpen(true)}
@@ -727,7 +891,7 @@ export const Forum = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {posts.map((post, index) => (
+              {filteredPosts.map((post, index) => (
                 <PostCard key={post.id} post={post} index={index} />
               ))}
             </div>
@@ -755,19 +919,51 @@ export const Forum = () => {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 mt-2">
+              {/* Category selector */}
+              <div className="flex items-center gap-2">
+                <Hash className="h-4 w-4 text-muted-foreground" />
+                <Select value={newPostCategory} onValueChange={setNewPostCategory}>
+                  <SelectTrigger className="w-[180px] bg-background/50 border-primary/10">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.filter(c => c.id !== 'all').map(({ id, label }) => (
+                      <SelectItem key={id} value={id}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="flex items-start gap-3">
                 <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getAvatarGradient(currentUserName)} flex items-center justify-center shadow-md shrink-0`}>
                   <span className="text-white font-bold text-sm">
                     {currentUserName.charAt(0).toUpperCase()}
                   </span>
                 </div>
-                <Textarea
-                  value={newPostContent}
-                  onChange={(e) => setNewPostContent(e.target.value)}
-                  placeholder="What's on your mind..."
-                  className="flex-1 min-h-[120px] resize-none bg-background/50 border-primary/10 focus:border-primary/30 rounded-xl"
-                  maxLength={500}
-                />
+                <div className="relative flex-1">
+                  <Textarea
+                    value={newPostContent}
+                    onChange={(e) => handleContentChange(e.target.value, 'post')}
+                    placeholder="What's on your mind... Use @ to tag users"
+                    className="min-h-[120px] resize-none bg-background/50 border-primary/10 focus:border-primary/30 rounded-xl"
+                    maxLength={500}
+                  />
+                  {/* Mention suggestions */}
+                  {showMentionSuggestions && mentionTarget === 'post' && filteredSuggestions.length > 0 && (
+                    <div className="absolute bottom-full left-0 right-0 mb-1 bg-card border border-primary/20 rounded-lg shadow-lg overflow-hidden z-50">
+                      {filteredSuggestions.map((name) => (
+                        <button
+                          key={name}
+                          onClick={() => insertMention(name)}
+                          className="w-full px-3 py-2 text-left text-sm hover:bg-primary/10 flex items-center gap-2 transition-colors"
+                        >
+                          <AtSign className="h-3 w-3 text-primary" />
+                          <span className="font-medium">{name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground/60 tabular-nums">
