@@ -5,6 +5,7 @@ import { DailyDuaCard } from '@/components/home/DailyDuaCard';
 import { TodaysVerseCard } from '@/components/home/TodaysVerseCard';
 import { IslamicNewsCard } from '@/components/home/IslamicNewsCard';
 import { BarakahLogo } from '@/components/BarakahLogo';
+import { LanguageSelector } from '@/components/LanguageSelector';
 import {
   Clock,
   BookOpen,
@@ -175,13 +176,16 @@ export const Home = () => {
           >
             <Menu className="h-5 w-5" strokeWidth={1.5} />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="text-foreground hover:bg-primary/8 hover:text-primary rounded-xl h-10 w-10 border border-transparent hover:border-primary/20"
-          >
-            <Bell className="h-5 w-5" strokeWidth={1.5} />
-          </Button>
+          <div className="flex items-center gap-2">
+            <LanguageSelector />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-foreground hover:bg-primary/8 hover:text-primary rounded-xl h-10 w-10 border border-transparent hover:border-primary/20"
+            >
+              <Bell className="h-5 w-5" strokeWidth={1.5} />
+            </Button>
+          </div>
         </div>
 
         {/* Welcome + Prayer overview */}
