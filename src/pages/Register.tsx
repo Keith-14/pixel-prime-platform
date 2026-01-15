@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { User, Briefcase, Plane } from 'lucide-react';
+import { User, Briefcase, Plane, Chrome } from 'lucide-react';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { BarakahLogo } from '@/components/BarakahLogo';
+import { Separator } from '@/components/ui/separator';
 
 type UserRole = 'normal_user' | 'seller' | 'travel_partner';
 
@@ -22,8 +23,18 @@ export const Register = () => {
   const [loading, setLoading] = useState(false);
   
   const navigate = useNavigate();
-  const { signUp, signIn } = useAuth();
+  const { signUp, signIn, signInWithProvider } = useAuth();
   const { t } = useLanguage();
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    const { error } = await signInWithProvider('google');
+    if (error) {
+      toast.error(error.message);
+      setLoading(false);
+    }
+    // OAuth will redirect, so no need to handle success here
+  };
 
   const profileOptions = [
     {
@@ -203,6 +214,22 @@ export const Register = () => {
               </Card>
             ))}
 
+            <div className="flex items-center gap-4 my-4">
+              <Separator className="flex-1 bg-sage/30" />
+              <span className="text-sm text-sage/70">{t('login.or')}</span>
+              <Separator className="flex-1 bg-sage/30" />
+            </div>
+
+            <Button 
+              onClick={handleGoogleSignIn}
+              disabled={loading}
+              variant="outline"
+              className="w-full rounded-xl h-12 font-medium border-sage/30 hover:bg-sage/10"
+            >
+              <Chrome className="h-5 w-5 mr-2" />
+              {t('login.google')}
+            </Button>
+
             <div className="text-center pt-4">
               <p className="text-sm text-sage/70">
                 {t('login.already_have_account')}{' '}
@@ -273,6 +300,22 @@ export const Register = () => {
                 className="w-full rounded-xl h-12 font-medium"
               >
                 {t('login.back')}
+              </Button>
+
+              <div className="flex items-center gap-4 my-2">
+                <Separator className="flex-1 bg-sage/30" />
+                <span className="text-sm text-sage/70">{t('login.or')}</span>
+                <Separator className="flex-1 bg-sage/30" />
+              </div>
+
+              <Button 
+                onClick={handleGoogleSignIn}
+                disabled={loading}
+                variant="outline"
+                className="w-full rounded-xl h-12 font-medium border-sage/30 hover:bg-sage/10"
+              >
+                <Chrome className="h-5 w-5 mr-2" />
+                {t('login.google')}
               </Button>
 
               {isSignIn && (
