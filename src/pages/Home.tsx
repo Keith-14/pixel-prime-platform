@@ -196,7 +196,7 @@ export const Home = () => {
               <p className="text-sm text-muted-foreground">
                 {greeting}
               </p>
-              <h1 className="text-2xl font-bold text-emerald-gradient tracking-tight drop-shadow-[0_0_15px_hsl(145_70%_45%/0.15)]">{t('home.title')}</h1>
+              <h1 className="text-2xl font-bold text-[#ffebc9] tracking-tight">{t('home.title')}</h1>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <MapPin className="h-3 w-3 text-primary" strokeWidth={2} />
                 {locationLoading ? (
