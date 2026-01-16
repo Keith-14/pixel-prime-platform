@@ -120,7 +120,7 @@ export const Forum = () => {
   const startYRef = useRef(0);
   const PULL_THRESHOLD = 80;
 
-  const currentUserName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
+  const currentUserName = user?.displayName || user?.email?.split('@')[0] || 'User';
 
   // Get filtered posts based on selected category
   const filteredPosts = selectedCategory === 'all' 
@@ -179,7 +179,7 @@ export const Forum = () => {
           replies: repliesByPost[post.id] || [],
           likes: postLikes,
           likeCount: postLikes.length,
-          isLiked: user ? postLikes.some(like => like.user_id === user.id) : false,
+          isLiked: user ? postLikes.some(like => like.user_id === user.uid) : false,
         };
       });
 
@@ -387,7 +387,7 @@ export const Forum = () => {
     setSubmitting(true);
     try {
       const { error } = await supabase.from('guftagu_posts').insert({
-        user_id: user.id,
+        user_id: user.uid,
         user_name: currentUserName,
         content: newPostContent.trim(),
         category: newPostCategory,
@@ -449,12 +449,12 @@ export const Forum = () => {
           .from('guftagu_likes')
           .delete()
           .eq('post_id', postId)
-          .eq('user_id', user.id);
+          .eq('user_id', user.uid);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('guftagu_likes')
-          .insert({ post_id: postId, user_id: user.id });
+          .insert({ post_id: postId, user_id: user.uid });
         if (error) throw error;
       }
     } catch (error) {
@@ -487,7 +487,7 @@ export const Forum = () => {
     try {
       const { error } = await supabase.from('guftagu_replies').insert({
         post_id: selectedPost.id,
-        user_id: user.id,
+        user_id: user.uid,
         user_name: currentUserName,
         content: newReply.trim(),
       });
@@ -520,7 +520,7 @@ export const Forum = () => {
   const totalReplies = posts.reduce((acc, p) => acc + (p.replies?.length || 0), 0);
 
   const PostCard = ({ post, showActions = true, index = 0 }: { post: Post; showActions?: boolean; index?: number }) => {
-    const isOwner = user?.id === post.user_id;
+    const isOwner = user?.uid === post.user_id;
     const isLiking = likingPosts.has(post.id);
     const avatarGradient = getAvatarGradient(post.user_name);
 
@@ -686,7 +686,7 @@ export const Forum = () => {
 
               <div className="space-y-3">
                 {selectedPost.replies?.map((reply, index) => {
-                  const isOwner = user?.id === reply.user_id;
+                  const isOwner = user?.uid === reply.user_id;
                   const replyGradient = getAvatarGradient(reply.user_name);
                   
                   return (

@@ -63,7 +63,7 @@ export const useSalahTracker = () => {
     const { data, error } = await supabase
       .from('salah_log')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', user.uid)
       .eq('date', today)
       .maybeSingle();
 
@@ -81,7 +81,7 @@ export const useSalahTracker = () => {
     const { data, error } = await supabase
       .from('salah_streaks')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', user.uid)
       .maybeSingle();
 
     if (error) {
@@ -116,7 +116,7 @@ export const useSalahTracker = () => {
     const { data, error } = await supabase
       .from('salah_log')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', user.uid)
       .gte('date', formatLocalDate(weekAgo))
       .lte('date', formatLocalDate(today))
       .order('date', { ascending: true });
@@ -158,7 +158,7 @@ export const useSalahTracker = () => {
     const { data: logs, error } = await supabase
       .from('salah_log')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', user.uid)
       .order('date', { ascending: false })
       .limit(365); // Check up to a year of data
 
@@ -241,7 +241,7 @@ export const useSalahTracker = () => {
     const { data: existingStreak } = await supabase
       .from('salah_streaks')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', user.uid)
       .maybeSingle();
 
     const longestStreak = Math.max(currentStreak, existingStreak?.longest_streak || 0);
@@ -255,12 +255,12 @@ export const useSalahTracker = () => {
       await supabase
         .from('salah_streaks')
         .update(updateData)
-        .eq('user_id', user.id);
+        .eq('user_id', user.uid);
     } else {
       await supabase
         .from('salah_streaks')
         .insert({
-          user_id: user.id,
+          user_id: user.uid,
           ...updateData,
         });
     }
@@ -295,7 +295,7 @@ export const useSalahTracker = () => {
       } else {
         // Create new record
         const newLog = {
-          user_id: user.id,
+          user_id: user.uid,
           date: today,
           fajr: false,
           dhuhr: false,

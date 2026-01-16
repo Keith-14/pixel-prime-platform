@@ -35,7 +35,7 @@ export const Cart = () => {
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .insert({
-          user_id: user.id,
+          user_id: user.uid,
           total_amount: totalAmount,
           status: 'pending'
         })

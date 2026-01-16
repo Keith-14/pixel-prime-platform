@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session, Provider } from '@supabase/supabase-js';
+import { User } from 'firebase/auth';
+import { auth, onAuthStateChanged, signUpWithEmail, signInWithEmail, signInWithGoogle, firebaseSignOut } from '@/lib/firebase';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 
@@ -7,12 +8,11 @@ type UserRole = 'normal_user' | 'seller' | 'travel_partner' | null;
 
 interface AuthContextType {
   user: User | null;
-  session: Session | null;
   userRole: UserRole;
   loading: boolean;
   signUp: (email: string, password: string, role: UserRole, fullName: string) => Promise<{ error: any; role?: UserRole }>;
   signIn: (email: string, password: string) => Promise<{ error: any; role?: UserRole }>;
-  signInWithProvider: (provider: Provider) => Promise<{ error: any }>;
+  signInWithGoogle: () => Promise<{ error: any; role?: UserRole }>;
   signOut: () => Promise<void>;
 }
 
@@ -20,44 +20,23 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // Defer role fetching with setTimeout
-        if (session?.user) {
-          setTimeout(() => {
-            fetchUserRole(session.user.id);
-          }, 0);
-        } else {
-          setUserRole(null);
-        }
-        setLoading(false);
-      }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setUser(firebaseUser);
       
-      if (session?.user) {
-        setTimeout(() => {
-          fetchUserRole(session.user.id);
-        }, 0);
+      if (firebaseUser) {
+        await fetchUserRole(firebaseUser.uid);
+      } else {
+        setUserRole(null);
       }
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => unsubscribe();
   }, []);
 
   const fetchUserRole = async (userId: string) => {
@@ -81,95 +60,108 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUp = async (email: string, password: string, role: UserRole, fullName: string) => {
     try {
-      const redirectUrl = `${window.location.origin}/`;
-      
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            full_name: fullName
-          }
-        }
-      });
+      const userCredential = await signUpWithEmail(email, password);
+      const firebaseUser = userCredential.user;
 
-      if (error) return { error };
-      if (!data.user) return { error: { message: 'User creation failed' } };
+      if (!firebaseUser) return { error: { message: 'User creation failed' } };
 
-      // Insert user role
+      // Insert user role into Supabase
       const { error: roleError } = await supabase
         .from('user_roles')
-        .insert({ user_id: data.user.id, role });
+        .insert({ user_id: firebaseUser.uid, role });
 
-      if (roleError) return { error, role: undefined };
+      if (roleError) return { error: roleError, role: undefined };
 
-      // Insert profile
+      // Insert profile into Supabase
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({ 
-          user_id: data.user.id, 
+          user_id: firebaseUser.uid, 
           full_name: fullName 
         });
 
       if (profileError) return { error: profileError, role: undefined };
 
+      setUserRole(role);
       return { error: null, role };
     } catch (error: any) {
-      return { error, role: undefined };
+      return { error: { message: error.message || 'Sign up failed' }, role: undefined };
     }
   };
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const userCredential = await signInWithEmail(email, password);
+      const firebaseUser = userCredential.user;
 
-      if (error) return { error, role: undefined };
-      if (!data.user) return { error: { message: 'Sign in failed' }, role: undefined };
+      if (!firebaseUser) return { error: { message: 'Sign in failed' }, role: undefined };
 
-      // Fetch user role
+      // Fetch user role from Supabase
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', data.user.id)
+        .eq('user_id', firebaseUser.uid)
         .single();
 
       if (roleError) return { error: roleError, role: undefined };
 
-      return { error: null, role: roleData?.role as UserRole };
+      const role = roleData?.role as UserRole;
+      setUserRole(role);
+      return { error: null, role };
     } catch (error: any) {
-      return { error, role: undefined };
+      return { error: { message: error.message || 'Sign in failed' }, role: undefined };
     }
   };
 
-  const signInWithProvider = async (provider: Provider) => {
+  const handleGoogleSignIn = async () => {
     try {
-      const redirectUrl = `${window.location.origin}/`;
-      
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: redirectUrl,
-        },
-      });
+      const result = await signInWithGoogle();
+      const firebaseUser = result.user;
 
-      return { error };
+      if (!firebaseUser) return { error: { message: 'Google sign in failed' }, role: undefined };
+
+      // Check if user role exists in Supabase
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', firebaseUser.uid)
+        .single();
+
+      if (roleError && roleError.code !== 'PGRST116') {
+        // PGRST116 means no rows found, which is expected for new users
+        return { error: roleError, role: undefined };
+      }
+
+      if (roleData) {
+        const role = roleData.role as UserRole;
+        setUserRole(role);
+        return { error: null, role };
+      }
+
+      // New Google user - they need to select a role
+      // Return null role to indicate role selection is needed
+      return { error: null, role: null };
     } catch (error: any) {
-      return { error };
+      return { error: { message: error.message || 'Google sign in failed' }, role: undefined };
     }
   };
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
+  const handleSignOut = async () => {
+    await firebaseSignOut();
     setUserRole(null);
     navigate('/login');
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, userRole, loading, signUp, signIn, signInWithProvider, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      userRole, 
+      loading, 
+      signUp, 
+      signIn, 
+      signInWithGoogle: handleGoogleSignIn, 
+      signOut: handleSignOut 
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -23,17 +23,31 @@ export const Register = () => {
   const [loading, setLoading] = useState(false);
   
   const navigate = useNavigate();
-  const { signUp, signIn, signInWithProvider } = useAuth();
+  const { signUp, signIn, signInWithGoogle } = useAuth();
   const { t } = useLanguage();
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
-    const { error } = await signInWithProvider('google');
+    const { error, role } = await signInWithGoogle();
     if (error) {
       toast.error(error.message);
       setLoading(false);
+      return;
     }
-    // OAuth will redirect, so no need to handle success here
+    
+    // If role is null, user needs to select a role (new Google user)
+    if (role === null) {
+      // For now, navigate to home - could add role selection for new Google users
+      toast.success('Signed in with Google!');
+      navigate('/');
+    } else if (role === 'seller') {
+      navigate('/seller-dashboard');
+    } else if (role === 'travel_partner') {
+      navigate('/business-account');
+    } else {
+      navigate('/');
+    }
+    setLoading(false);
   };
 
   const profileOptions = [
