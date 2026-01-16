@@ -50,7 +50,7 @@ export const SellerDashboard = () => {
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .eq('seller_id', user?.id)
+        .eq('seller_id', user?.uid)
         .order('created_at', { ascending: false });
 
       if (error) throw error;

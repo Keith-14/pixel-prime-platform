@@ -46,16 +46,17 @@ export const Home = () => {
         return;
       }
 
-      const metaName = user.user_metadata?.full_name;
-      if (metaName) {
-        setUserName(metaName.split(' ')[0]);
+      // Firebase user has displayName
+      const displayName = user.displayName;
+      if (displayName) {
+        setUserName(displayName.split(' ')[0]);
         return;
       }
 
       const { data } = await supabase
         .from('profiles')
         .select('full_name')
-        .eq('user_id', user.id)
+        .eq('user_id', user.uid)
         .single();
 
       if (data?.full_name) {

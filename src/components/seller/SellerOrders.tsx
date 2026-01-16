@@ -61,7 +61,7 @@ export const SellerOrders = () => {
       const { data: products, error: productsError } = await supabase
         .from('products')
         .select('id')
-        .eq('seller_id', user?.id);
+        .eq('seller_id', user?.uid);
 
       if (productsError) throw productsError;
 

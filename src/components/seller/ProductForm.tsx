@@ -47,7 +47,7 @@ export const ProductForm = ({ product, onClose }: ProductFormProps) => {
 
     try {
       const fileExt = imageFile.name.split('.').pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      const fileName = `${user.uid}/${Date.now()}.${fileExt}`;
       
       const { error: uploadError } = await supabase.storage
         .from('product-images')
@@ -88,7 +88,7 @@ export const ProductForm = ({ product, onClose }: ProductFormProps) => {
       }
 
       const productData = {
-        seller_id: user?.id,
+        seller_id: user?.uid,
         name: formData.name,
         description: formData.description || null,
         price: parseFloat(formData.price),
