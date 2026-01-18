@@ -96,7 +96,15 @@ export const Register = () => {
       if (isSignIn) {
         const { error, role } = await signIn(email, password);
         if (error) {
-          toast.error(error.message);
+          // If the user accidentally tried to sign in with a provider that can't use password,
+          // or if the message is misleading, keep guidance friendly.
+          if (String(error.message).includes('auth/user-not-found')) {
+            toast.error('No account found for this email. Please create an account first.');
+            setIsSignIn(false);
+            setStep('profile');
+          } else {
+            toast.error(error.message);
+          }
         } else {
           toast.success('Signed in successfully!');
           // Redirect based on role
@@ -114,10 +122,17 @@ export const Register = () => {
           setLoading(false);
           return;
         }
-        
+
         const { error, role } = await signUp(email, password, selectedRole, fullName);
         if (error) {
-          toast.error(error.message);
+          // Common confusion: trying to create an account that already exists.
+          if (String(error.message).includes('auth/email-already-in-use')) {
+            toast.error('This email already has an account. Please sign in instead.');
+            setIsSignIn(true);
+            setStep('details');
+          } else {
+            toast.error(error.message);
+          }
         } else {
           toast.success('Account created successfully!');
           // Store destination for after onboarding
