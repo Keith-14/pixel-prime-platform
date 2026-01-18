@@ -45,14 +45,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching user role:', error);
         return;
       }
 
-      setUserRole(data?.role as UserRole);
+      setUserRole(data?.role as UserRole || null);
     } catch (error) {
       console.error('Error in fetchUserRole:', error);
     }
@@ -101,9 +101,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .from('user_roles')
         .select('role')
         .eq('user_id', firebaseUser.uid)
-        .single();
+        .maybeSingle();
 
       if (roleError) return { error: roleError, role: undefined };
+      if (!roleData) return { error: { message: 'User role not found. Please sign up first.' }, role: undefined };
 
       const role = roleData?.role as UserRole;
       setUserRole(role);
@@ -125,7 +126,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .from('user_roles')
         .select('role')
         .eq('user_id', firebaseUser.uid)
-        .single();
+        .maybeSingle();
 
       if (roleError && roleError.code !== 'PGRST116') {
         // PGRST116 means no rows found, which is expected for new users
