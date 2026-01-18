@@ -34,10 +34,10 @@ export const BottomNavigation = () => {
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                {/* Green gradient circle behind Guftagu tab */}
+                {/* Green solid circle behind Guftagu tab */}
                 {isGuftagu && (
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/40 via-primary/25 to-primary/10 blur-sm" />
+                    <div className="w-[62px] h-[62px] rounded-full bg-primary/80" />
                   </div>
                 )}
                 <div className={cn(
