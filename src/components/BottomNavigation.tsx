@@ -22,19 +22,26 @@ export const BottomNavigation = () => {
         <div className="flex justify-around py-2">
           {navItems.map(({ icon: Icon, labelKey, path }) => {
             const isActive = location.pathname === path;
+            const isGuftagu = path === '/forum';
             return (
               <button
                 key={path}
                 onClick={() => navigate(path)}
                 className={cn(
-                  "flex flex-col items-center py-3 px-4 text-xs font-medium transition-all duration-300 ease-out rounded-xl group",
+                  "flex flex-col items-center py-3 px-4 text-xs font-medium transition-all duration-300 ease-out rounded-xl group relative",
                   isActive 
                     ? "text-primary" 
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
+                {/* Green gradient circle behind Guftagu tab */}
+                {isGuftagu && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/40 via-primary/25 to-primary/10 blur-sm" />
+                  </div>
+                )}
                 <div className={cn(
-                  "p-2 rounded-xl transition-all duration-300 relative",
+                  "p-2 rounded-xl transition-all duration-300 relative z-10",
                   isActive && "bg-gradient-to-br from-primary/20 to-primary/5"
                 )}>
                   {isActive && (
@@ -46,7 +53,7 @@ export const BottomNavigation = () => {
                   )} strokeWidth={isActive ? 2.5 : 1.5} />
                 </div>
                 <span className={cn(
-                  "mt-1.5 transition-all duration-300",
+                  "mt-1.5 transition-all duration-300 relative z-10",
                   isActive && "font-bold text-emerald-gradient"
                 )}>{t(labelKey)}</span>
               </button>
