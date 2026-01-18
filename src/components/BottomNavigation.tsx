@@ -42,19 +42,25 @@ export const BottomNavigation = () => {
                 )}
                 <div className={cn(
                   "p-2 rounded-xl transition-all duration-300 relative z-10",
-                  isActive && "bg-gradient-to-br from-primary/20 to-primary/5"
+                  isActive && !isGuftagu && "bg-gradient-to-br from-primary/20 to-primary/5"
                 )}>
-                  {isActive && (
+                  {isActive && !isGuftagu && (
                     <div className="absolute inset-0 rounded-xl bg-primary/15 blur-lg" />
                   )}
                   <Icon className={cn(
                     "h-5 w-5 transition-all duration-300 relative z-10",
-                    isActive ? "text-primary drop-shadow-[0_0_8px_hsl(145_70%_45%/0.5)]" : "group-hover:scale-110"
-                  )} strokeWidth={isActive ? 2.5 : 1.5} />
+                    isGuftagu 
+                      ? "text-black" 
+                      : isActive 
+                        ? "text-primary drop-shadow-[0_0_8px_hsl(145_70%_45%/0.5)]" 
+                        : "group-hover:scale-110"
+                  )} strokeWidth={isGuftagu ? 2.5 : isActive ? 2.5 : 1.5} />
                 </div>
                 <span className={cn(
                   "mt-1.5 transition-all duration-300 relative z-10",
-                  isActive && "font-bold text-emerald-gradient"
+                  isGuftagu 
+                    ? "text-black font-bold" 
+                    : isActive && "font-bold text-emerald-gradient"
                 )}>{t(labelKey)}</span>
               </button>
             );
