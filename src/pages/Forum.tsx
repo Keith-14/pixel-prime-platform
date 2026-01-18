@@ -112,6 +112,7 @@ export const Forum = () => {
   const [showMentionSuggestions, setShowMentionSuggestions] = useState(false);
   const [mentionSearch, setMentionSearch] = useState('');
   const [mentionTarget, setMentionTarget] = useState<'post' | 'reply'>('post');
+  const [profileName, setProfileName] = useState<string | null>(null);
   
   // Pull to refresh state
   const [pullDistance, setPullDistance] = useState(0);
@@ -120,7 +121,26 @@ export const Forum = () => {
   const startYRef = useRef(0);
   const PULL_THRESHOLD = 80;
 
-  const currentUserName = user?.displayName || user?.email?.split('@')[0] || 'User';
+  // Fetch user's profile name from Supabase
+  useEffect(() => {
+    const fetchProfileName = async () => {
+      if (!user?.uid) return;
+      
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('user_id', user.uid)
+        .maybeSingle();
+      
+      if (data?.full_name) {
+        setProfileName(data.full_name);
+      }
+    };
+    
+    fetchProfileName();
+  }, [user?.uid]);
+
+  const currentUserName = profileName || user?.displayName || user?.email?.split('@')[0] || 'User';
 
   // Get filtered posts based on selected category
   const filteredPosts = selectedCategory === 'all' 
