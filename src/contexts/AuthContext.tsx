@@ -13,6 +13,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, role: UserRole, fullName: string) => Promise<{ error: any; role?: UserRole }>;
   signIn: (email: string, password: string) => Promise<{ error: any; role?: UserRole }>;
   signInWithGoogle: () => Promise<{ error: any; role?: UserRole }>;
+  completeAccountSetup: (role: Exclude<UserRole, null>, fullName: string) => Promise<{ error: any; role?: UserRole }>;
   signOut: () => Promise<void>;
 }
 
@@ -45,6 +46,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
+        .limit(1)
         .maybeSingle();
 
       if (error) {
@@ -52,7 +54,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
-      setUserRole(data?.role as UserRole || null);
+      setUserRole((data?.role as UserRole) || null);
     } catch (error) {
       console.error('Error in fetchUserRole:', error);
     }
@@ -96,15 +98,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (!firebaseUser) return { error: { message: 'Sign in failed' }, role: undefined };
 
-      // Fetch user role from Supabase
+      // Fetch user role from database
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', firebaseUser.uid)
+        .limit(1)
         .maybeSingle();
 
       if (roleError) return { error: roleError, role: undefined };
-      if (!roleData) return { error: { message: 'User role not found. Please sign up first.' }, role: undefined };
+
+      // Account exists in Firebase, but may be missing role/profile setup in DB.
+      // Return role null so UI can guide the user to finish setup.
+      if (!roleData) {
+        setUserRole(null);
+        return { error: null, role: null };
+      }
 
       const role = roleData?.role as UserRole;
       setUserRole(role);
@@ -121,11 +130,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (!firebaseUser) return { error: { message: 'Google sign in failed' }, role: undefined };
 
-      // Check if user role exists in Supabase
+      // Check if user role exists in database
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', firebaseUser.uid)
+        .limit(1)
         .maybeSingle();
 
       if (roleError && roleError.code !== 'PGRST116') {
@@ -140,10 +150,43 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       // New Google user - they need to select a role
-      // Return null role to indicate role selection is needed
       return { error: null, role: null };
     } catch (error: any) {
       return { error: { message: error.message || 'Google sign in failed' }, role: undefined };
+    }
+  };
+
+  const completeAccountSetup = async (role: Exclude<UserRole, null>, fullName: string) => {
+    try {
+      if (!user) return { error: { message: 'You must be signed in to complete setup.' }, role: undefined };
+
+      // Ensure role row exists
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({ user_id: user.uid, role });
+
+      // If role already exists, ignore the unique error
+      if (roleError && roleError.code !== '23505') {
+        return { error: roleError, role: undefined };
+      }
+
+      // Upsert profile (profiles.user_id is unique)
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert(
+          {
+            user_id: user.uid,
+            full_name: fullName,
+          },
+          { onConflict: 'user_id' }
+        );
+
+      if (profileError) return { error: profileError, role: undefined };
+
+      setUserRole(role);
+      return { error: null, role };
+    } catch (error: any) {
+      return { error: { message: error.message || 'Account setup failed' }, role: undefined };
     }
   };
 
@@ -160,7 +203,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       loading, 
       signUp, 
       signIn, 
-      signInWithGoogle: handleGoogleSignIn, 
+      signInWithGoogle: handleGoogleSignIn,
+      completeAccountSetup,
       signOut: handleSignOut 
     }}>
       {children}
