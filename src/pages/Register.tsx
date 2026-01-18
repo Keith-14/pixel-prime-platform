@@ -20,10 +20,11 @@ export const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSignIn, setIsSignIn] = useState(false);
+  const [needsSetup, setNeedsSetup] = useState(false);
   const [loading, setLoading] = useState(false);
   
   const navigate = useNavigate();
-  const { signUp, signIn, signInWithGoogle } = useAuth();
+  const { signUp, signIn, signInWithGoogle, completeAccountSetup } = useAuth();
   const { t } = useLanguage();
 
   const handleGoogleSignIn = async () => {
@@ -34,13 +35,22 @@ export const Register = () => {
       setLoading(false);
       return;
     }
-    
-    // If role is null, user needs to select a role (new Google user)
+
+    // If role is null, the user signed in but still needs to pick a role + name.
     if (role === null) {
-      // For now, navigate to home - could add role selection for new Google users
-      toast.success('Signed in with Google!');
-      navigate('/');
-    } else if (role === 'seller') {
+      toast.message('Finish setup', {
+        description: 'Please choose your account type to continue.'
+      });
+      setNeedsSetup(true);
+      setIsSignIn(false);
+      setStep('profile');
+      setSelectedRole(null);
+      setFullName('');
+      setLoading(false);
+      return;
+    }
+
+    if (role === 'seller') {
       navigate('/seller-dashboard');
     } else if (role === 'travel_partner') {
       navigate('/business-account');
@@ -80,6 +90,44 @@ export const Register = () => {
   };
 
   const handleSubmit = async () => {
+    // Completing setup for an existing Firebase account (role/profile missing)
+    if (needsSetup) {
+      if (!selectedRole) {
+        toast.error('Please select a profile type');
+        return;
+      }
+
+      if (!fullName) {
+        toast.error('Please enter your full name');
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const { error, role } = await completeAccountSetup(selectedRole, fullName);
+        if (error) {
+          toast.error(error.message);
+          return;
+        }
+
+        toast.success('Account setup completed!');
+        setNeedsSetup(false);
+
+        if (role === 'seller') {
+          navigate('/seller-dashboard');
+        } else if (role === 'travel_partner') {
+          navigate('/business-account');
+        } else {
+          navigate('/');
+        }
+      } catch {
+        toast.error('An error occurred. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     if (!email || !password) {
       toast.error('Please fill in all fields');
       return;
@@ -105,6 +153,16 @@ export const Register = () => {
           } else {
             toast.error(error.message);
           }
+        } else if (role === null) {
+          // Signed in successfully, but the account is missing role/profile rows.
+          toast.message('Finish setup', {
+            description: 'Please choose your account type to continue.'
+          });
+          setNeedsSetup(true);
+          setIsSignIn(false);
+          setStep('profile');
+          setSelectedRole(null);
+          setFullName('');
         } else {
           toast.success('Signed in successfully!');
           // Redirect based on role
@@ -299,28 +357,38 @@ export const Register = () => {
                 />
               )}
               
-              <Input
-                type="email"
-                placeholder={t('login.email_placeholder')}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="bg-background border-sage/30 rounded-xl h-12 text-center placeholder:text-sage/50"
-              />
+              {!needsSetup && (
+                <>
+                  <Input
+                    type="email"
+                    placeholder={t('login.email_placeholder')}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="bg-background border-sage/30 rounded-xl h-12 text-center placeholder:text-sage/50"
+                  />
 
-              <Input
-                type="password"
-                placeholder={t('login.password')}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="bg-background border-sage/30 rounded-xl h-12 text-center placeholder:text-sage/50"
-              />
+                  <Input
+                    type="password"
+                    placeholder={t('login.password')}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="bg-background border-sage/30 rounded-xl h-12 text-center placeholder:text-sage/50"
+                  />
+                </>
+              )}
 
               <Button 
                 onClick={handleSubmit}
                 disabled={loading}
                 className="w-full bg-sage hover:bg-sage-dark text-primary-foreground rounded-xl h-12 font-medium"
               >
-                {loading ? t('login.please_wait') : isSignIn ? t('login.sign_in') : t('login.create_account_btn')}
+                {loading
+                  ? t('login.please_wait')
+                  : needsSetup
+                    ? 'Finish setup'
+                    : isSignIn
+                      ? t('login.sign_in')
+                      : t('login.create_account_btn')}
               </Button>
 
               <Button 
