@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 
-type NewsCategory = 'all' | 'world' | 'education' | 'community' | 'charity' | 'business';
+type NewsCategory = 'all' | 'world' | 'education' | 'community' | 'charity' | 'business' | 'politics';
 
 interface NewsItem {
   id: string;
@@ -25,6 +25,7 @@ const categories: { key: NewsCategory; labelKey: string; icon: typeof Globe }[] 
   { key: 'community', labelKey: 'news.category.community', icon: Users },
   { key: 'charity', labelKey: 'news.category.charity', icon: Heart },
   { key: 'business', labelKey: 'news.category.business', icon: Building2 },
+  { key: 'politics', labelKey: 'news.category.politics', icon: Globe },
 ];
 
 const newsItems: NewsItem[] = [
