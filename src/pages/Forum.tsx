@@ -17,7 +17,6 @@ const CATEGORIES = [
   { id: 'general', label: 'General', icon: MessageCircle },
   { id: 'dua', label: 'Dua Requests', icon: Heart },
   { id: 'knowledge', label: 'Deen & Knowledge', icon: Hash },
-  { id: 'advice', label: 'Advice', icon: Users },
   { id: 'inspiration', label: 'Inspiration', icon: TrendingUp },
   { id: 'ummah-news', label: 'Ummah News', icon: TrendingUp },
   { id: 'entrepreneurship', label: 'Entrepreneurship & Business', icon: TrendingUp },
