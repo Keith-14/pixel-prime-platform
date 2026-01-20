@@ -18,29 +18,40 @@ export const BottomNavigation = () => {
 
   return (
     <nav className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md z-30 px-4 pb-4 font-arabic">
+      {/* Elevated center button - positioned absolutely to protrude above the bar */}
+      <div className="absolute left-1/2 -translate-x-1/2 -top-4 z-10">
+        <button
+          onClick={() => navigate('/forum')}
+          className="relative flex flex-col items-center"
+        >
+          <div className={cn(
+            "w-16 h-16 rounded-full flex items-center justify-center shadow-xl transition-all duration-300",
+            "bg-primary hover:bg-primary/90 hover:scale-105",
+            "shadow-[0_4px_20px_-4px_hsl(145_70%_45%/0.5)]"
+          )}>
+            <Users className="h-7 w-7 text-black" strokeWidth={2} />
+          </div>
+        </button>
+      </div>
+      
       <div className="relative glass-dark rounded-2xl shadow-lg">
-        <div className="flex justify-around items-end py-2">
+        <div className="flex justify-around items-center py-2">
           {navItems.map(({ icon: Icon, labelKey, path }, index) => {
             const isActive = location.pathname === path;
             const isCenter = index === 2; // Guftagu is the center item
             
             if (isCenter) {
-              // Elevated center button (Guftagu)
+              // Center placeholder - label only, button is elevated above
               return (
                 <button
                   key={path}
                   onClick={() => navigate(path)}
-                  className="relative flex flex-col items-center -mt-6"
+                  className="flex flex-col items-center py-3 px-4"
                 >
-                  {/* Elevated green circle */}
-                  <div className={cn(
-                    "w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all duration-300",
-                    "bg-primary hover:bg-primary/90 hover:scale-105"
-                  )}>
-                    <Icon className="h-7 w-7 text-black" strokeWidth={2} />
-                  </div>
+                  {/* Invisible spacer for the elevated button */}
+                  <div className="h-9 w-9" />
                   <span className={cn(
-                    "mt-1.5 text-xs font-bold transition-all duration-300",
+                    "text-xs font-bold transition-all duration-300",
                     isActive ? "text-primary" : "text-muted-foreground"
                   )}>{t(labelKey)}</span>
                 </button>
