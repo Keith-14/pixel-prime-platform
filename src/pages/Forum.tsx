@@ -16,9 +16,15 @@ const CATEGORIES = [
   { id: 'all', label: 'All', icon: Sparkles },
   { id: 'general', label: 'General', icon: MessageCircle },
   { id: 'dua', label: 'Dua Requests', icon: Heart },
-  { id: 'knowledge', label: 'Knowledge', icon: Hash },
+  { id: 'knowledge', label: 'Deen & Knowledge', icon: Hash },
   { id: 'advice', label: 'Advice', icon: Users },
   { id: 'inspiration', label: 'Inspiration', icon: TrendingUp },
+  { id: 'ummah-news', label: 'Ummah News', icon: TrendingUp },
+  { id: 'entrepreneurship', label: 'Entrepreneurship & Business', icon: TrendingUp },
+  { id: 'sports', label: 'Sports', icon: TrendingUp },
+  { id: 'youth', label: 'Youth', icon: Users },
+  { id: 'student', label: 'Student', icon: Hash },
+  { id: 'global-politics', label: 'Global Politics', icon: MessageCircle },
 ];
 
 interface Reply {
