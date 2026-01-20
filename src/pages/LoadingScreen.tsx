@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import tasbeehImage from '@/assets/tasbeeh-startup.png';
+import barakahLogo from '@/assets/barakah-logo.png';
 
 export const LoadingScreen = () => {
   const navigate = useNavigate();
@@ -38,11 +38,11 @@ export const LoadingScreen = () => {
 
       {/* Content */}
       <div className="relative z-10 text-center">
-        {/* Tasbeeh Image */}
-        <div className="w-64 h-64 mx-auto mb-6 relative flex items-center justify-center float">
+        {/* Company Logo */}
+        <div className="w-32 h-32 mx-auto mb-8 relative flex items-center justify-center float">
           <img 
-            src={tasbeehImage} 
-            alt="Hand holding tasbeeh" 
+            src={barakahLogo} 
+            alt="Barakah Logo" 
             className="w-full h-full object-contain drop-shadow-[0_0_15px_hsl(150_30%_50%/0.4)]"
           />
         </div>
