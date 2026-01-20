@@ -39,11 +39,11 @@ export const LoadingScreen = () => {
       {/* Content */}
       <div className="relative z-10 text-center">
         {/* Tasbeeh Image */}
-        <div className="w-64 h-64 mx-auto mb-6 relative flex items-center justify-center">
+        <div className="w-64 h-64 mx-auto mb-6 relative flex items-center justify-center float">
           <img 
             src={tasbeehImage} 
             alt="Hand holding tasbeeh" 
-            className="w-full h-full object-contain animate-pulse-slow"
+            className="w-full h-full object-contain drop-shadow-[0_0_15px_hsl(150_30%_50%/0.4)]"
           />
         </div>
         
