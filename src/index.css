@@ -261,9 +261,9 @@ All colors MUST be HSL.
   .glass-footer {
     background: linear-gradient(
       135deg,
-      hsl(180 20% 8% / 0.85),
-      hsl(160 15% 6% / 0.9),
-      hsl(180 20% 8% / 0.85)
+      hsl(180 20% 10% / 0.55),
+      hsl(160 15% 8% / 0.6),
+      hsl(180 20% 10% / 0.55)
     );
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
