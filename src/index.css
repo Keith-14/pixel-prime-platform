@@ -257,6 +257,56 @@ All colors MUST be HSL.
       inset 0 1px 0 hsl(0 0% 100% / 0.03);
   }
 
+  /* Premium glassmorphism footer */
+  .glass-footer {
+    background: linear-gradient(
+      135deg,
+      hsl(180 20% 8% / 0.85),
+      hsl(160 15% 6% / 0.9),
+      hsl(180 20% 8% / 0.85)
+    );
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid hsl(180 30% 40% / 0.15);
+    box-shadow: 
+      0 -4px 30px hsl(0 0% 0% / 0.3),
+      0 8px 32px hsl(0 0% 0% / 0.4),
+      inset 0 1px 0 hsl(180 40% 60% / 0.08),
+      inset 0 -1px 0 hsl(0 0% 0% / 0.2),
+      0 0 0 1px hsl(180 25% 35% / 0.1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .glass-footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(180 40% 50% / 0.3),
+      hsl(160 50% 45% / 0.4),
+      hsl(180 40% 50% / 0.3),
+      transparent
+    );
+  }
+
+  .glass-footer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      ellipse at 50% 0%,
+      hsl(180 30% 50% / 0.05),
+      transparent 60%
+    );
+    pointer-events: none;
+  }
+
   /* Interactive hover states */
   .hover-lift {
     transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);

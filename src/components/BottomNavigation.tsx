@@ -34,7 +34,7 @@ export const BottomNavigation = () => {
         </button>
       </div>
       
-      <div className="relative glass-dark rounded-2xl shadow-lg">
+      <div className="relative glass-footer rounded-[28px]">
         <div className="flex justify-around items-center py-2">
           {navItems.map(({ icon: Icon, labelKey, path }, index) => {
             const isActive = location.pathname === path;
