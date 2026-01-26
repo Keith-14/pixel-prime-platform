@@ -44,7 +44,7 @@ export const PrayerOverviewCard = ({
   const activePrayerIndex = PRAYER_NAMES.findIndex(p => p.key === activePrayer);
 
   return (
-    <Card className="relative overflow-hidden glass-dark p-5 shine-effect">
+    <Card className="relative overflow-hidden glass-dark p-4 shine-effect">
       {/* Subtle gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
       <div className="absolute top-0 right-0 w-32 h-32 bg-[radial-gradient(circle_at_top_right,hsl(145_70%_45%/0.1),transparent_60%)] pointer-events-none" />
@@ -54,21 +54,21 @@ export const PrayerOverviewCard = ({
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary/80">
             {t('home.next_prayer')}
           </p>
-          <p className="mt-2 text-3xl font-bold tracking-tight text-emerald-gradient">
+          <p className="mt-1 text-2xl font-bold tracking-tight text-emerald-gradient">
             {getDisplayPrayerName()}
           </p>
-          <p className="mt-2 text-xs text-muted-foreground max-w-[180px] leading-relaxed">
+          <p className="mt-1 text-xs text-muted-foreground max-w-[180px] leading-relaxed">
             {nextTimeLabel || t('home.next_prayer_at')}
           </p>
         </div>
 
-        <div className="text-right flex items-start gap-3">
+        <div className="text-right flex items-start gap-2">
           <div className="relative">
             <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl" />
-            <Moon className="h-12 w-12 text-primary relative z-10 float drop-shadow-[0_0_10px_hsl(145_70%_45%/0.4)]" strokeWidth={1} fill="hsl(145 70% 45% / 0.1)" />
+            <Moon className="h-10 w-10 text-primary relative z-10 float drop-shadow-[0_0_10px_hsl(145_70%_45%/0.4)]" strokeWidth={1} fill="hsl(145 70% 45% / 0.1)" />
           </div>
           <div>
-            <p className="text-4xl font-bold tabular-nums tracking-tight text-emerald-gradient drop-shadow-[0_0_15px_hsl(145_70%_45%/0.25)]">
+            <p className="text-3xl font-bold tabular-nums tracking-tight text-emerald-gradient drop-shadow-[0_0_15px_hsl(145_70%_45%/0.25)]">
               {currentTime || "--:--:--"}
             </p>
           </div>
@@ -76,7 +76,7 @@ export const PrayerOverviewCard = ({
       </div>
 
       {/* Prayer timeline with minimal curve */}
-      <div className="relative z-10 mt-8">
+      <div className="relative z-10 mt-5">
         {/* Curved line SVG */}
         <svg 
           className="absolute inset-x-0 top-0 h-14 w-full" 
