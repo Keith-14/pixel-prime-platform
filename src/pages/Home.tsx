@@ -39,6 +39,7 @@ export const Home = () => {
   const [currentTime, setCurrentTime] = useState('');
   const [currentPrayer, setCurrentPrayer] = useState({ name: '', nextTime: '' });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   // Fetch user name
   useEffect(() => {
