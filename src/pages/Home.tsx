@@ -6,6 +6,8 @@ import { TodaysVerseCard } from '@/components/home/TodaysVerseCard';
 import { IslamicNewsCard } from '@/components/home/IslamicNewsCard';
 import { BarakahLogo } from '@/components/BarakahLogo';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import { FloatingChatButton } from '@/components/FloatingChatButton';
+import { ChatAssistant } from '@/components/ChatAssistant';
 import {
   Clock,
   BookOpen,
