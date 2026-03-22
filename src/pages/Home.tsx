@@ -251,6 +251,12 @@ export const Home = () => {
         </section>
       </div>
 
+      {/* Floating Chat Button */}
+      {!isChatOpen && <FloatingChatButton onClick={() => setIsChatOpen(true)} />}
+
+      {/* Chat Assistant Overlay */}
+      <ChatAssistant open={isChatOpen} onClose={() => setIsChatOpen(false)} />
+
       {/* Side Menu - controlled from Home */}
       <div 
         className={`fixed inset-0 z-50 ${isMenuOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
