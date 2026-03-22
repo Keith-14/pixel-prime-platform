@@ -1,4 +1,4 @@
-import chatAvatar from '@/assets/chat-avatar.png';
+import chatAvatar from '@/assets/chat-avatar.webp';
 
 interface FloatingChatButtonProps {
   onClick: () => void;
