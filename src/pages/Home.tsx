@@ -6,6 +6,8 @@ import { TodaysVerseCard } from '@/components/home/TodaysVerseCard';
 import { IslamicNewsCard } from '@/components/home/IslamicNewsCard';
 import { BarakahLogo } from '@/components/BarakahLogo';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import { FloatingChatButton } from '@/components/FloatingChatButton';
+import { ChatAssistant } from '@/components/ChatAssistant';
 import {
   Clock,
   BookOpen,
@@ -37,6 +39,7 @@ export const Home = () => {
   const [currentTime, setCurrentTime] = useState('');
   const [currentPrayer, setCurrentPrayer] = useState({ name: '', nextTime: '' });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   // Fetch user name
   useEffect(() => {
@@ -247,6 +250,12 @@ export const Home = () => {
           <TodaysVerseCard />
         </section>
       </div>
+
+      {/* Floating Chat Button */}
+      {!isChatOpen && <FloatingChatButton onClick={() => setIsChatOpen(true)} />}
+
+      {/* Chat Assistant Overlay */}
+      <ChatAssistant open={isChatOpen} onClose={() => setIsChatOpen(false)} />
 
       {/* Side Menu - controlled from Home */}
       <div 
