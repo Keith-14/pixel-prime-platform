@@ -182,7 +182,7 @@ export const ChatAssistant = ({ open, onClose }: ChatAssistantProps) => {
       </div>
 
       {/* Input */}
-      <div className="px-4 pb-24 pt-2">
+      <div className="px-4 pb-32 pt-2">
         <div className="flex items-center gap-2 bg-card/60 border border-primary/20 rounded-2xl px-4 py-2 backdrop-blur-sm">
           <input
             value={input}
