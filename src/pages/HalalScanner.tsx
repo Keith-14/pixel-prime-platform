@@ -230,14 +230,25 @@ export const HalalScanner = () => {
           0%, 100% { top: 20%; }
           50% { top: 75%; }
         }
-        #${scannerIdRef.current} video,
-        #halal-scanner-reader video {
-          object-fit: cover !important;
-          border-radius: 12px;
+        #${scannerIdRef.current},
+        #${scannerIdRef.current} > div {
+          width: 100% !important;
+          height: 100% !important;
+          border: none !important;
+          padding: 0 !important;
         }
-        #${scannerIdRef.current} img,
-        #halal-scanner-reader img {
-          display: none;
+        #${scannerIdRef.current} video {
+          object-fit: cover !important;
+          width: 100% !important;
+          height: 100% !important;
+          border-radius: 0 !important;
+        }
+        #${scannerIdRef.current} img {
+          display: none !important;
+        }
+        /* Hide the built-in qr shaded region borders */
+        #${scannerIdRef.current} #qr-shaded-region {
+          display: none !important;
         }
       `}</style>
     </Layout>
