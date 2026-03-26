@@ -72,7 +72,7 @@ const translations: Record<Language, Record<string, string>> = {
     'action.makkah_live': 'Makkah Live',
     'action.prayer': 'Prayer',
     'action.zakat': 'Zakat',
-    'action.news': 'News',
+    'action.scanner': 'Scanner',
     'action.travel': 'Travel',
     
     // Bottom Navigation
@@ -193,7 +193,7 @@ const translations: Record<Language, Record<string, string>> = {
     'action.makkah_live': 'مکہ لائیو',
     'action.prayer': 'نماز',
     'action.zakat': 'زکوٰۃ',
-    'action.news': 'خبریں',
+    'action.scanner': 'اسکینر',
     'action.travel': 'سفر',
     
     // Bottom Navigation
@@ -314,7 +314,7 @@ const translations: Record<Language, Record<string, string>> = {
     'action.makkah_live': 'مكة مباشر',
     'action.prayer': 'الصلاة',
     'action.zakat': 'الزكاة',
-    'action.news': 'الأخبار',
+    'action.scanner': 'ماسح',
     'action.travel': 'السفر',
     
     // Bottom Navigation
@@ -435,7 +435,7 @@ const translations: Record<Language, Record<string, string>> = {
     'action.makkah_live': 'Mekke Canlı',
     'action.prayer': 'Namaz',
     'action.zakat': 'Zekat',
-    'action.news': 'Haberler',
+    'action.scanner': 'Tarayıcı',
     'action.travel': 'Seyahat',
     
     // Bottom Navigation
@@ -556,7 +556,7 @@ const translations: Record<Language, Record<string, string>> = {
     'action.makkah_live': 'Mekah Live',
     'action.prayer': 'Shalat',
     'action.zakat': 'Zakat',
-    'action.news': 'Berita',
+    'action.scanner': 'Pemindai',
     'action.travel': 'Perjalanan',
     
     // Bottom Navigation
@@ -677,7 +677,7 @@ const translations: Record<Language, Record<string, string>> = {
     'action.makkah_live': 'Mekah Live',
     'action.prayer': 'Solat',
     'action.zakat': 'Zakat',
-    'action.news': 'Berita',
+    'action.scanner': 'Pengimbas',
     'action.travel': 'Perjalanan',
     
     // Bottom Navigation
@@ -798,7 +798,7 @@ const translations: Record<Language, Record<string, string>> = {
     'action.makkah_live': 'மக்கா நேரலை',
     'action.prayer': 'தொழுகை',
     'action.zakat': 'ஜகாத்',
-    'action.news': 'செய்திகள்',
+    'action.scanner': 'ஸ்கேனர்',
     'action.travel': 'பயணம்',
     
     // Bottom Navigation
@@ -919,7 +919,7 @@ const translations: Record<Language, Record<string, string>> = {
     'action.makkah_live': 'মক্কা লাইভ',
     'action.prayer': 'নামাজ',
     'action.zakat': 'যাকাত',
-    'action.news': 'সংবাদ',
+    'action.scanner': 'স্ক্যানার',
     'action.travel': 'ভ্রমণ',
     
     // Bottom Navigation

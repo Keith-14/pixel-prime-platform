@@ -13,7 +13,7 @@ import {
   BookOpen,
   Calculator,
   Compass,
-  Search,
+  ScanBarcode,
   MapPin,
   BarChart3,
   Heart,
@@ -160,7 +160,7 @@ export const Home = () => {
     { label: t('action.quran'), Icon: BookOpen, onClick: () => navigate('/quran') },
     { label: t('action.qibla'), Icon: Compass, onClick: () => navigate('/qibla') },
     { label: t('action.travel'), Icon: MapPin, onClick: () => navigate('/hajj') },
-    { label: t('action.news'), Icon: Search, onClick: () => navigate('/news') },
+    { label: t('action.scanner'), Icon: ScanBarcode, onClick: () => navigate('/halal-scanner') },
     { label: t('action.zakat'), Icon: Calculator, onClick: () => navigate('/zakat') },
     { label: t('action.prayer'), Icon: Clock, onClick: () => navigate('/prayer-times') },
   ];
