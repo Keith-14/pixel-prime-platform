@@ -1,7 +1,7 @@
 import { Layout } from '@/components/Layout';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useState, useEffect, useRef } from 'react';
-import { Html5Qrcode } from 'html5-qrcode';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
 import { ArrowLeft, ScanBarcode } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -27,52 +27,82 @@ export const HalalScanner = () => {
   const [result, setResult] = useState<{ status: HalalStatus; productName: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
-  const containerRef = useRef<string>('halal-scanner-reader');
+  const scannerDivRef = useRef<HTMLDivElement>(null);
+  const scannerIdRef = useRef(`halal-scanner-${Date.now()}`);
+  const mountedRef = useRef(true);
+
+  const cleanupScanner = useCallback(async () => {
+    const scanner = scannerRef.current;
+    if (!scanner) return;
+    try {
+      const state = scanner.getState();
+      if (state === Html5QrcodeScannerState.SCANNING || state === Html5QrcodeScannerState.PAUSED) {
+        await scanner.stop();
+      }
+      scanner.clear();
+    } catch {
+      // ignore cleanup errors
+    }
+    scannerRef.current = null;
+  }, []);
 
   const startScanning = async () => {
     setResult(null);
     setError(null);
 
+    await cleanupScanner();
+
+    const el = scannerDivRef.current;
+    if (!el) return;
+
+    // Clear any leftover DOM content from previous scan
+    el.innerHTML = '';
+
+    // Create a fresh child div for the scanner to own
+    const scannerContainer = document.createElement('div');
+    scannerContainer.id = scannerIdRef.current;
+    scannerContainer.style.width = '100%';
+    scannerContainer.style.height = '100%';
+    el.appendChild(scannerContainer);
+
     try {
-      const scanner = new Html5Qrcode(containerRef.current);
+      const scanner = new Html5Qrcode(scannerIdRef.current);
       scannerRef.current = scanner;
 
       await scanner.start(
         { facingMode: 'environment' },
-        {
-          fps: 10,
-          qrbox: { width: 280, height: 200 },
-        },
+        { fps: 10, qrbox: { width: 280, height: 200 } },
         (decodedText) => {
+          if (!mountedRef.current) return;
           const halalResult = checkHalalStatus(decodedText);
           setResult(halalResult);
-          scanner.stop().catch(() => {});
+          cleanupScanner();
           setScanning(false);
         },
-        () => {} // ignore scan failures
+        () => {}
       );
 
-      setScanning(true);
-    } catch (err: any) {
-      setError('Camera access denied. Please allow camera permissions.');
-      setScanning(false);
+      if (mountedRef.current) setScanning(true);
+    } catch {
+      if (mountedRef.current) {
+        setError('Camera access denied. Please allow camera permissions.');
+        setScanning(false);
+      }
     }
   };
 
-  const stopScanning = () => {
-    if (scannerRef.current) {
-      scannerRef.current.stop().catch(() => {});
-      setScanning(false);
-    }
+  const stopScanning = async () => {
+    await cleanupScanner();
+    setScanning(false);
   };
 
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
-      if (scannerRef.current) {
-        scannerRef.current.stop().catch(() => {});
-      }
+      mountedRef.current = false;
+      cleanupScanner();
     };
-  }, []);
+  }, [cleanupScanner]);
 
   const statusConfig = {
     halal: {
@@ -137,18 +167,19 @@ export const HalalScanner = () => {
             <div className="absolute left-4 right-4 h-0.5 bg-destructive z-10 animate-[scanline_2s_ease-in-out_infinite]" />
           )}
 
-          {/* Camera feed container */}
+          {/* Camera feed container - React does NOT render children here */}
           <div
-            id={containerRef.current}
-            className="w-full h-full flex items-center justify-center"
-          >
-            {!scanning && !result && (
-              <div className="flex flex-col items-center gap-3 text-muted-foreground">
-                <ScanBarcode className="h-16 w-16 opacity-30" />
-                <p className="text-sm">Tap scan to start</p>
-              </div>
-            )}
-          </div>
+            ref={scannerDivRef}
+            className="w-full h-full"
+          />
+
+          {/* Overlay placeholder when not scanning */}
+          {!scanning && !result && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-muted-foreground pointer-events-none">
+              <ScanBarcode className="h-16 w-16 opacity-30" />
+              <p className="text-sm">Tap scan to start</p>
+            </div>
+          )}
         </div>
 
         {/* Scan button */}
@@ -199,10 +230,12 @@ export const HalalScanner = () => {
           0%, 100% { top: 20%; }
           50% { top: 75%; }
         }
+        #${scannerIdRef.current} video,
         #halal-scanner-reader video {
           object-fit: cover !important;
           border-radius: 12px;
         }
+        #${scannerIdRef.current} img,
         #halal-scanner-reader img {
           display: none;
         }
