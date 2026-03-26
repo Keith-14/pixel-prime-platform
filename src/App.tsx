@@ -28,6 +28,7 @@ import { MakkahLive } from "./pages/MakkahLive";
 import { Forum } from "./pages/Forum";
 import { News } from "./pages/News";
 import { Mood } from "./pages/Mood";
+import { HalalScanner } from "./pages/HalalScanner";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -78,6 +79,7 @@ const App = () => (
                   <Route path="/makkah-live" element={<ProtectedRoute><MakkahLive /></ProtectedRoute>} />
                   <Route path="/news" element={<ProtectedRoute><News /></ProtectedRoute>} />
                   <Route path="/mood" element={<ProtectedRoute><Mood /></ProtectedRoute>} />
+                  <Route path="/halal-scanner" element={<ProtectedRoute><HalalScanner /></ProtectedRoute>} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
