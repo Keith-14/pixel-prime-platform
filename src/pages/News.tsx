@@ -2,20 +2,24 @@ import { Layout } from '@/components/Layout';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Newspaper, Globe, BookOpen, Users, Heart, Building2, Sparkles, ExternalLink, ChevronRight } from 'lucide-react';
-import { useState } from 'react';
+import { Newspaper, Globe, BookOpen, Users, Heart, Building2, Sparkles, ExternalLink, ChevronRight, RefreshCw, Loader2 } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 type NewsCategory = 'all' | 'world' | 'education' | 'community' | 'charity' | 'business' | 'politics';
 
 interface NewsItem {
   id: string;
   title: string;
+  description: string | null;
+  image_url: string | null;
+  article_url: string;
   source: string;
   category: NewsCategory;
   time: string;
-  imageUrl?: string;
 }
 
 const categories: { key: NewsCategory; labelKey: string; icon: typeof Globe }[] = [
@@ -28,86 +32,69 @@ const categories: { key: NewsCategory; labelKey: string; icon: typeof Globe }[] 
   { key: 'politics', labelKey: 'news.category.politics', icon: Globe },
 ];
 
-const newsItems: NewsItem[] = [
-  {
-    id: '1',
-    title: 'Historic Islamic Art Exhibition Opens in London',
-    source: 'Al Jazeera',
-    category: 'world',
-    time: '2h ago',
-  },
-  {
-    id: '2',
-    title: 'New Scholarship Program for Muslim Students Announced',
-    source: 'Muslim News',
-    category: 'education',
-    time: '4h ago',
-  },
-  {
-    id: '3',
-    title: 'Community Mosque Breaks Ground on New Community Center',
-    source: 'Local News',
-    category: 'community',
-    time: '5h ago',
-  },
-  {
-    id: '4',
-    title: 'Ramadan Food Drive Collects Record Donations',
-    source: 'Charity Weekly',
-    category: 'charity',
-    time: '6h ago',
-  },
-  {
-    id: '5',
-    title: 'Islamic Finance Summit Highlights Ethical Investing',
-    source: 'Business Arabia',
-    category: 'business',
-    time: '8h ago',
-  },
-  {
-    id: '6',
-    title: 'Global Muslim Population Expected to Grow Significantly',
-    source: 'World Report',
-    category: 'world',
-    time: '10h ago',
-  },
-  {
-    id: '7',
-    title: 'Online Quran Learning Platform Reaches 1 Million Users',
-    source: 'Tech Islamic',
-    category: 'education',
-    time: '12h ago',
-  },
-  {
-    id: '8',
-    title: 'Youth Islamic Camp Inspires Next Generation Leaders',
-    source: 'Community Voice',
-    category: 'community',
-    time: '14h ago',
-  },
-  {
-    id: '9',
-    title: 'Zakat Foundation Provides Aid to Flood Victims',
-    source: 'Relief News',
-    category: 'charity',
-    time: '16h ago',
-  },
-  {
-    id: '10',
-    title: 'Halal Industry Market Value Surpasses $2 Trillion',
-    source: 'Economic Times',
-    category: 'business',
-    time: '18h ago',
-  },
-];
+function timeAgo(iso: string | null): string {
+  if (!iso) return '';
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString();
+}
 
 export const News = () => {
   const { t } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<NewsCategory>('all');
+  const [items, setItems] = useState<NewsItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const filteredNews = selectedCategory === 'all' 
-    ? newsItems 
-    : newsItems.filter(item => item.category === selectedCategory);
+  const load = useCallback(async () => {
+    setLoading(true);
+    let q = supabase
+      .from('news_articles')
+      .select('id, title, description, image_url, article_url, source_name, published_at, category')
+      .order('published_at', { ascending: false, nullsFirst: false })
+      .limit(50);
+    if (selectedCategory !== 'all') q = q.eq('category', selectedCategory);
+    const { data, error } = await q;
+    if (!error && data) {
+      setItems(
+        data.map((d) => ({
+          id: d.id,
+          title: d.title,
+          description: d.description,
+          image_url: d.image_url,
+          article_url: d.article_url,
+          source: d.source_name,
+          category: (d.category as NewsCategory) ?? 'world',
+          time: timeAgo(d.published_at),
+        })),
+      );
+    }
+    setLoading(false);
+  }, [selectedCategory]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const refresh = async () => {
+    setRefreshing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('fetch-news');
+      if (error) throw error;
+      toast({ title: 'Feed refreshed', description: `Fetched ${data?.totalProcessed ?? 0} items` });
+      await load();
+    } catch (e) {
+      toast({ title: 'Refresh failed', description: (e as Error).message, variant: 'destructive' });
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const getCategoryIcon = (category: NewsCategory) => {
     const found = categories.find(c => c.key === category);
@@ -127,7 +114,16 @@ export const News = () => {
             <h1 className="text-2xl font-bold text-emerald-gradient">{t('news.title')}</h1>
             <p className="text-sm text-muted-foreground">{t('news.subtitle')}</p>
           </div>
-          <Sparkles className="h-5 w-5 text-primary/60 ml-auto animate-pulse" />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={refresh}
+            disabled={refreshing}
+            className="ml-auto text-primary hover:bg-primary/10 rounded-full"
+            aria-label="Refresh news"
+          >
+            {refreshing ? <Loader2 className="h-5 w-5 animate-spin" /> : <RefreshCw className="h-5 w-5" />}
+          </Button>
         </div>
 
         {/* Categories */}
@@ -152,12 +148,32 @@ export const News = () => {
         </div>
 
         {/* News List */}
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        ) : items.length === 0 ? (
+          <div className="text-center py-12 space-y-3">
+            <Sparkles className="h-8 w-8 text-primary/60 mx-auto" />
+            <p className="text-sm text-muted-foreground">No articles yet. Tap refresh to load the latest news.</p>
+            <Button onClick={refresh} disabled={refreshing} className="rounded-full">
+              {refreshing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+              Fetch news
+            </Button>
+          </div>
+        ) : (
         <div className="space-y-4">
-          {filteredNews.map((item, index) => {
+          {items.map((item, index) => {
             const CategoryIcon = getCategoryIcon(item.category);
             return (
-              <Card
+              <a
                 key={item.id}
+                href={item.article_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block"
+              >
+              <Card
                 className={cn(
                   "relative overflow-hidden glass-dark p-4 transition-all duration-300 hover:scale-[1.01] cursor-pointer group",
                   "animate-in fade-in slide-in-from-bottom-2"
@@ -168,11 +184,21 @@ export const News = () => {
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 
                 <div className="relative z-10 flex items-start gap-4">
-                  {/* Category Icon */}
+                  {/* Image or Category Icon */}
                   <div className="shrink-0">
-                    <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/15 flex items-center justify-center group-hover:border-primary/30 transition-all duration-300">
-                      <CategoryIcon className="h-5 w-5 text-primary" strokeWidth={1.5} />
-                    </div>
+                    {item.image_url ? (
+                      <img
+                        src={item.image_url}
+                        alt=""
+                        loading="lazy"
+                        className="h-16 w-16 rounded-xl object-cover border border-primary/15"
+                        onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
+                      />
+                    ) : (
+                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/15 flex items-center justify-center group-hover:border-primary/30 transition-all duration-300">
+                        <CategoryIcon className="h-5 w-5 text-primary" strokeWidth={1.5} />
+                      </div>
+                    )}
                   </div>
 
                   {/* Content */}
@@ -180,6 +206,9 @@ export const News = () => {
                     <h3 className="font-semibold text-foreground leading-snug line-clamp-2 group-hover:text-primary transition-colors duration-300">
                       {item.title}
                     </h3>
+                    {item.description && (
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{item.description}</p>
+                    )}
                     <div className="flex items-center gap-2 mt-2">
                       <Badge variant="secondary" className="text-[10px] bg-primary/10 text-primary border-none">
                         {item.source}
@@ -192,20 +221,11 @@ export const News = () => {
                   <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all duration-300 shrink-0" />
                 </div>
               </Card>
+              </a>
             );
           })}
         </div>
-
-        {/* Load More */}
-        <div className="flex justify-center pt-4">
-          <Button
-            variant="ghost"
-            className="text-primary hover:bg-primary/10 rounded-full px-6"
-          >
-            <span>{t('news.load_more')}</span>
-            <ExternalLink className="h-4 w-4 ml-2" />
-          </Button>
-        </div>
+        )}
       </div>
     </Layout>
   );
