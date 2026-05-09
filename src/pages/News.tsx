@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Newspaper, Globe, BookOpen, Users, Heart, Building2, Sparkles, ExternalLink, ChevronRight, RefreshCw, Loader2 } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,6 +48,7 @@ function timeAgo(iso: string | null): string {
 
 export const News = () => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState<NewsCategory>('all');
   const [items, setItems] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -166,12 +168,11 @@ export const News = () => {
           {items.map((item, index) => {
             const CategoryIcon = getCategoryIcon(item.category);
             return (
-              <a
+              <button
                 key={item.id}
-                href={item.article_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block"
+                type="button"
+                onClick={() => navigate(`/news/${item.id}`)}
+                className="block w-full text-left"
               >
               <Card
                 className={cn(
@@ -221,7 +222,7 @@ export const News = () => {
                   <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all duration-300 shrink-0" />
                 </div>
               </Card>
-              </a>
+              </button>
             );
           })}
         </div>
