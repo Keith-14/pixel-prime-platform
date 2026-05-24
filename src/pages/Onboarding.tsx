@@ -1,31 +1,24 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import onboarding1 from '@/assets/onboarding-1.jpg';
+import onboarding1Full from '@/assets/onboarding-1-full.png';
 import onboarding2 from '@/assets/onboarding-2.jpg';
 import onboarding3 from '@/assets/onboarding-3.jpg';
 
 const ONBOARDING_KEY = 'barakah_onboarding_completed';
 
 type Slide = {
-  image: string;
+  image?: string;
+  fullImage?: string;
   bg: string;
-  title: React.ReactNode;
-  description: string;
+  title?: React.ReactNode;
+  description?: string;
 };
 
 const slides: Slide[] = [
   {
-    image: onboarding1,
-    bg: '#b9573a',
-    title: (
-      <>
-        One <span style={{ color: '#7a2e1a' }}>Ummah</span>
-        <br />One App
-      </>
-    ),
-    description:
-      'All your essentials in one place—faith, daily life, and what matters most, organized with intention.',
+    fullImage: onboarding1Full,
+    bg: 'linear-gradient(180deg, #79351A 0%, #C94E1D 100%)',
   },
   {
     image: onboarding2,
@@ -70,10 +63,40 @@ export const Onboarding = () => {
 
   const slide = slides[current];
 
+  if (slide.fullImage) {
+    return (
+      <div
+        className="min-h-screen max-w-md mx-auto relative flex flex-col overflow-hidden"
+        style={{ background: slide.bg }}
+      >
+        <img
+          src={slide.fullImage}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="flex justify-end px-6 pt-6 relative z-10">
+          <button onClick={finish} className="text-white/95 text-base font-medium">
+            Skip
+          </button>
+        </div>
+        <div className="flex-1" />
+        <div className="relative z-10 px-8 pb-8">
+          <Button
+            onClick={handleNext}
+            className="w-full h-14 rounded-full text-white text-base font-semibold"
+            style={{ backgroundColor: '#b9573a' }}
+          >
+            {isLast ? 'Get Started' : 'Next'}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className="min-h-screen max-w-md mx-auto relative flex flex-col overflow-hidden transition-colors duration-500"
-      style={{ backgroundColor: slide.bg }}
+      style={{ background: slide.bg }}
     >
       {/* Skip */}
       <div className="flex justify-end px-6 pt-6 relative z-10">
