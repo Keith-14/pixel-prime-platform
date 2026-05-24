@@ -1,99 +1,74 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import barakahLogo from '@/assets/barakah-logo.png';
 
 export const LoadingScreen = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Auto redirect after 4 seconds to give time for animation
     const timer = setTimeout(() => {
       navigate('/login');
     }, 4000);
-
     return () => clearTimeout(timer);
   }, [navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center max-w-md mx-auto relative overflow-hidden">
-      {/* Dark sage gradient background */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div 
-          className="absolute inset-0"
-          style={{ 
-            background: 'linear-gradient(180deg, rgba(40, 55, 45, 1) 0%, rgba(25, 35, 28, 1) 50%, rgba(15, 20, 16, 1) 100%)' 
-          }}
-        />
-        <div 
-          className="absolute inset-0"
-          style={{ background: 'rgba(106, 139, 116, 0.08)' }}
-        />
-        <div 
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[50%]"
-          style={{ 
-            background: 'radial-gradient(ellipse at top, rgba(106, 139, 116, 0.15) 0%, transparent 70%)' 
-          }}
-        />
-      </div>
+    <div className="min-h-screen max-w-md mx-auto relative overflow-hidden flex items-center justify-center" style={{ backgroundColor: '#fbf1dd' }}>
+      {/* Centered animated logo */}
+      <img
+        src="https://ik.imagekit.io/i9qun1svg/30%20fps%20.gif"
+        alt="Barakah"
+        className="w-40 h-40 object-contain relative z-10"
+      />
 
-      {/* Content */}
-      <div className="relative z-10 text-center">
-        {/* Company Logo */}
-        <div className="w-32 h-32 mx-auto mb-8 relative flex items-center justify-center float">
-          <img 
-            src={barakahLogo} 
-            alt="Barakah Logo" 
-            className="w-full h-full object-contain drop-shadow-[0_0_15px_hsl(150_30%_50%/0.4)]"
-          />
-        </div>
-        
-        <h1 className="text-5xl font-arabic font-bold text-[#ffebc9] mb-3 tracking-wide">BARAKAH</h1>
-        <p className="text-sm text-[#ffebc9]/70 font-body tracking-[0.3em]">
-          FAITH • LIFESTYLE • COMMUNITY
-        </p>
+      {/* Bottom dune + palms */}
+      <svg
+        className="absolute bottom-0 left-0 w-full"
+        viewBox="0 0 400 160"
+        preserveAspectRatio="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <defs>
+          <linearGradient id="duneGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#fcd9a4" />
+            <stop offset="100%" stopColor="#f4c27a" />
+          </linearGradient>
+        </defs>
+        <path
+          d="M0,110 C80,70 160,140 240,110 C320,80 360,120 400,100 L400,160 L0,160 Z"
+          fill="url(#duneGrad)"
+        />
+      </svg>
 
-        {/* Loading dots */}
-        <div className="mt-10 flex justify-center gap-2">
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className="w-2 h-2 rounded-full bg-[#6a8b74]"
-              style={{
-                animation: 'loadingDot 1.4s ease-in-out infinite',
-                animationDelay: `${i * 0.2}s`,
-              }}
-            />
-          ))}
-        </div>
-      </div>
-
-      <style>{`
-        @keyframes loadingDot {
-          0%, 80%, 100% {
-            transform: scale(0.8);
-            opacity: 0.5;
-          }
-          40% {
-            transform: scale(1.2);
-            opacity: 1;
-          }
-        }
-        
-        .animate-pulse-slow {
-          animation: pulseSlow 3s ease-in-out infinite;
-        }
-        
-        @keyframes pulseSlow {
-          0%, 100% {
-            opacity: 0.9;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 1;
-            transform: scale(1.02);
-          }
-        }
-      `}</style>
+      {/* Palm trees */}
+      <PalmTree className="absolute bottom-8 left-6 w-14 h-20" />
+      <PalmTree className="absolute bottom-10 left-16 w-10 h-14 opacity-80" />
+      <PalmTree className="absolute bottom-10 right-10 w-16 h-24" />
     </div>
   );
 };
+
+const PalmTree = ({ className = '' }: { className?: string }) => (
+  <svg
+    className={className}
+    viewBox="0 0 64 96"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+  >
+    {/* Trunk */}
+    <path
+      d="M32 96 C30 70 34 50 32 30"
+      stroke="#b87545"
+      strokeWidth="3"
+      strokeLinecap="round"
+      fill="none"
+    />
+    {/* Leaves */}
+    <path d="M32 28 C20 22 10 24 4 30 C14 28 22 30 30 34 Z" fill="#c98a55" />
+    <path d="M32 28 C44 22 54 24 60 30 C50 28 42 30 34 34 Z" fill="#b87545" />
+    <path d="M32 28 C28 16 22 10 14 8 C22 16 26 22 30 30 Z" fill="#b87545" />
+    <path d="M32 28 C36 16 42 10 50 8 C42 16 38 22 34 30 Z" fill="#c98a55" />
+    <path d="M32 28 C30 18 30 10 32 2 C34 10 34 18 32 28 Z" fill="#a86537" />
+  </svg>
+);
