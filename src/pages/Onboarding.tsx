@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import onboarding1Full from '@/assets/onboarding-1-full.png';
@@ -35,6 +35,16 @@ export const Onboarding = () => {
   const [current, setCurrent] = useState(0);
   const isLast = current === slides.length - 1;
 
+  // Preload all onboarding images on mount for instant transitions
+  useEffect(() => {
+    slides.forEach((s) => {
+      if (s.fullImage) {
+        const img = new Image();
+        img.src = s.fullImage;
+      }
+    });
+  }, []);
+
   const finish = () => {
     localStorage.setItem(ONBOARDING_KEY, 'true');
     navigate('/login', { replace: true });
@@ -50,14 +60,22 @@ export const Onboarding = () => {
   if (slide.fullImage) {
     return (
       <div
-        className="min-h-screen max-w-md mx-auto relative flex flex-col overflow-hidden"
+        className="min-h-screen max-w-md mx-auto relative flex flex-col overflow-hidden transition-[background] duration-500 ease-out"
         style={{ background: slide.bg }}
       >
-        <img
-          src={slide.fullImage}
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+        {slides.map((s, i) =>
+          s.fullImage ? (
+            <img
+              key={i}
+              src={s.fullImage}
+              alt=""
+              fetchPriority={i === 0 ? 'high' : 'low'}
+              decoding="async"
+              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ease-out"
+              style={{ opacity: i === current ? 1 : 0 }}
+            />
+          ) : null
+        )}
         <div className="flex justify-end px-6 pt-6 relative z-10">
           <button onClick={finish} className="text-white/95 text-base font-medium">
             Skip
