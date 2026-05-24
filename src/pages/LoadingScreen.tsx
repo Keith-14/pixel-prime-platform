@@ -1,22 +1,28 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import splashLastFrame from '@/assets/splash-last-frame.png';
 
 export const LoadingScreen = () => {
   const navigate = useNavigate();
+  const [frozen, setFrozen] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const seen = localStorage.getItem('barakah_onboarding_completed') === 'true';
-      navigate(seen ? '/login' : '/onboarding');
-    }, 4000);
-    return () => clearTimeout(timer);
+    // GIF duration ~1850ms — freeze on last frame after one play
+    const freezeTimer = setTimeout(() => setFrozen(true), 1850);
+    const navTimer = setTimeout(() => {
+      navigate('/onboarding');
+    }, 2600);
+    return () => {
+      clearTimeout(freezeTimer);
+      clearTimeout(navTimer);
+    };
   }, [navigate]);
 
   return (
     <div className="min-h-screen max-w-md mx-auto relative overflow-hidden flex items-center justify-center" style={{ backgroundColor: '#fbf1dd' }}>
       {/* Centered animated logo */}
       <img
-        src="https://ik.imagekit.io/i9qun1svg/30%20fps%20.gif"
+        src={frozen ? splashLastFrame : 'https://ik.imagekit.io/i9qun1svg/30%20fps%20.gif'}
         alt="Barakah"
         className="w-40 h-40 object-contain relative z-10"
       />
