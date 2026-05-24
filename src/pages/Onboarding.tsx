@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import onboarding1Full from '@/assets/onboarding-1-full.png';
-import onboarding2 from '@/assets/onboarding-2.jpg';
-import onboarding3 from '@/assets/onboarding-3.jpg';
+import onboarding2Full from '@/assets/onboarding-2-full.png';
+import onboarding3Full from '@/assets/onboarding-3-full.png';
 
 const ONBOARDING_KEY = 'barakah_onboarding_completed';
 
@@ -21,28 +21,12 @@ const slides: Slide[] = [
     bg: 'linear-gradient(180deg, #79351A 0%, #C94E1D 100%)',
   },
   {
-    image: onboarding2,
-    bg: '#b9573a',
-    title: (
-      <>
-        <span style={{ color: '#7a2e1a' }}>AI-driven</span> Islamic
-        <br />companion
-      </>
-    ),
-    description:
-      'Ask anything — prayer guidance, fiqh questions, daily duas. Instant trusted answers powered by AI.',
+    fullImage: onboarding2Full,
+    bg: 'linear-gradient(180deg, #79351A 0%, #C94E1D 100%)',
   },
   {
-    image: onboarding3,
+    fullImage: onboarding3Full,
     bg: '#d9a23a',
-    title: (
-      <>
-        <span style={{ color: '#7a2e1a' }}>Trusted</span> Hajj &
-        <br />Umrah packages
-      </>
-    ),
-    description:
-      'Explore trusted Hajj and Umrah packages, plan your pilgrimage and connect with fellow traveller.',
   },
 ];
 
