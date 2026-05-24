@@ -83,8 +83,8 @@ export const Onboarding = () => {
         <div className="relative z-10 px-8 pb-8">
           <Button
             onClick={handleNext}
-            className="w-full h-14 rounded-full text-white text-base font-semibold"
-            style={{ backgroundColor: '#b9573a' }}
+            className="w-full h-14 rounded-full text-white text-base font-semibold hover:opacity-90"
+            style={{ backgroundColor: '#A35233' }}
           >
             {isLast ? 'Get Started' : 'Next'}
           </Button>
@@ -151,8 +151,8 @@ export const Onboarding = () => {
 
         <Button
           onClick={handleNext}
-          className="w-full h-14 rounded-full text-white text-base font-semibold"
-          style={{ backgroundColor: '#b9573a' }}
+          className="w-full h-14 rounded-full text-white text-base font-semibold hover:opacity-90"
+          style={{ backgroundColor: '#A35233' }}
         >
           {isLast ? 'Get Started' : 'Next'}
         </Button>
