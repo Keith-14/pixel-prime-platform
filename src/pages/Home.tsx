@@ -1,365 +1,448 @@
-import { Layout } from '@/components/Layout';
-import { PrayerOverviewCard } from '@/components/home/PrayerOverviewCard';
-import { QuickActionsRow } from '@/components/home/QuickActionsRow';
-import { DailyDuaCard } from '@/components/home/DailyDuaCard';
-import { TodaysVerseCard } from '@/components/home/TodaysVerseCard';
-import { IslamicNewsCard } from '@/components/home/IslamicNewsCard';
-import { BarakahLogo } from '@/components/BarakahLogo';
-import { LanguageSelector } from '@/components/LanguageSelector';
-import { FloatingChatButton } from '@/components/FloatingChatButton';
-import { ChatAssistant } from '@/components/ChatAssistant';
-import {
-  Clock,
-  BookOpen,
-  Calculator,
-  Compass,
-  ScanBarcode,
-  MapPin,
-  BarChart3,
-  Heart,
-  Menu,
-  Bell,
-  Loader2,
-} from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { Menu, Bell, MapPin, ChevronDown, Newspaper, Home as HomeIcon, ShoppingBag, ScanLine, MessageCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
 import { useGlobalLocation } from '@/contexts/LocationContext';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
+import { ChatAssistant } from '@/components/ChatAssistant';
+import { SideMenu } from '@/components/SideMenu';
+import qaQuran from '@/assets/qa-quran.png';
+import qaAi from '@/assets/qa-ai.png';
+import qaPlaces from '@/assets/qa-places.png';
+import qaHajj from '@/assets/qa-hajj.png';
+
+interface NewsItem {
+  id: string;
+  title: string;
+  source_name: string;
+  category?: string | null;
+  image_url?: string | null;
+  published_at?: string | null;
+}
+
+const FALLBACK_IMG =
+  'https://images.unsplash.com/photo-1564769625905-50e93615e769?w=200&h=200&fit=crop';
+
+const timeAgo = (iso?: string | null) => {
+  if (!iso) return '';
+  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (diff < 3600) return `${Math.max(1, Math.floor(diff / 60))}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+};
 
 export const Home = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { location, loading: locationLoading, error: locationError, refresh: refreshLocation } = useGlobalLocation();
-  const { t } = useLanguage();
-  const [userName, setUserName] = useState<string>('');
-  const [currentDate, setCurrentDate] = useState('');
-  const [currentTime, setCurrentTime] = useState('');
-  const [currentPrayer, setCurrentPrayer] = useState({ name: '', nextTime: '' });
+  const { location } = useGlobalLocation();
+  const [userName, setUserName] = useState('');
+  const [news, setNews] = useState<NewsItem[]>([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [now, setNow] = useState(new Date());
 
-  // Fetch user name
   useEffect(() => {
-    const fetchUserName = async () => {
-      if (!user) {
-        setUserName('');
-        return;
-      }
+    const id = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(id);
+  }, []);
 
-      // Firebase user has displayName
-      const displayName = user.displayName;
-      if (displayName) {
-        setUserName(displayName.split(' ')[0]);
-        return;
-      }
-
+  useEffect(() => {
+    if (!user) return;
+    const display = user.displayName;
+    if (display) {
+      setUserName(display.split(' ')[0]);
+      return;
+    }
+    (async () => {
       const { data } = await supabase
         .from('profiles')
         .select('full_name')
         .eq('user_id', user.uid)
         .single();
-
-      if (data?.full_name) {
-        setUserName(data.full_name.split(' ')[0]);
-      }
-    };
-
-    fetchUserName();
+      if (data?.full_name) setUserName(data.full_name.split(' ')[0]);
+    })();
   }, [user]);
 
-  const getCurrentPrayer = () => {
-    const now = new Date();
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-    const currentMinutes = hours * 60 + minutes;
-
-    const prayerTimes = {
-      Fajr: { start: 5 * 60, end: 6 * 60 + 30 },
-      Dhuhr: { start: 12 * 60 + 30, end: 15 * 60 },
-      Asr: { start: 15 * 60, end: 18 * 60 },
-      Maghrib: { start: 18 * 60, end: 19 * 60 + 30 },
-      Isha: { start: 19 * 60 + 30, end: 23 * 60 },
-    } as const;
-
-    for (const [name, time] of Object.entries(prayerTimes)) {
-      if (currentMinutes >= time.start && currentMinutes <= time.end) {
-        const nextPrayerTime = time.end;
-        const nextHours = Math.floor(nextPrayerTime / 60);
-        const nextMins = nextPrayerTime % 60;
-        return {
-          name: `${name} Time`,
-          nextTime: `${t('home.next_prayer_at')} ${nextHours.toString().padStart(2, '0')}:${nextMins
-            .toString()
-            .padStart(2, '0')}`,
-        };
-      }
-    }
-
-    const nextPrayerNames: Array<keyof typeof prayerTimes> = [
-      'Fajr',
-      'Dhuhr',
-      'Asr',
-      'Maghrib',
-      'Isha',
-    ];
-    const nextPrayer =
-      nextPrayerNames.find((name) => {
-        const time = prayerTimes[name];
-        return currentMinutes < time.start;
-      }) || 'Fajr';
-
-    const nextTime = prayerTimes[nextPrayer].start;
-    const nextHours = Math.floor(nextTime / 60);
-    const nextMins = nextTime % 60;
-
-    return {
-      name: `Next: ${nextPrayer}`,
-      nextTime: `${nextHours.toString().padStart(2, '0')}:${nextMins
-        .toString()
-        .padStart(2, '0')}`,
-    };
-  };
-
   useEffect(() => {
-    const now = new Date();
-    const islamicDate = new Intl.DateTimeFormat('en-u-ca-islamic', {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    }).format(now);
-
-    setCurrentDate(islamicDate);
+    (async () => {
+      const { data } = await supabase
+        .from('news_articles')
+        .select('id, title, source_name, category, image_url, published_at')
+        .order('published_at', { ascending: false, nullsFirst: false })
+        .limit(4);
+      if (data) setNews(data as NewsItem[]);
+    })();
   }, []);
 
-  useEffect(() => {
-    const updateTimeAndPrayer = () => {
-      const now = new Date();
-      const timeString = now.toLocaleTimeString('en-US', {
-        hour12: false,
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-      });
-      setCurrentTime(timeString);
-      setCurrentPrayer(getCurrentPrayer());
-    };
+  // Islamic (Hijri) date
+  const hijri = new Intl.DateTimeFormat('en-u-ca-islamic', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+    .format(now)
+    .replace(' AH', '');
 
-    updateTimeAndPrayer();
-    const interval = setInterval(updateTimeAndPrayer, 1000);
+  // Next prayer
+  const prayerTimes: Array<[string, number, number]> = [
+    ['Fajr', 5, 12],
+    ['Dhuhr', 12, 30],
+    ['Asr', 15, 45],
+    ['Maghrib', 18, 38],
+    ['Isha', 19, 55],
+  ];
+  const cur = now.getHours() * 60 + now.getMinutes();
+  const next =
+    prayerTimes.find(([, h, m]) => h * 60 + m > cur) || prayerTimes[0];
+  const nextHour = next[1];
+  const nextMin = next[2];
+  const ampm = nextHour >= 12 ? 'pm' : 'am';
+  const displayHour = ((nextHour + 11) % 12) + 1;
+  const prayerTime = `${displayHour}:${nextMin.toString().padStart(2, '0')} ${ampm}`;
 
-    return () => clearInterval(interval);
-  }, [t]);
+  const cityLabel = location?.city || 'Dubai';
 
   const quickActions = [
-    { label: t('action.makkah_live'), Icon: Heart, onClick: () => navigate('/makkah-live') },
-    { label: t('action.mood'), Icon: BarChart3, onClick: () => navigate('/mood') },
-    { label: t('action.quran'), Icon: BookOpen, onClick: () => navigate('/quran') },
-    { label: t('action.qibla'), Icon: Compass, onClick: () => navigate('/qibla') },
-    { label: t('action.travel'), Icon: MapPin, onClick: () => navigate('/hajj') },
-    { label: t('action.scanner'), Icon: ScanBarcode, onClick: () => navigate('/halal-scanner') },
-    { label: t('action.zakat'), Icon: Calculator, onClick: () => navigate('/zakat') },
-    { label: t('action.prayer'), Icon: Clock, onClick: () => navigate('/prayer-times') },
+    { label: 'Quran', img: qaQuran, onClick: () => navigate('/quran') },
+    { label: 'Islamic AI', img: qaAi, onClick: () => setIsChatOpen(true) },
+    { label: 'Places', img: qaPlaces, onClick: () => navigate('/places') },
+    { label: 'Hajj Packages', img: qaHajj, onClick: () => navigate('/hajj') },
   ];
 
-  const greeting = userName ? `${t('home.greeting')}, ${userName}` : t('home.greeting');
-
   return (
-    <Layout showHeader={false}>
-      <div className="px-5 py-4 space-y-6 font-arabic">
-        {/* Top controls */}
-        <div className="flex items-center justify-between">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="text-foreground hover:bg-primary/8 hover:text-primary rounded-xl h-10 w-10 border border-transparent hover:border-primary/20"
-            onClick={() => setIsMenuOpen(true)}
-          >
-            <Menu className="h-5 w-5" strokeWidth={1.5} />
-          </Button>
-          <div className="flex items-center gap-2">
-            <LanguageSelector />
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="text-foreground hover:bg-primary/8 hover:text-primary rounded-xl h-10 w-10 border border-transparent hover:border-primary/20"
-            >
-              <Bell className="h-5 w-5" strokeWidth={1.5} />
-            </Button>
-          </div>
-        </div>
-
-        {/* Welcome + Prayer overview */}
-        <section className="space-y-5" aria-label="Welcome and prayer overview">
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-1.5 flex-1">
-              <p className="text-sm text-muted-foreground">
-                {greeting}
-              </p>
-              <h1 className="text-2xl font-bold text-[#ffebc9] tracking-tight">{t('home.title')}</h1>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <MapPin className="h-3 w-3 text-primary" strokeWidth={2} />
-                {locationLoading ? (
-                  <span className="flex items-center gap-1.5">
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    {t('home.getting_location')}
-                  </span>
-                ) : locationError ? (
-                  <button 
-                    onClick={refreshLocation}
-                    className="text-destructive hover:underline"
-                  >
-                    {locationError} {t('home.tap_retry')}
-                  </button>
-                ) : (
-                  <span className="line-clamp-1">{location?.city}, {location?.country}</span>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground">{currentDate}</p>
-            </div>
-            <BarakahLogo size="md" className="shrink-0" />
-          </div>
-
-          <PrayerOverviewCard
-            currentPrayerName={currentPrayer.name}
-            currentTime={currentTime}
-            nextTimeLabel={currentPrayer.nextTime}
-          />
-        </section>
-
-        {/* All quick actions icons */}
-        <section aria-label="Quick actions">
-          <QuickActionsRow items={quickActions} />
-        </section>
-
-        {/* Islamic World News */}
-        <section aria-label="Islamic news">
-          <IslamicNewsCard />
-        </section>
-
-        {/* Daily Dua */}
-        <section aria-label="Daily dua">
-          <DailyDuaCard />
-        </section>
-
-        {/* Today's Verse */}
-        <section aria-label="Today's verse">
-          <TodaysVerseCard />
-        </section>
-      </div>
-
-      {/* Floating Chat Button */}
-      {!isChatOpen && <FloatingChatButton onClick={() => setIsChatOpen(true)} />}
-
-      {/* Chat Assistant Overlay */}
-      <ChatAssistant open={isChatOpen} onClose={() => setIsChatOpen(false)} />
-
-      {/* Side Menu - controlled from Home */}
-      <div 
-        className={`fixed inset-0 z-50 ${isMenuOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
-        onClick={() => setIsMenuOpen(false)}
+    <div
+      className="min-h-screen max-w-md mx-auto relative overflow-hidden"
+      style={{ background: 'linear-gradient(180deg, #FFE4B9 0%, #FFF5E5 32.66%)' }}
+    >
+      {/* HERO — brown gradient top section */}
+      <div
+        className="relative pt-4 pb-10 overflow-hidden"
+        style={{ background: 'linear-gradient(177deg, #78351A 2.14%, #CE5728 97.86%)' }}
       >
-        <div className={`absolute inset-0 bg-background/85 backdrop-blur-sm transition-opacity duration-300 ${isMenuOpen ? 'opacity-100' : 'opacity-0'}`} />
-        <div 
-          className={`absolute left-0 top-0 h-full w-80 bg-card border-r border-primary/20 shadow-2xl transition-transform duration-300 ease-out ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <SideMenuContent onClose={() => setIsMenuOpen(false)} />
-        </div>
-      </div>
-    </Layout>
-  );
-};
+        {/* soft radial glows */}
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            width: 596,
+            height: 299,
+            left: -173,
+            top: 241,
+            background:
+              'radial-gradient(42% 42% at 50% 50%, #D79354 0%, rgba(150,80,42,0) 70%)',
+          }}
+        />
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            width: 596,
+            height: 299,
+            left: 8,
+            top: 243,
+            background:
+              'radial-gradient(42% 42% at 50% 50%, #D79354 0%, rgba(150,80,42,0) 70%)',
+          }}
+        />
 
-// Inline side menu content
-const SideMenuContent = ({ onClose }: { onClose: () => void }) => {
-  const navigate = useNavigate();
-  const { user, signOut } = useAuth();
-  const { t, language, setLanguage } = useLanguage();
-
-  const menuItems = [
-    { labelKey: 'menu.home', path: '/' },
-    { labelKey: 'menu.prayer_times', path: '/prayer-times' },
-    { labelKey: 'menu.qibla', path: '/qibla' },
-    { labelKey: 'menu.quran', path: '/quran' },
-    { labelKey: 'menu.makkah_live', path: '/makkah-live' },
-    { labelKey: 'menu.zakat', path: '/zakat' },
-    { labelKey: 'menu.shop', path: '/shop' },
-    { labelKey: 'menu.progress', path: '/progress' },
-    { labelKey: 'menu.account', path: '/account' },
-  ];
-
-  const languages = [
-    { code: 'en' as const, label: 'English' },
-    { code: 'ur' as const, label: 'اردو' },
-    { code: 'ar' as const, label: 'العربية' },
-    { code: 'tr' as const, label: 'Türkçe' },
-    { code: 'id' as const, label: 'Indonesia' },
-    { code: 'ms' as const, label: 'Melayu' },
-    { code: 'ta' as const, label: 'தமிழ்' },
-    { code: 'bn' as const, label: 'বাংলা' },
-  ];
-
-  return (
-    <div className="flex flex-col h-full font-arabic">
-      <div className="flex items-center justify-between px-6 py-5 bg-gradient-to-r from-primary/15 to-primary/5 border-b border-primary/20">
-        <h2 className="text-xl font-semibold tracking-tight text-primary">Barakah</h2>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={onClose}
-          className="hover:bg-primary/8 rounded-xl h-10 w-10 text-primary border border-primary/20"
-        >
-          ✕
-        </Button>
-      </div>
-      <nav className="flex-1 py-3 px-3 overflow-y-auto">
-        {menuItems.map((item) => (
+        {/* Top app bar */}
+        <div className="relative z-10 flex items-center justify-between px-5 pt-2">
           <button
-            key={item.path}
-            onClick={() => {
-              navigate(item.path);
-              onClose();
-            }}
-            className="w-full text-left px-4 py-3.5 rounded-xl text-foreground hover:bg-primary/8 hover:text-primary transition-colors duration-200 font-medium"
+            onClick={() => setIsMenuOpen(true)}
+            className="text-[#F9FAFB] p-2 -ml-2"
+            aria-label="Menu"
           >
-            {t(item.labelKey)}
+            <Menu className="h-6 w-6" strokeWidth={2} />
           </button>
-        ))}
+          <h1
+            className="text-[#FFE8CA] text-[22px] tracking-wide"
+            style={{ fontFamily: 'Reem Kufi, sans-serif', fontWeight: 600 }}
+          >
+            Barakah
+          </h1>
+          <button
+            className="w-9 h-9 rounded-full flex items-center justify-center text-[#F9FAFB]"
+            style={{ background: 'rgba(255,255,255,0.15)' }}
+            aria-label="Notifications"
+          >
+            <Bell className="h-4 w-4" strokeWidth={2} />
+          </button>
+        </div>
 
-        {/* Language Selection */}
-        <div className="mt-4 pt-4 border-t border-primary/15">
-          <p className="px-4 text-xs uppercase tracking-wider text-muted-foreground mb-3">{t('languageSelector.title')}</p>
-          <div className="grid grid-cols-3 gap-2 px-4">
-            {languages.map((lang) => (
-              <button
-                key={lang.code}
-                onClick={() => setLanguage(lang.code)}
-                className={`py-2.5 px-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  language === lang.code
-                    ? 'bg-primary/15 text-primary border border-primary/30'
-                    : 'text-muted-foreground hover:bg-primary/8 hover:text-primary border border-transparent'
-                }`}
-              >
-                {lang.label}
-              </button>
-            ))}
+        {/* Greeting + location */}
+        <div className="relative z-10 px-5 pt-5 flex items-start justify-between">
+          <div>
+            <p className="text-[12px] font-medium" style={{ color: '#E8D5C4', opacity: 0.85 }}>
+              As-Salaam-Alaikum!
+            </p>
+            <p className="text-[18px] font-bold mt-0.5" style={{ color: '#E8D5C4' }}>
+              {userName || 'Friend'}
+            </p>
+          </div>
+          <div className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-white/70 text-[#F9FAFB]">
+            <MapPin className="h-3.5 w-3.5" strokeWidth={2} />
+            <span className="text-[12px] font-medium">{cityLabel}</span>
+            <ChevronDown className="h-3 w-3" strokeWidth={2} />
           </div>
         </div>
-      </nav>
-      {user && (
-        <div className="px-3 pb-6">
-          <button
-            onClick={() => signOut()}
-            className="w-full text-left px-4 py-3.5 rounded-xl text-destructive hover:bg-destructive/10 transition-colors duration-200 font-medium"
+
+        {/* Arc + center logo + prayer info */}
+        <div className="relative h-[200px] mt-4">
+          {/* Arc */}
+          <svg
+            className="absolute left-1/2 -translate-x-1/2 top-0"
+            width="280"
+            height="200"
+            viewBox="0 0 280 200"
+            fill="none"
+            aria-hidden="true"
           >
-            {t('menu.sign_out')}
+            <path
+              d="M10 200 A130 130 0 0 1 270 200"
+              stroke="rgba(255,255,255,0.4)"
+              strokeWidth="1"
+              fill="none"
+            />
+          </svg>
+          {/* B logo at top of arc */}
+          <div
+            className="absolute left-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-md"
+            style={{ top: -2 }}
+          >
+            <span
+              className="text-[#A35334] text-[18px]"
+              style={{ fontFamily: 'Reem Kufi, sans-serif', fontWeight: 700 }}
+            >
+              B
+            </span>
+          </div>
+
+          {/* Date + prayer */}
+          <div className="relative z-10 flex flex-col items-center pt-14">
+            <p
+              className="text-[16px] tracking-tight"
+              style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 300 }}
+            >
+              {hijri}
+            </p>
+            <p
+              className="text-white text-[26px] mt-1 tracking-tight"
+              style={{ fontWeight: 300 }}
+            >
+              {next[0]} {prayerTime}
+            </p>
+          </div>
+        </div>
+
+        {/* Quick action cards */}
+        <div className="relative z-10 px-5 mt-2 grid grid-cols-4 gap-2">
+          {quickActions.map((a) => (
+            <button
+              key={a.label}
+              onClick={a.onClick}
+              className="flex flex-col items-center justify-end pt-2 pb-2.5 rounded-2xl border transition-transform active:scale-95"
+              style={{
+                background: '#FFF5E5',
+                borderColor: 'rgba(232,213,196,0.86)',
+                height: 90,
+              }}
+            >
+              <img src={a.img} alt={a.label} className="h-12 w-auto object-contain" />
+              <span
+                className="text-[10px] mt-1"
+                style={{ color: '#55433D', fontWeight: 500 }}
+              >
+                {a.label}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* CREAM SHEET — News */}
+      <div
+        className="relative -mt-6 rounded-t-[24px] border-2 border-b-0 px-5 pt-5 pb-40"
+        style={{ background: '#FFF5E5', borderColor: '#E8D5C4' }}
+      >
+        {/* drag handle */}
+        <div
+          className="absolute left-1/2 -translate-x-1/2 rounded-full"
+          style={{ width: 80, height: 3, top: 8, background: '#D9D9D9' }}
+        />
+
+        <div className="flex items-center justify-between mb-4 mt-2">
+          <div className="flex items-center gap-2">
+            <Newspaper className="h-5 w-5" style={{ color: '#C4733A' }} strokeWidth={2} />
+            <h2
+              className="text-[18px]"
+              style={{ color: '#2C1309', fontFamily: 'Plus Jakarta Sans, sans-serif', fontWeight: 700 }}
+            >
+              News
+            </h2>
+          </div>
+          <button
+            onClick={() => navigate('/news')}
+            className="text-[12px] font-medium"
+            style={{ color: '#5F5A4F' }}
+          >
+            View More
           </button>
         </div>
-      )}
+
+        <div className="space-y-2.5">
+          {(news.length ? news : Array.from({ length: 2 })).map((n: any, i) => (
+            <button
+              key={n?.id || i}
+              onClick={() => n?.id && navigate(`/news/${n.id}`)}
+              className="w-full text-left rounded-2xl border p-3 flex items-start gap-3 transition-transform active:scale-[0.99]"
+              style={{
+                background: 'rgba(255,255,255,0.65)',
+                borderColor: '#E8D5C4',
+                backdropFilter: 'blur(4px)',
+              }}
+            >
+              <img
+                src={n?.image_url || FALLBACK_IMG}
+                alt=""
+                loading="lazy"
+                className="w-20 h-20 rounded-full object-cover shrink-0"
+              />
+              <div className="flex-1 min-w-0">
+                <p
+                  className="text-[9px] font-bold uppercase tracking-[0.05em]"
+                  style={{ color: '#5C1F05' }}
+                >
+                  {n?.category || 'Culture'}
+                </p>
+                <p
+                  className="text-[13px] mt-1 line-clamp-2"
+                  style={{
+                    color: '#2C1309',
+                    fontFamily: 'Plus Jakarta Sans, sans-serif',
+                    fontWeight: 600,
+                    lineHeight: '18px',
+                  }}
+                >
+                  {n?.title ||
+                    "New calligraphy exhibition opens in Istanbul's historic center"}
+                </p>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-[10px] font-medium" style={{ color: '#B8622A' }}>
+                    {n?.source_name || 'TRT World'}
+                  </span>
+                  <span
+                    className="w-1 h-1 rounded-full"
+                    style={{ background: 'rgba(184,98,42,0.4)' }}
+                  />
+                  <span className="text-[10px] font-medium" style={{ color: '#B8622A' }}>
+                    {timeAgo(n?.published_at) || '2h ago'}
+                  </span>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Bottom fade */}
+      <div
+        className="fixed left-1/2 -translate-x-1/2 max-w-md w-full pointer-events-none"
+        style={{
+          bottom: 0,
+          height: 140,
+          background:
+            'linear-gradient(0deg, #FFF5E5 30%, rgba(255,245,229,0) 100%)',
+        }}
+      />
+
+      {/* Bottom nav */}
+      <BottomNav onChat={() => setIsChatOpen(true)} />
+
+      {/* Chat overlay + side menu */}
+      <ChatAssistant open={isChatOpen} onClose={() => setIsChatOpen(false)} />
+      <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
     </div>
   );
 };
+
+const BottomNav = ({ onChat }: { onChat: () => void }) => {
+  const navigate = useNavigate();
+  const items = [
+    { label: 'Home', Icon: HomeIcon, path: '/', active: true },
+    { label: 'Marketplace', Icon: ShoppingBag, path: '/shop' },
+    { label: 'Prayer', Icon: () => <PrayerIcon />, path: '/prayer-times' },
+    { label: 'Halal Scan', Icon: ScanLine, path: '/halal-scanner' },
+  ];
+
+  return (
+    <div className="fixed bottom-3 left-1/2 -translate-x-1/2 max-w-md w-full px-5 z-30">
+      <div className="flex items-center gap-2">
+        <nav
+          className="flex-1 flex items-center justify-between px-2 py-2 rounded-full"
+          style={{
+            background: 'rgba(255,255,255,0.75)',
+            boxShadow:
+              '0 2px 30px rgba(0,0,0,0.05), 0 8px 30px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.6)',
+            backdropFilter: 'blur(8px)',
+          }}
+        >
+          {items.map(({ label, Icon, path, active }) => (
+            <button
+              key={label}
+              onClick={() => navigate(path)}
+              className="flex flex-col items-center justify-center rounded-full px-3 py-1.5 min-w-[60px]"
+              style={
+                active
+                  ? { background: 'rgba(133,59,30,0.10)' }
+                  : undefined
+              }
+            >
+              <Icon
+                className="h-5 w-5"
+                strokeWidth={active ? 2.2 : 1.6}
+                color={active ? '#7A3D26' : '#8F8F8F'}
+              />
+              <span
+                className="text-[10px] mt-0.5"
+                style={{
+                  color: active ? '#7A3D26' : 'rgba(0,0,0,0.5)',
+                  fontWeight: active ? 700 : 600,
+                }}
+              >
+                {label}
+              </span>
+            </button>
+          ))}
+        </nav>
+        <button
+          onClick={onChat}
+          aria-label="Chat"
+          className="w-14 h-14 rounded-full flex items-center justify-center shrink-0"
+          style={{
+            background: 'linear-gradient(180deg, #5A2611 0%, #C94E1D 100%)',
+            boxShadow:
+              '0 8px 24px rgba(90,38,17,0.35), inset 0 1px 0 rgba(255,255,255,0.4)',
+          }}
+        >
+          <MessageCircle className="h-6 w-6 text-white" strokeWidth={2} />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const PrayerIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path
+      d="M12 3v2M5 12H3M21 12h-2M6.3 6.3l1.4 1.4M16.3 7.7l1.4-1.4"
+      stroke="#8F8F8F"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+    />
+    <path
+      d="M6 21V13a6 6 0 0112 0v8"
+      stroke="#8F8F8F"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+    />
+    <path d="M4 21h16" stroke="#8F8F8F" strokeWidth="1.6" strokeLinecap="round" />
+  </svg>
+);
