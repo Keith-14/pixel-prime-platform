@@ -4,11 +4,10 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { User, Briefcase, Plane, Star, ArrowLeft } from 'lucide-react';
+import { User, Briefcase, Plane, ArrowLeft, Apple, Star } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Separator } from '@/components/ui/separator';
 import loginHero from '@/assets/login-hero.jpg';
 
 type UserRole = 'normal_user' | 'seller' | 'travel_partner';
@@ -22,10 +21,16 @@ export const Register = () => {
   const [isSignIn, setIsSignIn] = useState(false);
   const [needsSetup, setNeedsSetup] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+
   const navigate = useNavigate();
   const { signUp, signIn, signInWithGoogle, completeAccountSetup } = useAuth();
   const { t } = useLanguage();
+
+  const routeByRole = (role: UserRole | null | undefined) => {
+    if (role === 'seller') navigate('/seller-dashboard');
+    else if (role === 'travel_partner') navigate('/business-account');
+    else navigate('/');
+  };
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
@@ -35,144 +40,81 @@ export const Register = () => {
       setLoading(false);
       return;
     }
-
-    // If role is null, the user signed in but still needs to pick a role + name.
     if (role === null) {
-      toast.message('Finish setup', {
-        description: 'Please choose your account type to continue.'
-      });
+      toast.message('Finish setup', { description: 'Please choose your account type to continue.' });
       setNeedsSetup(true);
       setIsSignIn(false);
-      setStep('profile');
+      setView('profile');
       setSelectedRole(null);
       setFullName('');
       setLoading(false);
       return;
     }
-
-    if (role === 'seller') {
-      navigate('/seller-dashboard');
-    } else if (role === 'travel_partner') {
-      navigate('/business-account');
-    } else {
-      navigate('/');
-    }
+    routeByRole(role);
     setLoading(false);
   };
 
   const profileOptions = [
-    {
-      role: 'normal_user' as UserRole,
-      icon: User,
-      titleKey: 'login.normal_user',
-      descKey: 'login.normal_user_desc',
-      color: 'bg-sage'
-    },
-    {
-      role: 'seller' as UserRole,
-      icon: Briefcase,
-      titleKey: 'login.seller',
-      descKey: 'login.seller_desc',
-      color: 'bg-sage-dark'
-    },
-    {
-      role: 'travel_partner' as UserRole,
-      icon: Plane,
-      titleKey: 'login.travel_partner',
-      descKey: 'login.travel_partner_desc',
-      color: 'bg-sage-dark'
-    }
+    { role: 'normal_user' as UserRole, icon: User, titleKey: 'login.normal_user', descKey: 'login.normal_user_desc' },
+    { role: 'seller' as UserRole, icon: Briefcase, titleKey: 'login.seller', descKey: 'login.seller_desc' },
+    { role: 'travel_partner' as UserRole, icon: Plane, titleKey: 'login.travel_partner', descKey: 'login.travel_partner_desc' },
   ];
+
+  const handleContinueEmail = () => {
+    if (!email) {
+      toast.error('Please enter your email');
+      return;
+    }
+    // Email-first: go to details for sign in by default; sign-up path goes through profile
+    setIsSignIn(true);
+    setView('details');
+  };
 
   const handleRoleSelect = (role: UserRole) => {
     setSelectedRole(role);
-    setStep('details');
+    setView('details');
   };
 
   const handleSubmit = async () => {
-    // Completing setup for an existing Firebase account (role/profile missing)
     if (needsSetup) {
-      if (!selectedRole) {
-        toast.error('Please select a profile type');
-        return;
-      }
-
-      if (!fullName) {
-        toast.error('Please enter your full name');
-        return;
-      }
-
+      if (!selectedRole) return toast.error('Please select a profile type');
+      if (!fullName) return toast.error('Please enter your full name');
       setLoading(true);
       try {
         const { error, role } = await completeAccountSetup(selectedRole, fullName);
-        if (error) {
-          toast.error(error.message);
-          return;
-        }
-
+        if (error) return toast.error(error.message);
         toast.success('Account setup completed!');
         setNeedsSetup(false);
-
-        if (role === 'seller') {
-          navigate('/seller-dashboard');
-        } else if (role === 'travel_partner') {
-          navigate('/business-account');
-        } else {
-          navigate('/');
-        }
-      } catch {
-        toast.error('An error occurred. Please try again.');
+        routeByRole(role);
       } finally {
         setLoading(false);
       }
       return;
     }
 
-    if (!email || !password) {
-      toast.error('Please fill in all fields');
-      return;
-    }
-
-    if (!isSignIn && !selectedRole) {
-      toast.error('Please select a profile type');
-      return;
-    }
+    if (!email || !password) return toast.error('Please fill in all fields');
+    if (!isSignIn && !selectedRole) return toast.error('Please select a profile type');
 
     setLoading(true);
-
     try {
       if (isSignIn) {
         const { error, role } = await signIn(email, password);
         if (error) {
-          // If the user accidentally tried to sign in with a provider that can't use password,
-          // or if the message is misleading, keep guidance friendly.
           if (String(error.message).includes('auth/user-not-found')) {
-            toast.error('No account found for this email. Please create an account first.');
+            toast.error('No account found. Please create an account first.');
             setIsSignIn(false);
-            setStep('profile');
+            setView('profile');
           } else {
             toast.error(error.message);
           }
         } else if (role === null) {
-          // Signed in successfully, but the account is missing role/profile rows.
-          toast.message('Finish setup', {
-            description: 'Please choose your account type to continue.'
-          });
+          toast.message('Finish setup', { description: 'Please choose your account type to continue.' });
           setNeedsSetup(true);
           setIsSignIn(false);
-          setStep('profile');
-          setSelectedRole(null);
-          setFullName('');
+          setView('profile');
         } else {
           toast.success('Signed in successfully!');
-          // Redirect based on role
-          if (role === 'seller') {
-            navigate('/seller-dashboard');
-          } else if (role === 'travel_partner') {
-            navigate('/business-account');
-          } else {
-            navigate('/');
-          }
+          routeByRole(role);
         }
       } else {
         if (!fullName) {
@@ -180,32 +122,25 @@ export const Register = () => {
           setLoading(false);
           return;
         }
-
         const { error, role } = await signUp(email, password, selectedRole, fullName);
         if (error) {
-          // Common confusion: trying to create an account that already exists.
           if (String(error.message).includes('auth/email-already-in-use')) {
             toast.error('This email already has an account. Please sign in instead.');
             setIsSignIn(true);
-            setStep('details');
+            setView('details');
           } else {
             toast.error(error.message);
           }
         } else {
           toast.success('Account created successfully!');
-          // Store destination for after onboarding
           let destination = '/';
-          if (role === 'seller') {
-            destination = '/seller-dashboard';
-          } else if (role === 'travel_partner') {
-            destination = '/business-account';
-          }
+          if (role === 'seller') destination = '/seller-dashboard';
+          else if (role === 'travel_partner') destination = '/business-account';
           localStorage.setItem('barakah_onboarding_destination', destination);
-          // New users go to onboarding first
           navigate('/onboarding');
         }
       }
-    } catch (error: any) {
+    } catch {
       toast.error('An error occurred. Please try again.');
     } finally {
       setLoading(false);
@@ -213,231 +148,235 @@ export const Register = () => {
   };
 
   const handleBack = () => {
-    if (step === 'details' && !isSignIn) {
-      setStep('profile');
-    } else {
-      setIsSignIn(false);
-      setStep('profile');
+    if (view === 'details') {
+      setView(isSignIn ? 'welcome' : 'profile');
+    } else if (view === 'profile') {
+      setView('welcome');
     }
   };
 
   const getSelectedRoleTitle = () => {
-    const option = profileOptions.find(p => p.role === selectedRole);
+    const option = profileOptions.find((p) => p.role === selectedRole);
     return option ? t(option.titleKey) : '';
   };
 
+  // Shared frame
   return (
-    <div className="min-h-screen flex items-center justify-center max-w-md mx-auto relative overflow-hidden">
-      {/* Background with sage green tint #6a8b74 */}
-      <div className="fixed inset-0 pointer-events-none">
-        {/* Dark green-tinted base */}
-        <div 
-          className="absolute inset-0"
-          style={{ 
-            background: 'linear-gradient(180deg, rgba(40, 55, 45, 1) 0%, rgba(25, 35, 28, 1) 50%, rgba(15, 20, 16, 1) 100%)' 
-          }}
-        />
-        
-        {/* Sage green overlay for the tint */}
-        <div 
-          className="absolute inset-0"
-          style={{ 
-            background: 'rgba(106, 139, 116, 0.08)' 
-          }}
-        />
-        
-        {/* Subtle lighter glow at top center */}
-        <div 
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[50%]"
-          style={{ 
-            background: 'radial-gradient(ellipse at top, rgba(106, 139, 116, 0.15) 0%, transparent 70%)' 
-          }}
-        />
-      </div>
-
-      {/* Language Selector */}
-      <div className="absolute top-4 right-4 z-20">
+    <div
+      className="min-h-screen max-w-md mx-auto relative overflow-hidden flex flex-col"
+      style={{ background: 'linear-gradient(180deg, #FFE7C7 0%, #FBE3C3 28%, #FBEBD3 60%, #FFF1DD 100%)' }}
+    >
+      {/* Language selector */}
+      <div className="absolute top-3 right-3 z-30">
         <LanguageSelector />
       </div>
 
-      <div className="relative z-10 w-full px-6">
-        {/* Logo and Branding */}
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-            <BarakahLogo size="lg" />
+      {/* Hero illustration */}
+      <div className="relative h-[42vh] min-h-[300px] w-full">
+        <img
+          src={loginHero}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ objectPosition: 'center bottom' }}
+        />
+        {/* Soft fade into cream */}
+        <div
+          className="absolute inset-x-0 bottom-0 h-24"
+          style={{ background: 'linear-gradient(180deg, rgba(255,241,221,0) 0%, #FFF1DD 100%)' }}
+        />
+        {/* Brand */}
+        <div className="absolute inset-x-0 top-[22%] flex flex-col items-center">
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-2.5 h-2.5 rotate-45" style={{ background: '#8A8C24' }} />
+            <h1 className="text-5xl font-semibold tracking-tight" style={{ color: '#A35334', fontFamily: 'Reem Kufi, sans-serif' }}>
+              Barakah
+            </h1>
           </div>
-          
-          <h1 className="text-3xl font-bold text-sage mb-1">BARAKAH</h1>
-          <p className="text-xs text-sage/80 font-medium tracking-wide">
-            {t('login.tagline')}
-          </p>
         </div>
+      </div>
 
-        {/* Profile Selection */}
-        {step === 'profile' && !isSignIn && (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <h2 className="text-xl font-semibold text-sage mb-2">{t('login.choose_profile')}</h2>
-              <p className="text-sm text-sage/70">
-                {t('login.select_account_type')}
-              </p>
+      {/* Bottom sheet */}
+      <div className="flex-1 px-6 pb-8 pt-2 relative z-10">
+        {view === 'welcome' && (
+          <div className="space-y-3">
+            {/* Apple */}
+            <Button
+              onClick={() => toast.message('Apple sign-in coming soon')}
+              className="w-full h-14 rounded-full text-white text-base font-medium hover:opacity-90"
+              style={{ backgroundColor: '#3A1E12' }}
+            >
+              <Apple className="h-5 w-5 mr-2 fill-white" />
+              Continue with Apple
+            </Button>
+
+            {/* Google */}
+            <Button
+              onClick={handleGoogleSignIn}
+              disabled={loading}
+              variant="outline"
+              className="w-full h-14 rounded-full bg-white border border-[#E5D8C3] hover:bg-white text-[#1a1a1a] text-base font-medium"
+            >
+              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC04" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+              </svg>
+              Continue with Google
+            </Button>
+
+            {/* OR */}
+            <div className="flex items-center gap-3 py-2">
+              <div className="flex-1 h-px bg-[#D9C9A8]" />
+              <span className="text-xs text-[#7c6a4f] tracking-widest">OR</span>
+              <div className="flex-1 h-px bg-[#D9C9A8]" />
             </div>
 
-            {profileOptions.map(({ role, icon: Icon, titleKey, descKey, color }) => (
-              <Card 
+            {/* Email */}
+            <div className="relative">
+              <Star className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-[#A8A8A8]" />
+              <Input
+                type="email"
+                placeholder="Continue with Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="h-14 rounded-full bg-[#FBF4E7] border border-[#EADFC9] pl-12 pr-4 text-[15px] placeholder:text-[#9a8a70] focus-visible:ring-0 focus-visible:ring-offset-0"
+                dir="ltr"
+              />
+            </div>
+
+            {/* Continue */}
+            <Button
+              onClick={handleContinueEmail}
+              disabled={!email}
+              className="w-full h-14 rounded-full text-base font-medium disabled:opacity-100"
+              style={{
+                backgroundColor: email ? '#A35334' : '#D7CFC0',
+                color: email ? '#fff' : '#8a8170',
+              }}
+            >
+              Continue
+            </Button>
+
+            {/* Divider */}
+            <div className="h-px bg-[#D9C9A8] my-3" />
+
+            {/* Business account link */}
+            <button
+              onClick={() => {
+                setIsSignIn(false);
+                setView('profile');
+              }}
+              className="w-full text-center text-[15px] font-semibold text-[#1a1a1a]"
+            >
+              Create a Business Account
+            </button>
+
+            {/* Terms */}
+            <p className="text-[11px] text-[#7c6a4f] text-center px-6 leading-relaxed pt-6">
+              By continuing, you agree to Barakah <span className="underline font-semibold text-[#3a2a18]">Terms of Service</span>
+              <br />
+              and <span className="underline font-semibold text-[#3a2a18]">Privacy Policy.</span>
+            </p>
+          </div>
+        )}
+
+        {view === 'profile' && (
+          <div className="space-y-3">
+            <button onClick={handleBack} className="flex items-center gap-1 text-[#5a3a20] text-sm mb-2">
+              <ArrowLeft className="h-4 w-4" /> Back
+            </button>
+            <div className="text-center mb-3">
+              <h2 className="text-xl font-semibold" style={{ color: '#A35334', fontFamily: 'Reem Kufi, sans-serif' }}>
+                {t('login.choose_profile')}
+              </h2>
+              <p className="text-sm text-[#7c6a4f]">{t('login.select_account_type')}</p>
+            </div>
+            {profileOptions.map(({ role, icon: Icon, titleKey, descKey }) => (
+              <Card
                 key={role}
                 onClick={() => handleRoleSelect(role)}
-                className="p-4 rounded-2xl cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-sage"
+                className="p-4 rounded-2xl cursor-pointer hover:shadow-md transition border bg-white/70 border-[#EADFC9]"
               >
                 <div className="flex items-center space-x-4">
-                  <div className={`${color} p-3 rounded-xl`}>
-                    <Icon className="h-6 w-6 text-white" />
+                  <div className="p-3 rounded-xl" style={{ background: '#A35334' }}>
+                    <Icon className="h-5 w-5 text-white" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-foreground">{t(titleKey)}</h3>
-                    <p className="text-sm text-muted-foreground">{t(descKey)}</p>
+                    <h3 className="font-semibold text-[#1a1a1a]">{t(titleKey)}</h3>
+                    <p className="text-xs text-[#6b5a40]">{t(descKey)}</p>
                   </div>
                 </div>
               </Card>
             ))}
-
-            <div className="flex items-center gap-4 my-4">
-              <Separator className="flex-1 bg-sage/30" />
-              <span className="text-sm text-sage/70">{t('login.or')}</span>
-              <Separator className="flex-1 bg-sage/30" />
-            </div>
-
-            <Button 
-              onClick={handleGoogleSignIn}
-              disabled={loading}
-              variant="outline"
-              className="w-full rounded-xl h-12 font-medium border-sage/30 hover:bg-sage/10"
-            >
-              <Chrome className="h-5 w-5 mr-2" />
-              {t('login.google')}
-            </Button>
-
-            <div className="text-center pt-4">
-              <p className="text-sm text-sage/70">
-                {t('login.already_have_account')}{' '}
-                <button 
-                  onClick={() => setIsSignIn(true)}
-                  className="text-sage font-semibold underline"
-                >
-                  {t('login.sign_in')}
-                </button>
-              </p>
-            </div>
           </div>
         )}
 
-        {/* Sign In / Sign Up Form */}
-        {(step === 'details' || isSignIn) && (
-          <div className="space-y-6">
-            <div className="text-center">
-              <h2 className="text-lg font-semibold text-sage mb-2">
+        {view === 'details' && (
+          <div className="space-y-3">
+            <button onClick={handleBack} className="flex items-center gap-1 text-[#5a3a20] text-sm mb-1">
+              <ArrowLeft className="h-4 w-4" /> Back
+            </button>
+            <div className="text-center mb-2">
+              <h2 className="text-lg font-semibold" style={{ color: '#A35334', fontFamily: 'Reem Kufi, sans-serif' }}>
                 {isSignIn ? t('login.welcome_back') : t('login.create_your_account')}
               </h2>
-              <p className="text-sm text-sage/70">
-                {isSignIn 
-                  ? t('login.enter_credentials')
-                  : `${t('login.sign_up_as')} ${getSelectedRoleTitle()}`
-                }
+              <p className="text-sm text-[#7c6a4f]">
+                {isSignIn ? t('login.enter_credentials') : `${t('login.sign_up_as')} ${getSelectedRoleTitle()}`}
               </p>
             </div>
 
-            <div className="space-y-4">
-              {!isSignIn && (
+            {!isSignIn && (
+              <Input
+                type="text"
+                placeholder={t('login.full_name')}
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="h-14 rounded-full bg-[#FBF4E7] border border-[#EADFC9] px-5 placeholder:text-[#9a8a70] focus-visible:ring-0 focus-visible:ring-offset-0"
+              />
+            )}
+            {!needsSetup && (
+              <>
                 <Input
-                  type="text"
-                  placeholder={t('login.full_name')}
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="bg-background border-sage/30 rounded-xl h-12 text-center placeholder:text-sage/50"
+                  type="email"
+                  placeholder={t('login.email_placeholder')}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-14 rounded-full bg-[#FBF4E7] border border-[#EADFC9] px-5 placeholder:text-[#9a8a70] focus-visible:ring-0 focus-visible:ring-offset-0"
                 />
-              )}
-              
-              {!needsSetup && (
-                <>
-                  <Input
-                    type="email"
-                    placeholder={t('login.email_placeholder')}
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="bg-background border-sage/30 rounded-xl h-12 text-center placeholder:text-sage/50"
-                  />
+                <Input
+                  type="password"
+                  placeholder={t('login.password')}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="h-14 rounded-full bg-[#FBF4E7] border border-[#EADFC9] px-5 placeholder:text-[#9a8a70] focus-visible:ring-0 focus-visible:ring-offset-0"
+                />
+              </>
+            )}
 
-                  <Input
-                    type="password"
-                    placeholder={t('login.password')}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="bg-background border-sage/30 rounded-xl h-12 text-center placeholder:text-sage/50"
-                  />
-                </>
-              )}
+            <Button
+              onClick={handleSubmit}
+              disabled={loading}
+              className="w-full h-14 rounded-full text-white text-base font-medium hover:opacity-90"
+              style={{ backgroundColor: '#A35334' }}
+            >
+              {loading ? t('login.please_wait') : needsSetup ? 'Finish setup' : isSignIn ? t('login.sign_in') : t('login.create_account_btn')}
+            </Button>
 
-              <Button 
-                onClick={handleSubmit}
-                disabled={loading}
-                className="w-full bg-sage hover:bg-sage-dark text-primary-foreground rounded-xl h-12 font-medium"
-              >
-                {loading
-                  ? t('login.please_wait')
-                  : needsSetup
-                    ? 'Finish setup'
-                    : isSignIn
-                      ? t('login.sign_in')
-                      : t('login.create_account_btn')}
-              </Button>
-
-              <Button 
-                onClick={handleBack}
-                variant="ghost"
-                className="w-full rounded-xl h-12 font-medium"
-              >
-                {t('login.back')}
-              </Button>
-
-              <div className="flex items-center gap-4 my-2">
-                <Separator className="flex-1 bg-sage/30" />
-                <span className="text-sm text-sage/70">{t('login.or')}</span>
-                <Separator className="flex-1 bg-sage/30" />
-              </div>
-
-              <Button 
-                onClick={handleGoogleSignIn}
-                disabled={loading}
-                variant="outline"
-                className="w-full rounded-xl h-12 font-medium border-sage/30 hover:bg-sage/10"
-              >
-                <Chrome className="h-5 w-5 mr-2" />
-                {t('login.google')}
-              </Button>
-
-              {isSignIn && (
-                <div className="text-center pt-2">
-                  <p className="text-sm text-sage/70">
-                    {t('login.dont_have_account')}{' '}
-                    <button 
-                      onClick={() => {
-                        setIsSignIn(false);
-                        setStep('profile');
-                      }}
-                      className="text-sage font-semibold underline"
-                    >
-                      {t('login.sign_up')}
-                    </button>
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <p className="text-xs text-sage/60 text-center px-4 leading-relaxed">
-              {t('login.terms')}{' '}
-              <span className="underline">{t('login.terms_of_service')}</span> {t('login.and')}{' '}
-              <span className="underline">{t('login.privacy_policy')}</span>
-            </p>
+            {isSignIn && (
+              <p className="text-sm text-center text-[#7c6a4f] pt-2">
+                {t('login.dont_have_account')}{' '}
+                <button
+                  onClick={() => {
+                    setIsSignIn(false);
+                    setView('profile');
+                  }}
+                  className="text-[#A35334] font-semibold underline"
+                >
+                  {t('login.sign_up')}
+                </button>
+              </p>
+            )}
           </div>
         )}
       </div>
