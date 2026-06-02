@@ -4,16 +4,19 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { User, Briefcase, Plane, ArrowLeft, Apple, Star } from 'lucide-react';
+import { User, Briefcase, Plane, ArrowLeft, Apple, Star, Chrome } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { BarakahLogo } from '@/components/BarakahLogo';
 import loginHero from '@/assets/login-hero.jpg';
 
 type UserRole = 'normal_user' | 'seller' | 'travel_partner';
 
 export const Register = () => {
   const [view, setView] = useState<'welcome' | 'profile' | 'details'>('welcome');
+  const step = view;
+  const setStep = setView;
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
