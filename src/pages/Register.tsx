@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/card';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { BarakahLogo } from '@/components/BarakahLogo';
-import loginBg from '@/assets/login-bg-v2.png.asset.json';
+import loginBg from '@/assets/login-bg.png.asset.json';
 
 type UserRole = 'normal_user' | 'seller' | 'travel_partner';
 
@@ -167,13 +167,7 @@ export const Register = () => {
   return (
     <div
       className="min-h-screen max-w-md mx-auto relative overflow-hidden flex flex-col"
-      style={{
-        backgroundImage: `url(${loginBg.url})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        backgroundColor: '#FFF1DD',
-      }}
+      style={{ backgroundColor: '#FFF1DD' }}
     >
       {/* Language selector */}
       <div className="absolute top-3 right-3 z-30">
