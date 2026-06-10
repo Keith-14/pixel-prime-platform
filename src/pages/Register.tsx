@@ -183,16 +183,7 @@ export const Register = () => {
           backgroundPosition: 'center top, center top',
           backgroundRepeat: 'no-repeat, no-repeat',
         }}
-      >
-        <div className="absolute inset-x-0 top-[22%] flex flex-col items-center">
-          <div className="flex items-center gap-2">
-            <span className="inline-block w-2.5 h-2.5 rotate-45" style={{ background: '#8A8C24' }} />
-            <h1 className="text-5xl font-semibold tracking-tight" style={{ color: '#A35334', fontFamily: 'Reem Kufi, sans-serif' }}>
-              Barakah
-            </h1>
-          </div>
-        </div>
-      </div>
+      />
 
       {/* Bottom sheet */}
       <div className="flex-1 px-6 pb-8 pt-2 relative z-10">
