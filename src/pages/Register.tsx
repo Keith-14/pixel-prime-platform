@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/card';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { BarakahLogo } from '@/components/BarakahLogo';
-import loginHero from '@/assets/login-hero.jpg';
+import loginBg from '@/assets/login-bg.png.asset.json';
 
 type UserRole = 'normal_user' | 'seller' | 'travel_partner';
 
@@ -167,27 +167,21 @@ export const Register = () => {
   return (
     <div
       className="min-h-screen max-w-md mx-auto relative overflow-hidden flex flex-col"
-      style={{ background: 'linear-gradient(180deg, #FFE7C7 0%, #FBE3C3 28%, #FBEBD3 60%, #FFF1DD 100%)' }}
+      style={{
+        backgroundImage: `linear-gradient(180deg, rgba(255,241,221,0) 55%, #FFF1DD 100%), url(${loginBg.url})`,
+        backgroundSize: 'cover, cover',
+        backgroundPosition: 'center top, center top',
+        backgroundRepeat: 'no-repeat, no-repeat',
+        backgroundColor: '#FFF1DD',
+      }}
     >
       {/* Language selector */}
       <div className="absolute top-3 right-3 z-30">
         <LanguageSelector />
       </div>
 
-      {/* Hero illustration */}
+      {/* Hero spacer with brand */}
       <div className="relative h-[42vh] min-h-[300px] w-full">
-        <img
-          src={loginHero}
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{ objectPosition: 'center bottom' }}
-        />
-        {/* Soft fade into cream */}
-        <div
-          className="absolute inset-x-0 bottom-0 h-24"
-          style={{ background: 'linear-gradient(180deg, rgba(255,241,221,0) 0%, #FFF1DD 100%)' }}
-        />
-        {/* Brand */}
         <div className="absolute inset-x-0 top-[22%] flex flex-col items-center">
           <div className="flex items-center gap-2">
             <span className="inline-block w-2.5 h-2.5 rotate-45" style={{ background: '#8A8C24' }} />
