@@ -390,6 +390,120 @@ const BottomNav = ({ onChat }: { onChat: () => void }) => {
   );
 };
 
+type ArcTimelineProps = {
+  hijri: string;
+  currentPrayer: string;
+  prayerTime: string;
+  nowMinutes: number;
+  prayerTimes: Array<[string, number, number]>;
+};
+
+const ArcTimeline = ({
+  hijri,
+  currentPrayer,
+  prayerTime,
+  nowMinutes,
+  prayerTimes,
+}: ArcTimelineProps) => {
+  const cx = 140;
+  const cy = 200;
+  const r = 130;
+  // Angles spread from 180° (left) to 0° (right) for 5 prayers
+  const dots = prayerTimes.map(([name, h, m], i) => {
+    const angleDeg = 180 - (i * 180) / (prayerTimes.length - 1);
+    const rad = (angleDeg * Math.PI) / 180;
+    return {
+      name,
+      mins: h * 60 + m,
+      x: cx + r * Math.cos(rad),
+      y: cy - r * Math.sin(rad),
+    };
+  });
+
+  // Determine active prayer: the most recent one whose time has passed; default to first
+  let activeIdx = 0;
+  for (let i = 0; i < dots.length; i++) {
+    if (nowMinutes >= dots[i].mins) activeIdx = i;
+  }
+  // If before Fajr, highlight Isha (previous day's last)
+  if (nowMinutes < dots[0].mins) activeIdx = dots.length - 1;
+
+  return (
+    <div className="relative h-[230px] mt-4">
+      <svg
+        className="absolute left-1/2 -translate-x-1/2 top-0"
+        width="280"
+        height="230"
+        viewBox="0 0 280 230"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M10 200 A130 130 0 0 1 270 200"
+          stroke="rgba(255,255,255,0.4)"
+          strokeWidth="1"
+          fill="none"
+        />
+        {dots.map((d, i) => {
+          const isActive = i === activeIdx;
+          return (
+            <g key={d.name}>
+              <circle
+                cx={d.x}
+                cy={d.y}
+                r={isActive ? 6 : 3}
+                fill={isActive ? '#FFE8CA' : 'rgba(255,255,255,0.55)'}
+                stroke={isActive ? '#FFFFFF' : 'none'}
+                strokeWidth={isActive ? 2 : 0}
+              />
+              <text
+                x={d.x}
+                y={i === 0 || i === dots.length - 1 ? d.y + 18 : d.y - 10}
+                textAnchor="middle"
+                fill={isActive ? '#FFFFFF' : 'rgba(255,232,202,0.85)'}
+                fontSize="10"
+                fontWeight={isActive ? 700 : 500}
+                fontFamily="Plus Jakarta Sans, sans-serif"
+              >
+                {d.name}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+
+      {/* B logo at top of arc */}
+      <div
+        className="absolute left-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-md z-10"
+        style={{ top: -2 }}
+      >
+        <span
+          className="text-[#A35334] text-[18px]"
+          style={{ fontFamily: 'Reem Kufi, sans-serif', fontWeight: 700 }}
+        >
+          B
+        </span>
+      </div>
+
+      {/* Date + prayer (centered inside the semicircle) */}
+      <div className="absolute inset-x-0 flex flex-col items-center" style={{ top: 105 }}>
+        <p
+          className="text-[14px] tracking-tight"
+          style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 300 }}
+        >
+          {hijri}
+        </p>
+        <p
+          className="text-white text-[24px] mt-0.5 tracking-tight leading-none"
+          style={{ fontWeight: 300 }}
+        >
+          {currentPrayer} {prayerTime}
+        </p>
+      </div>
+    </div>
+  );
+};
+
 const PrayerIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
     <path
