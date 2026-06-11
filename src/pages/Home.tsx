@@ -185,52 +185,13 @@ export const Home = () => {
         </div>
 
         {/* Arc + center logo + prayer info */}
-        <div className="relative h-[200px] mt-4">
-          {/* Arc */}
-          <svg
-            className="absolute left-1/2 -translate-x-1/2 top-0"
-            width="280"
-            height="200"
-            viewBox="0 0 280 200"
-            fill="none"
-            aria-hidden="true"
-          >
-            <path
-              d="M10 200 A130 130 0 0 1 270 200"
-              stroke="rgba(255,255,255,0.4)"
-              strokeWidth="1"
-              fill="none"
-            />
-          </svg>
-          {/* B logo at top of arc */}
-          <div
-            className="absolute left-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-md"
-            style={{ top: -2 }}
-          >
-            <span
-              className="text-[#A35334] text-[18px]"
-              style={{ fontFamily: 'Reem Kufi, sans-serif', fontWeight: 700 }}
-            >
-              B
-            </span>
-          </div>
-
-          {/* Date + prayer */}
-          <div className="relative z-10 flex flex-col items-center pt-14">
-            <p
-              className="text-[16px] tracking-tight"
-              style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 300 }}
-            >
-              {hijri}
-            </p>
-            <p
-              className="text-white text-[26px] mt-1 tracking-tight"
-              style={{ fontWeight: 300 }}
-            >
-              {next[0]} {prayerTime}
-            </p>
-          </div>
-        </div>
+        <ArcTimeline
+          hijri={hijri}
+          currentPrayer={next[0]}
+          prayerTime={prayerTime}
+          nowMinutes={cur}
+          prayerTimes={prayerTimes}
+        />
 
         {/* Quick action cards */}
         <div className="relative z-10 px-5 mt-2 grid grid-cols-4 gap-2">
