@@ -1,7 +1,7 @@
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Search, X, Loader2, RefreshCw, Sparkles } from 'lucide-react';
+import { ArrowLeft, Search, X, Loader2, RefreshCw, Sparkles, Home as HomeIcon, ShoppingBag, Moon, ScanLine, MessageCircle } from 'lucide-react';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -113,7 +113,7 @@ export const News = () => {
   const CREAM = '#FFF1DD';
 
   return (
-    <Layout showHeader={false}>
+    <Layout showHeader={false} showNavigation={false}>
       <div className="relative min-h-screen" style={{ backgroundColor: CREAM }}>
         {/* Top header bar — white */}
         <div className="bg-white px-4 pt-4 pb-4">
