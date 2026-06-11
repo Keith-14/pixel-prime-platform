@@ -1,11 +1,9 @@
 import { Layout } from '@/components/Layout';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Newspaper, Globe, BookOpen, Users, Heart, Building2, Sparkles, ExternalLink, ChevronRight, RefreshCw, Loader2 } from 'lucide-react';
-import { useEffect, useState, useCallback } from 'react';
+import { Input } from '@/components/ui/input';
+import { ArrowLeft, Search, X, Loader2, RefreshCw, Sparkles } from 'lucide-react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -23,14 +21,14 @@ interface NewsItem {
   time: string;
 }
 
-const categories: { key: NewsCategory; labelKey: string; icon: typeof Globe }[] = [
-  { key: 'all', labelKey: 'news.category.all', icon: Newspaper },
-  { key: 'world', labelKey: 'news.category.world', icon: Globe },
-  { key: 'education', labelKey: 'news.category.education', icon: BookOpen },
-  { key: 'community', labelKey: 'news.category.community', icon: Users },
-  { key: 'charity', labelKey: 'news.category.charity', icon: Heart },
-  { key: 'business', labelKey: 'news.category.business', icon: Building2 },
-  { key: 'politics', labelKey: 'news.category.politics', icon: Globe },
+const categories: { key: NewsCategory; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'world', label: 'Ummah' },
+  { key: 'community', label: 'Lifestyle' },
+  { key: 'education', label: 'Heritage' },
+  { key: 'charity', label: 'Charity' },
+  { key: 'business', label: 'Business' },
+  { key: 'politics', label: 'Politics' },
 ];
 
 function timeAgo(iso: string | null): string {
@@ -47,12 +45,13 @@ function timeAgo(iso: string | null): string {
 }
 
 export const News = () => {
-  const { t } = useLanguage();
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState<NewsCategory>('all');
   const [items, setItems] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [search, setSearch] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -98,135 +97,255 @@ export const News = () => {
     }
   };
 
-  const getCategoryIcon = (category: NewsCategory) => {
-    const found = categories.find(c => c.key === category);
-    return found ? found.icon : Globe;
-  };
+  const filtered = useMemo(() => {
+    if (!search.trim()) return items;
+    const q = search.toLowerCase();
+    return items.filter(
+      (i) => i.title.toLowerCase().includes(q) || (i.description ?? '').toLowerCase().includes(q),
+    );
+  }, [items, search]);
+
+  const latest = filtered.slice(0, 5);
+  const topStories = filtered.slice(5);
+
+  const BROWN = '#A35233';
+  const BROWN_SOFT = '#F5D9C4';
+  const CREAM = '#FFF1DD';
 
   return (
-    <Layout>
-      <div className="px-4 py-6 space-y-6 font-arabic">
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl" />
-            <Newspaper className="h-8 w-8 text-primary relative z-10" strokeWidth={1.5} />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-emerald-gradient">{t('news.title')}</h1>
-            <p className="text-sm text-muted-foreground">{t('news.subtitle')}</p>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={refresh}
-            disabled={refreshing}
-            className="ml-auto text-primary hover:bg-primary/10 rounded-full"
-            aria-label="Refresh news"
-          >
-            {refreshing ? <Loader2 className="h-5 w-5 animate-spin" /> : <RefreshCw className="h-5 w-5" />}
-          </Button>
-        </div>
-
-        {/* Categories */}
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-          {categories.map(({ key, labelKey, icon: Icon }) => (
-            <Button
-              key={key}
-              variant="ghost"
-              size="sm"
-              onClick={() => setSelectedCategory(key)}
-              className={cn(
-                "flex items-center gap-2 rounded-full px-4 py-2 shrink-0 transition-all duration-300",
-                selectedCategory === key
-                  ? "bg-primary/15 text-primary border border-primary/30"
-                  : "text-muted-foreground hover:bg-primary/8 hover:text-primary border border-transparent"
-              )}
-            >
-              <Icon className="h-4 w-4" strokeWidth={1.5} />
-              <span className="text-xs font-medium">{t(labelKey)}</span>
-            </Button>
-          ))}
-        </div>
-
-        {/* News List */}
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
-          </div>
-        ) : items.length === 0 ? (
-          <div className="text-center py-12 space-y-3">
-            <Sparkles className="h-8 w-8 text-primary/60 mx-auto" />
-            <p className="text-sm text-muted-foreground">No articles yet. Tap refresh to load the latest news.</p>
-            <Button onClick={refresh} disabled={refreshing} className="rounded-full">
-              {refreshing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
-              Fetch news
-            </Button>
-          </div>
-        ) : (
-        <div className="space-y-4">
-          {items.map((item, index) => {
-            const CategoryIcon = getCategoryIcon(item.category);
-            return (
+    <Layout showHeader={false}>
+      <div className="relative min-h-screen" style={{ backgroundColor: CREAM }}>
+        {/* Top header bar — white */}
+        <div className="bg-white px-4 pt-4 pb-4">
+          {searchOpen ? (
+            <div className="flex items-center gap-3">
               <button
-                key={item.id}
                 type="button"
-                onClick={() => navigate(`/news/${item.id}`)}
-                className="block w-full text-left"
+                onClick={() => {
+                  setSearchOpen(false);
+                  setSearch('');
+                }}
+                className="h-10 w-10 shrink-0 rounded-full border flex items-center justify-center"
+                style={{ borderColor: BROWN, color: BROWN }}
+                aria-label="Back"
               >
-              <Card
-                className={cn(
-                  "relative overflow-hidden glass-dark p-4 transition-all duration-300 hover:scale-[1.01] cursor-pointer group",
-                  "animate-in fade-in slide-in-from-bottom-2"
-                )}
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                {/* Hover glow */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                
-                <div className="relative z-10 flex items-start gap-4">
-                  {/* Image or Category Icon */}
-                  <div className="shrink-0">
-                    {item.image_url ? (
-                      <img
-                        src={item.image_url}
-                        alt=""
-                        loading="lazy"
-                        className="h-16 w-16 rounded-xl object-cover border border-primary/15"
-                        onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
-                      />
-                    ) : (
-                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/15 flex items-center justify-center group-hover:border-primary/30 transition-all duration-300">
-                        <CategoryIcon className="h-5 w-5 text-primary" strokeWidth={1.5} />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-foreground leading-snug line-clamp-2 group-hover:text-primary transition-colors duration-300">
-                      {item.title}
-                    </h3>
-                    {item.description && (
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{item.description}</p>
-                    )}
-                    <div className="flex items-center gap-2 mt-2">
-                      <Badge variant="secondary" className="text-[10px] bg-primary/10 text-primary border-none">
-                        {item.source}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">{item.time}</span>
-                    </div>
-                  </div>
-
-                  {/* Arrow */}
-                  <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all duration-300 shrink-0" />
-                </div>
-              </Card>
+                <ArrowLeft className="h-4 w-4" />
               </button>
-            );
-          })}
+              <div className="flex-1 relative">
+                <Input
+                  autoFocus
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search news"
+                  className="h-10 rounded-full bg-neutral-100 border-0 pl-4 pr-10 text-sm"
+                />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => setSearch('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full flex items-center justify-center"
+                    style={{ color: BROWN }}
+                    aria-label="Clear"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                className="h-10 w-10 rounded-full border flex items-center justify-center"
+                style={{ borderColor: BROWN, color: BROWN }}
+                aria-label="Back"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+              <h1 className="text-xl font-bold" style={{ color: BROWN }}>News</h1>
+              <button
+                type="button"
+                onClick={() => setSearchOpen(true)}
+                className="h-10 w-10 rounded-full flex items-center justify-center"
+                style={{ color: BROWN }}
+                aria-label="Search"
+              >
+                <Search className="h-5 w-5" />
+              </button>
+            </div>
+          )}
         </div>
-        )}
+
+        <div className="px-4 pt-5 pb-8 space-y-6">
+          {/* Categories */}
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1">
+            {categories.map(({ key, label }) => {
+              const active = selectedCategory === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setSelectedCategory(key)}
+                  className="rounded-full px-5 py-2 text-sm font-semibold shrink-0 transition-colors"
+                  style={{
+                    backgroundColor: active ? BROWN : BROWN_SOFT,
+                    color: active ? '#fff' : BROWN,
+                  }}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin" style={{ color: BROWN }} />
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-12 space-y-3">
+              <Sparkles className="h-8 w-8 mx-auto" style={{ color: BROWN }} />
+              <p className="text-sm" style={{ color: BROWN }}>
+                No articles yet. Tap refresh to load the latest news.
+              </p>
+              <Button
+                onClick={refresh}
+                disabled={refreshing}
+                className="rounded-full"
+                style={{ backgroundColor: BROWN, color: '#fff' }}
+              >
+                {refreshing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+                Fetch news
+              </Button>
+            </div>
+          ) : (
+            <>
+              {/* Latest News */}
+              {latest.length > 0 && (
+                <section className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-bold" style={{ color: BROWN }}>Latest News</h2>
+                    <button
+                      type="button"
+                      onClick={refresh}
+                      className="text-sm font-medium opacity-70"
+                      style={{ color: BROWN }}
+                    >
+                      {refreshing ? 'Refreshing…' : 'See all'}
+                    </button>
+                  </div>
+                  <div className="flex gap-4 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-2 snap-x snap-mandatory">
+                    {latest.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => navigate(`/news/${item.id}`)}
+                        className="snap-start shrink-0 w-[78%] text-left rounded-3xl overflow-hidden bg-white shadow-sm"
+                        style={{ border: `1px solid ${BROWN_SOFT}` }}
+                      >
+                        <div className="h-44 w-full bg-neutral-100 overflow-hidden">
+                          {item.image_url ? (
+                            <img
+                              src={item.image_url}
+                              alt={item.title}
+                              loading="lazy"
+                              className="h-full w-full object-cover"
+                              onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
+                            />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center" style={{ color: BROWN }}>
+                              <Sparkles className="h-6 w-6 opacity-50" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-4 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-md text-white"
+                              style={{ backgroundColor: BROWN }}
+                            >
+                              {item.category}
+                            </span>
+                            <span className="text-xs text-neutral-500">{item.time}</span>
+                          </div>
+                          <h3 className="text-[15px] font-bold leading-snug text-neutral-900 line-clamp-2">
+                            {item.title}
+                          </h3>
+                          <p className="text-sm font-semibold" style={{ color: BROWN }}>
+                            {item.source}
+                          </p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Top Stories */}
+              {topStories.length > 0 && (
+                <section className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-bold" style={{ color: BROWN }}>Top Stories</h2>
+                    <button type="button" className="text-sm font-medium opacity-70" style={{ color: BROWN }}>
+                      See all
+                    </button>
+                  </div>
+                  <div className="space-y-3">
+                    {topStories.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => navigate(`/news/${item.id}`)}
+                        className={cn(
+                          'w-full text-left rounded-2xl bg-white p-3 flex items-center gap-3 shadow-sm',
+                        )}
+                        style={{ border: `1px solid ${BROWN_SOFT}` }}
+                      >
+                        <div
+                          className="h-16 w-16 shrink-0 rounded-full overflow-hidden bg-neutral-100"
+                          style={{ border: `1px solid ${BROWN_SOFT}` }}
+                        >
+                          {item.image_url ? (
+                            <img
+                              src={item.image_url}
+                              alt={item.title}
+                              loading="lazy"
+                              className="h-full w-full object-cover"
+                              onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
+                            />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center" style={{ color: BROWN }}>
+                              <Sparkles className="h-5 w-5 opacity-50" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p
+                            className="text-[10px] font-bold uppercase tracking-wide"
+                            style={{ color: BROWN }}
+                          >
+                            {item.category}
+                          </p>
+                          <h3 className="text-[14px] font-bold leading-snug text-neutral-900 line-clamp-2 mt-0.5">
+                            {item.title}
+                          </h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs font-semibold" style={{ color: BROWN }}>
+                              {item.source}
+                            </span>
+                            <span className="h-1 w-1 rounded-full bg-neutral-300" />
+                            <span className="text-xs text-neutral-500">{item.time}</span>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </Layout>
   );
