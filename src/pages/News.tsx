@@ -347,6 +347,64 @@ export const News = () => {
           )}
         </div>
       </div>
+      <NewsBottomNav />
     </Layout>
   );
 };
+
+const NEWS_NAV_BROWN = '#2B1810';
+const NEWS_NAV_ACCENT = '#A35233';
+
+function NewsBottomNav() {
+  const navigate = useNavigate();
+  const items = [
+    { icon: HomeIcon, label: 'Home', path: '/', active: true },
+    { icon: ShoppingBag, label: 'Marketplace', path: '/shop' },
+    { icon: Moon, label: 'Prayer', path: '/prayer-times' },
+    { icon: ScanLine, label: 'Halal Scan', path: '/halal-scanner' },
+  ];
+  return (
+    <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-30 px-4 pb-4 pointer-events-none">
+      <div className="flex items-center gap-3 pointer-events-auto">
+        <nav
+          className="flex-1 rounded-full px-2 py-2 flex items-center justify-around"
+          style={{ backgroundColor: NEWS_NAV_BROWN }}
+        >
+          {items.map(({ icon: Icon, label, path, active }) => (
+            <button
+              key={label}
+              type="button"
+              onClick={() => navigate(path)}
+              className="flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-full"
+              style={active ? { border: '1.5px solid #FFF1DD' } : undefined}
+            >
+              <Icon
+                className="h-5 w-5"
+                style={{ color: '#FFF1DD' }}
+                strokeWidth={active ? 2.2 : 1.7}
+              />
+              <span
+                className="text-[10px] leading-none"
+                style={{
+                  color: '#FFF1DD',
+                  fontWeight: active ? 700 : 500,
+                }}
+              >
+                {label}
+              </span>
+            </button>
+          ))}
+        </nav>
+        <button
+          type="button"
+          onClick={() => navigate('/forum')}
+          className="h-14 w-14 rounded-full flex items-center justify-center shadow-lg shrink-0"
+          style={{ backgroundColor: NEWS_NAV_ACCENT }}
+          aria-label="Chat"
+        >
+          <MessageCircle className="h-6 w-6" style={{ color: '#FFF1DD' }} strokeWidth={2} />
+        </button>
+      </div>
+    </div>
+  );
+}
