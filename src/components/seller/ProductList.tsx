@@ -39,7 +39,7 @@ export const ProductList = ({ products, loading, onEdit, onDelete }: ProductList
         {products.map((product) => (
           <Card key={product.id} className="overflow-hidden rounded-2xl">
             {/* Product Image */}
-            <div className="relative h-48 bg-sage-light/20">
+            <div className="relative aspect-square bg-sage-light/20">
               {product.image_url ? (
                 <img
                   src={product.image_url}
