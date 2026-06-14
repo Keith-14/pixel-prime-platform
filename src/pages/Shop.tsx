@@ -186,7 +186,8 @@ export const Shop = () => {
                   return (
                     <div
                       key={product.id}
-                      className="rounded-2xl overflow-hidden bg-white flex flex-col"
+                      onClick={() => navigate(`/shop/product/${product.id}`)}
+                      className="rounded-2xl overflow-hidden bg-white flex flex-col cursor-pointer"
                       style={{ boxShadow: '0 2px 6px rgba(92,42,20,0.06)' }}
                     >
                       <div className="relative aspect-square bg-neutral-100">
@@ -199,7 +200,7 @@ export const Shop = () => {
                         )}
                         <button
                           type="button"
-                          onClick={() => toggleFav(product.id)}
+                          onClick={(e) => { e.stopPropagation(); toggleFav(product.id); }}
                           className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/30 backdrop-blur flex items-center justify-center"
                           aria-label="Favorite"
                         >
@@ -215,7 +216,7 @@ export const Shop = () => {
                           <p className="text-base font-bold" style={{ color: BROWN_DARK }}>${product.price.toFixed(2)}</p>
                           <button
                             type="button"
-                            onClick={() => handleAddToCart(product)}
+                            onClick={(e) => { e.stopPropagation(); handleAddToCart(product); }}
                             className="h-7 w-7 rounded-full border flex items-center justify-center"
                             style={{ borderColor: BROWN, color: BROWN }}
                             aria-label="Add to cart"
