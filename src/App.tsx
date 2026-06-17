@@ -26,6 +26,8 @@ import { Hajj } from "./pages/Hajj";
 import { BusinessAccount } from "./pages/BusinessAccount";
 import { Cart } from "./pages/Cart";
 import { Checkout } from "./pages/Checkout";
+import { ShippingAddresses } from "./pages/ShippingAddresses";
+import { AddShippingAddress } from "./pages/AddShippingAddress";
 import { SellerDashboard } from "./pages/SellerDashboard";
 import { MakkahLive } from "./pages/MakkahLive";
 import { Forum } from "./pages/Forum";
@@ -83,6 +85,9 @@ const App = () => (
                   <Route path="/business-account" element={<ProtectedRoute><BusinessAccount /></ProtectedRoute>} />
                   <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
                   <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+                  <Route path="/shipping-address" element={<ProtectedRoute><ShippingAddresses /></ProtectedRoute>} />
+                  <Route path="/shipping-address/new" element={<ProtectedRoute><AddShippingAddress /></ProtectedRoute>} />
+                  <Route path="/shipping-address/edit/:id" element={<ProtectedRoute><AddShippingAddress /></ProtectedRoute>} />
                   <Route path="/makkah-live" element={<ProtectedRoute><MakkahLive /></ProtectedRoute>} />
                   <Route path="/news" element={<ProtectedRoute><News /></ProtectedRoute>} />
                   <Route path="/news/:id" element={<ProtectedRoute><NewsDetail /></ProtectedRoute>} />
