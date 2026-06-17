@@ -77,10 +77,12 @@ const translations: Record<Language, Record<string, string>> = {
     
     // Bottom Navigation
     'nav.home': 'Home',
-    'nav.store': 'Store',
+    'nav.store': 'Marketplace',
     'nav.guftagu': 'Guftagu',
     'nav.places': 'Places',
     'nav.account': 'Account',
+    'nav.prayer': 'Prayer',
+    'nav.halalScan': 'Halal Scan',
     
     // News page
     'news.title': 'Islamic News',
