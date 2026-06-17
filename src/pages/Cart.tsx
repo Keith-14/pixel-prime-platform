@@ -19,56 +19,14 @@ export const Cart = () => {
   const [processing, setProcessing] = useState(false);
   const [promoCode, setPromoCode] = useState('');
 
-  const handleProceedToPay = async () => {
+  const handleProceedToPay = () => {
     if (!user) {
       toast.error('Please login to checkout');
       navigate('/login');
       return;
     }
-
     if (items.length === 0) return;
-
-    setProcessing(true);
-    try {
-      const total = getTotalPrice();
-      const tax = total * 0.1;
-      const shipping = total > 50 ? 0 : 5.99;
-      const totalAmount = total + tax + shipping;
-
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          user_id: user.uid,
-          total_amount: totalAmount,
-          status: 'pending'
-        })
-        .select()
-        .single();
-
-      if (orderError) throw orderError;
-
-      const orderItems = items.map(item => ({
-        order_id: orderData.id,
-        product_id: item.id,
-        quantity: item.quantity,
-        price: item.price
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
-
-      if (itemsError) throw itemsError;
-
-      clearCart();
-      toast.success('Order placed successfully!');
-      navigate('/shop');
-    } catch (error: any) {
-      console.error('Checkout error:', error);
-      toast.error('Failed to place order. Please try again.');
-    } finally {
-      setProcessing(false);
-    }
+    navigate('/checkout');
   };
 
   const subtotal = getTotalPrice();
