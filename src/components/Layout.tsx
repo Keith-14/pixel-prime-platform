@@ -9,9 +9,13 @@ interface LayoutProps {
   children: ReactNode;
   showNavigation?: boolean;
   showHeader?: boolean;
+  headerTitle?: string;
+  headerRight?: ReactNode;
+  onSearchClick?: () => void;
+  showSearch?: boolean;
 }
 
-export const Layout = ({ children, showNavigation = true, showHeader = true }: LayoutProps) => {
+export const Layout = ({ children, showNavigation = true, showHeader = true, headerTitle, headerRight, onSearchClick, showSearch }: LayoutProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(true);
   const location = useLocation();
@@ -60,7 +64,7 @@ export const Layout = ({ children, showNavigation = true, showHeader = true }: L
         />
       </div>
       
-      {showHeader && <TopHeader onMenuClick={handleMenuClick} />}
+      {showHeader && <TopHeader onMenuClick={handleMenuClick} title={headerTitle} rightContent={headerRight} onSearchClick={onSearchClick} showSearch={showSearch} />}
       
       <main className={cn(
         "flex-1 relative z-10",

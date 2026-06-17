@@ -5,26 +5,59 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MessageCircle, Plus, Send, ArrowLeft, Loader2, Trash2, Heart, RefreshCw, Sparkles, Users, TrendingUp, Hash, AtSign } from 'lucide-react';
+import { 
+  MessageCircle, Plus, Send, ArrowLeft, Loader2, Trash2, Heart, RefreshCw, 
+  Sparkles, Users, TrendingUp, Hash, AtSign, Search, X, Bookmark, Share2, User, ChevronRight 
+} from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
-// Post categories
+// Post categories (limited to mockup set)
 const CATEGORIES = [
-  { id: 'all', label: 'All', icon: Sparkles },
-  { id: 'general', label: 'General', icon: MessageCircle },
-  { id: 'dua', label: 'Dua Requests', icon: Heart },
-  { id: 'knowledge', label: 'Deen & Knowledge', icon: Hash },
-  { id: 'inspiration', label: 'Inspiration', icon: TrendingUp },
-  { id: 'ummah-news', label: 'Ummah News', icon: TrendingUp },
-  { id: 'entrepreneurship', label: 'Entrepreneurship & Business', icon: TrendingUp },
-  { id: 'sports', label: 'Sports', icon: TrendingUp },
-  { id: 'youth', label: 'Youth', icon: Users },
-  { id: 'student', label: 'Student', icon: Hash },
-  { id: 'global-politics', label: 'Global Politics', icon: MessageCircle },
+  { id: 'all', label: 'All' },
+  { id: 'general', label: 'General' },
+  { id: 'dua', label: 'Dua Requests' },
+  { id: 'knowledge', label: 'Deen & Knowledge' },
 ];
+
+// Daily duas collection
+const DAILY_DUAS = [
+  {
+    arabic: 'اللَّهُمَّ أَنْتَ رَبِّي لاَ إِلَهَ إِلاَّ أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ',
+    translation: 'O Allah, You are my Lord. There is no god but You. You created me and I am Your servant.',
+  },
+  {
+    arabic: 'رَبِّ اغْفِرْ لِي وَلِوَالِدَيَّ وَلِلْمُؤْمِنِينَ يَوْمَ يَقُومُ الْحِسَابُ',
+    translation: 'My Lord, forgive me and my parents and the believers on the Day the account is established.',
+  },
+  {
+    arabic: 'اللَّهُمَّ إِنِّي أَسْأَلُكَ عِلْمًا نَافِعًا وَرِزْقًا طَيِّبًا وَعَمَلًا مُتَقَبَّلًا',
+    translation: 'O Allah, I ask You for beneficial knowledge, good provision, and accepted deeds.',
+  },
+  {
+    arabic: 'اللَّهُمَّ اجْعَلْنِي مِنَ التَّوَّابِينَ وَاجْعَلْنِي مِنَ الْمُتَطَهِّرِينَ',
+    translation: 'O Allah, make me among those who repent and make me among those who purify themselves.',
+  },
+  {
+    arabic: 'اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنْ عِلْمٍ لاَ يَنْفَعُ وَمِنْ قَلْبٍ لاَ يَخْشَعُ',
+    translation: 'O Allah, I seek refuge in You from knowledge that does not benefit, and a heart that does not humble itself.',
+  },
+  {
+    arabic: 'اللَّهُمَّ أَعِنِّي عَلَى ذِكْرِكَ وَشُكْرِكَ وَحُسْنِ عِبَادَتِكَ',
+    translation: 'O Allah, help me to remember You, to thank You, and to worship You in the best manner.',
+  },
+  {
+    arabic: 'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ سُبْحَانَ اللَّهِ الْعَظِيمِ',
+    translation: 'Glory is to Allah and praise is to Him, glory is to Allah the Magnificent.',
+  },
+];
+
+const getTodaysDua = () => {
+  const dayOfYear = Math.floor((new Date().getTime() - new Date(new Date().getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
+  return DAILY_DUAS[dayOfYear % DAILY_DUAS.length];
+};
 
 interface Reply {
   id: string;
@@ -65,21 +98,8 @@ const formatTimeAgo = (dateStr: string): string => {
   if (diffMins < 1) return 'Just now';
   if (diffMins < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
-  return `${diffDays}d ago`;
-};
-
-// Avatar gradient colors based on first letter
-const getAvatarGradient = (name: string) => {
-  const colors = [
-    'from-emerald-500 to-teal-600',
-    'from-primary to-amber-500',
-    'from-rose-500 to-pink-600',
-    'from-violet-500 to-purple-600',
-    'from-blue-500 to-cyan-600',
-    'from-orange-500 to-red-500',
-  ];
-  const index = name.charCodeAt(0) % colors.length;
-  return colors[index];
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return `${Math.floor(diffDays / 7)}w ago`;
 };
 
 // Helper function to render content with @mentions highlighted
@@ -88,7 +108,6 @@ const renderContentWithMentions = (content: string) => {
   const parts = content.split(mentionRegex);
   
   return parts.map((part, index) => {
-    // Every odd index is a captured username
     if (index % 2 === 1) {
       return (
         <span key={index} className="text-primary font-semibold hover:underline cursor-pointer">
@@ -99,6 +118,12 @@ const renderContentWithMentions = (content: string) => {
     return part;
   });
 };
+
+const BROWN = '#8B5E3C';
+const BROWN_LIGHT = '#A67B5B';
+const BROWN_DARK = '#5C3A2A';
+const CREAM_BG = 'rgba(255, 235, 201, 0.06)';
+const WARM_CARD = 'rgba(60, 45, 30, 0.35)';
 
 export const Forum = () => {
   const { user } = useAuth();
@@ -118,6 +143,10 @@ export const Forum = () => {
   const [mentionSearch, setMentionSearch] = useState('');
   const [mentionTarget, setMentionTarget] = useState<'post' | 'reply'>('post');
   const [profileName, setProfileName] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'announcements' | 'communities'>('announcements');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<string>>(new Set());
   
   // Pull to refresh state
   const [pullDistance, setPullDistance] = useState(0);
@@ -125,6 +154,8 @@ export const Forum = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const startYRef = useRef(0);
   const PULL_THRESHOLD = 80;
+
+  const todaysDua = getTodaysDua();
 
   // Fetch user's profile name from Supabase
   useEffect(() => {
@@ -147,10 +178,12 @@ export const Forum = () => {
 
   const currentUserName = profileName || user?.displayName || user?.email?.split('@')[0] || 'User';
 
-  // Get filtered posts based on selected category
-  const filteredPosts = selectedCategory === 'all' 
-    ? posts 
-    : posts.filter(post => post.category === selectedCategory);
+  // Get filtered posts based on selected category and search
+  const filteredPosts = posts.filter(post => {
+    const matchesCategory = selectedCategory === 'all' || post.category === selectedCategory;
+    const matchesSearch = !searchQuery || post.content.toLowerCase().includes(searchQuery.toLowerCase()) || post.user_name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   // Fetch posts with their replies and likes
   const fetchPosts = useCallback(async (showLoader = true) => {
@@ -163,7 +196,6 @@ export const Forum = () => {
 
       if (postsError) throw postsError;
 
-      // Fetch all replies
       const { data: repliesData, error: repliesError } = await supabase
         .from('guftagu_replies')
         .select('*')
@@ -171,14 +203,12 @@ export const Forum = () => {
 
       if (repliesError) throw repliesError;
 
-      // Fetch all likes
       const { data: likesData, error: likesError } = await supabase
         .from('guftagu_likes')
         .select('*');
 
       if (likesError) throw likesError;
 
-      // Group replies by post_id
       const repliesByPost: Record<string, Reply[]> = {};
       (repliesData || []).forEach((reply) => {
         if (!repliesByPost[reply.post_id]) {
@@ -187,7 +217,6 @@ export const Forum = () => {
         repliesByPost[reply.post_id].push(reply);
       });
 
-      // Group likes by post_id
       const likesByPost: Record<string, Like[]> = {};
       (likesData || []).forEach((like) => {
         if (!likesByPost[like.post_id]) {
@@ -196,7 +225,6 @@ export const Forum = () => {
         likesByPost[like.post_id].push(like);
       });
 
-      // Attach replies and likes to posts
       const postsWithData = (postsData || []).map((post) => {
         const postLikes = likesByPost[post.id] || [];
         return {
@@ -242,7 +270,6 @@ export const Forum = () => {
     setIsPulling(false);
   }, [pullDistance, refreshing, fetchPosts]);
 
-  // Fetch all unique usernames for mentions
   const fetchUserNames = useCallback(async () => {
     try {
       const { data: postsData } = await supabase
@@ -263,12 +290,10 @@ export const Forum = () => {
     }
   }, []);
 
-  // Set up real-time subscriptions
   useEffect(() => {
     fetchPosts();
     fetchUserNames();
 
-    // Subscribe to new posts
     const postsChannel = supabase
       .channel('guftagu-posts')
       .on(
@@ -288,14 +313,12 @@ export const Forum = () => {
       )
       .subscribe();
 
-    // Subscribe to likes
     const likesChannel = supabase
       .channel('guftagu-likes')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'guftagu_likes' },
         () => {
-          // Refetch to update like counts
           fetchPosts(false);
         }
       )
@@ -307,7 +330,6 @@ export const Forum = () => {
     };
   }, [fetchPosts, fetchUserNames]);
 
-  // Handle mention input
   const handleContentChange = (value: string, target: 'post' | 'reply') => {
     if (target === 'post') {
       setNewPostContent(value);
@@ -315,7 +337,6 @@ export const Forum = () => {
       setNewReply(value);
     }
     
-    // Check for @mention trigger
     const lastAtIndex = value.lastIndexOf('@');
     if (lastAtIndex !== -1) {
       const textAfterAt = value.slice(lastAtIndex + 1);
@@ -348,11 +369,9 @@ export const Forum = () => {
     .filter(name => name.toLowerCase().includes(mentionSearch) && name !== currentUserName)
     .slice(0, 5);
 
-  // Subscribe to replies when a post is selected
   useEffect(() => {
     if (!selectedPost) return;
 
-    // Get current replies from posts state
     const currentPost = posts.find(p => p.id === selectedPost.id);
     if (currentPost && currentPost.replies) {
       setSelectedPost(prev => prev ? { ...prev, replies: currentPost.replies, likeCount: currentPost.likeCount, isLiked: currentPost.isLiked } : null);
@@ -372,7 +391,6 @@ export const Forum = () => {
               replies: [...(prev.replies || []), newReplyData]
             };
           });
-          // Also update posts state
           setPosts((prev) => prev.map(p => 
             p.id === selectedPost.id 
               ? { ...p, replies: [...(p.replies || []), newReplyData] }
@@ -391,7 +409,6 @@ export const Forum = () => {
               replies: (prev.replies || []).filter((r) => r.id !== payload.old.id)
             };
           });
-          // Also update posts state
           setPosts((prev) => prev.map(p => 
             p.id === selectedPost.id 
               ? { ...p, replies: (p.replies || []).filter((r) => r.id !== payload.old.id) }
@@ -456,7 +473,6 @@ export const Forum = () => {
 
     setLikingPosts(prev => new Set(prev).add(postId));
 
-    // Optimistic update
     setPosts(prev => prev.map(p => {
       if (p.id === postId) {
         return {
@@ -484,7 +500,6 @@ export const Forum = () => {
       }
     } catch (error) {
       console.error('Error toggling like:', error);
-      // Revert optimistic update
       setPosts(prev => prev.map(p => {
         if (p.id === postId) {
           return {
@@ -540,104 +555,161 @@ export const Forum = () => {
     }
   };
 
-  // Calculate stats
-  const totalLikes = posts.reduce((acc, p) => acc + (p.likeCount || 0), 0);
-  const totalReplies = posts.reduce((acc, p) => acc + (p.replies?.length || 0), 0);
+  const handleToggleBookmark = (postId: string) => {
+    setBookmarkedPosts(prev => {
+      const next = new Set(prev);
+      if (next.has(postId)) {
+        next.delete(postId);
+        toast.success('Removed from bookmarks');
+      } else {
+        next.add(postId);
+        toast.success('Saved to bookmarks');
+      }
+      return next;
+    });
+  };
 
-  const PostCard = ({ post, showActions = true, index = 0 }: { post: Post; showActions?: boolean; index?: number }) => {
+  const handleShare = async (post: Post) => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `Post by ${post.user_name}`,
+          text: post.content,
+        });
+      } else {
+        await navigator.clipboard.writeText(post.content);
+        toast.success('Copied to clipboard');
+      }
+    } catch {
+      // User cancelled share
+    }
+  };
+
+  const getCategoryBadgeColor = (category?: string) => {
+    switch (category) {
+      case 'general': return 'bg-emerald-500/20 text-emerald-400';
+      case 'dua': return 'bg-amber-500/20 text-amber-400';
+      case 'knowledge': return 'bg-sky-500/20 text-sky-400';
+      default: return 'bg-emerald-500/20 text-emerald-400';
+    }
+  };
+
+  const getCategoryLabel = (category?: string) => {
+    return CATEGORIES.find(c => c.id === category)?.label || 'General';
+  };
+
+  const PostCard = ({ post, index = 0 }: { post: Post; index?: number }) => {
     const isOwner = user?.uid === post.user_id;
     const isLiking = likingPosts.has(post.id);
-    const avatarGradient = getAvatarGradient(post.user_name);
+    const isBookmarked = bookmarkedPosts.has(post.id);
+    const contentPreview = post.content.length > 180 ? post.content.slice(0, 180) + '...' : post.content;
+    const hasMore = post.content.length > 180;
 
     return (
       <Card 
-        className="group relative overflow-hidden bg-card/70 backdrop-blur-xl border-primary/10 shadow-lg hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 animate-fade-in"
-        style={{ animationDelay: `${index * 80}ms` }}
+        className="group relative overflow-hidden border-0 shadow-none animate-fade-in"
+        style={{ 
+          animationDelay: `${index * 80}ms`,
+          background: WARM_CARD,
+        }}
       >
-        {/* Decorative gradient line at top */}
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-        
-        <CardContent className="p-5">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className={`relative w-12 h-12 rounded-full bg-gradient-to-br ${avatarGradient} flex items-center justify-center shadow-lg`}>
-                <span className="text-white font-bold text-lg drop-shadow-sm">
-                  {post.user_name.charAt(0).toUpperCase()}
+        <CardContent className="p-4">
+          {/* Header: Avatar + Name + Category + Time */}
+          <div className="flex items-start gap-3 mb-3">
+            <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0"
+              style={{ background: 'rgba(255,255,255,0.08)' }}
+            >
+              <User className="h-5 w-5" style={{ color: 'rgba(255,235,201,0.5)' }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-semibold text-foreground text-sm">{post.user_name}</span>
+                <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-medium uppercase tracking-wide", getCategoryBadgeColor(post.category))}>
+                  {getCategoryLabel(post.category)}
                 </span>
-                {/* Online indicator */}
-                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-card" />
               </div>
-              <div className="space-y-0.5">
-                <p className="font-semibold text-foreground tracking-tight">{post.user_name}</p>
-                <p className="text-xs text-muted-foreground/60 flex items-center gap-1">
-                  <span className="inline-block w-1 h-1 rounded-full bg-primary/40" />
-                  {formatTimeAgo(post.created_at)}
-                </p>
-              </div>
+              <p className="text-xs text-muted-foreground/50 mt-0.5">{formatTimeAgo(post.created_at)}</p>
             </div>
             {isOwner && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all duration-300"
+              <button
+                className="text-muted-foreground/30 hover:text-destructive transition-colors p-1"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDeletePost(post.id);
                 }}
               >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
             )}
           </div>
 
-          {/* Category badge */}
-          {post.category && post.category !== 'general' && (
-            <div className="mb-3">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                <Hash className="h-3 w-3" />
-                {CATEGORIES.find(c => c.id === post.category)?.label || post.category}
+          {/* Content */}
+          <div className="mb-3">
+            <p className="text-foreground/85 text-sm leading-relaxed">
+              {renderContentWithMentions(contentPreview)}
+              {hasMore && (
+                <button 
+                  onClick={() => setSelectedPost(post)}
+                  className="text-sm ml-1 hover:underline"
+                  style={{ color: BROWN_LIGHT }}
+                >
+                  Read more
+                </button>
+              )}
+            </p>
+          </div>
+
+          {/* Image placeholder for posts with longer content (simulated feature post) */}
+          {post.content.length > 250 && (
+            <div 
+              className="w-full h-40 rounded-xl mb-3 flex items-center justify-center"
+              style={{ background: 'rgba(139, 94, 60, 0.15)' }}
+              onClick={() => setSelectedPost(post)}
+            >
+              <span className="text-xs uppercase tracking-widest" style={{ color: 'rgba(255,235,201,0.3)' }}>
+                IMAGE_PLACEHOLDER
               </span>
             </div>
           )}
 
-          <p className="text-foreground/90 mb-5 leading-relaxed text-[15px] whitespace-pre-wrap">{renderContentWithMentions(post.content)}</p>
-
-          {showActions && (
-            <div className="flex items-center gap-6 pt-4 border-t border-primary/5">
+          {/* Actions Row */}
+          <div className="flex items-center justify-between pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+            <div className="flex items-center gap-5">
               <button
                 onClick={() => handleToggleLike(post.id, post.isLiked || false)}
                 disabled={isLiking}
-                className={`flex items-center gap-2 text-sm transition-all duration-300 group/like ${
-                  post.isLiked 
-                    ? 'text-rose-500' 
-                    : 'text-muted-foreground/70 hover:text-rose-500'
-                }`}
+                className="flex items-center gap-1.5 text-sm transition-colors"
+                style={{ color: post.isLiked ? '#e57373' : 'rgba(255,255,255,0.4)' }}
               >
-                <div className={`relative ${post.isLiked ? 'animate-scale-in' : ''}`}>
-                  <Heart 
-                    className={`h-5 w-5 transition-all duration-300 ${
-                      post.isLiked 
-                        ? 'fill-rose-500 scale-110' 
-                        : 'group-hover/like:scale-110'
-                    } ${isLiking ? 'animate-pulse' : ''}`} 
-                  />
-                  {post.isLiked && (
-                    <div className="absolute inset-0 animate-ping">
-                      <Heart className="h-5 w-5 fill-rose-500 opacity-50" />
-                    </div>
-                  )}
-                </div>
-                <span className="font-medium tabular-nums">{post.likeCount || 0}</span>
+                <Heart className={cn("h-4 w-4", post.isLiked && "fill-current")} />
+                <span className="text-xs tabular-nums">{post.likeCount || 0}</span>
               </button>
               <button
                 onClick={() => setSelectedPost(post)}
-                className="flex items-center gap-2 text-sm text-muted-foreground/70 hover:text-primary transition-all duration-300 group/reply"
+                className="flex items-center gap-1.5 text-sm transition-colors"
+                style={{ color: 'rgba(255,255,255,0.4)' }}
               >
-                <MessageCircle className="h-5 w-5 group-hover/reply:scale-110 transition-transform duration-300" />
-                <span className="font-medium tabular-nums">{post.replies?.length || 0}</span>
+                <MessageCircle className="h-4 w-4" />
+                <span className="text-xs tabular-nums">{post.replies?.length || 0}</span>
               </button>
             </div>
-          )}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => handleToggleBookmark(post.id)}
+                className="transition-colors"
+                style={{ color: isBookmarked ? BROWN_LIGHT : 'rgba(255,255,255,0.4)' }}
+              >
+                <Bookmark className={cn("h-4 w-4", isBookmarked && "fill-current")} />
+              </button>
+              <button
+                onClick={() => handleShare(post)}
+                className="transition-colors"
+                style={{ color: 'rgba(255,255,255,0.4)' }}
+              >
+                <Share2 className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
         </CardContent>
       </Card>
     );
@@ -645,102 +717,89 @@ export const Forum = () => {
 
   // Replies View
   if (selectedPost) {
-    const avatarGradient = getAvatarGradient(selectedPost.user_name);
-    
     return (
       <Layout>
         <div className="min-h-screen pb-24">
-          {/* Hero gradient background */}
-          <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
-          
           <div className="relative px-4 pt-6">
             <button
               onClick={() => setSelectedPost(null)}
-              className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-6 group"
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6 group"
             >
               <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform duration-300" />
-              <span className="font-medium">Back to Guftagu</span>
+              <span className="font-medium text-sm">Back to Guftagu</span>
             </button>
 
-            {/* Original Post - Enhanced */}
-            <Card className="relative overflow-hidden bg-card/80 backdrop-blur-xl border-primary/15 shadow-xl mb-6">
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-emerald-400 to-primary" />
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4 mb-5">
-                  <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${avatarGradient} flex items-center justify-center shadow-lg ring-2 ring-primary/20`}>
-                    <span className="text-white font-bold text-xl drop-shadow-sm">
-                      {selectedPost.user_name.charAt(0).toUpperCase()}
-                    </span>
+            <Card className="relative overflow-hidden border-0 mb-6" style={{ background: WARM_CARD }}>
+              <CardContent className="p-5">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
+                    style={{ background: 'rgba(255,255,255,0.08)' }}
+                  >
+                    <User className="h-6 w-6" style={{ color: 'rgba(255,235,201,0.5)' }} />
                   </div>
                   <div className="flex-1">
-                    <p className="font-bold text-lg text-foreground">{selectedPost.user_name}</p>
-                    <p className="text-sm text-muted-foreground/60">{formatTimeAgo(selectedPost.created_at)}</p>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-foreground">{selectedPost.user_name}</span>
+                      <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-medium uppercase", getCategoryBadgeColor(selectedPost.category))}>
+                        {getCategoryLabel(selectedPost.category)}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground/50 mt-0.5">{formatTimeAgo(selectedPost.created_at)}</p>
                   </div>
                 </div>
-                {/* Category badge */}
-                {selectedPost.category && selectedPost.category !== 'general' && (
-                  <div className="mb-3">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                      <Hash className="h-3 w-3" />
-                      {CATEGORIES.find(c => c.id === selectedPost.category)?.label || selectedPost.category}
-                    </span>
-                  </div>
-                )}
-                <p className="text-foreground/90 text-[16px] leading-relaxed whitespace-pre-wrap">{renderContentWithMentions(selectedPost.content)}</p>
+                <p className="text-foreground/90 text-[15px] leading-relaxed whitespace-pre-wrap">{renderContentWithMentions(selectedPost.content)}</p>
                 
-                {/* Stats bar */}
-                <div className="flex items-center gap-4 mt-5 pt-4 border-t border-primary/10">
-                  <div className="flex items-center gap-1.5 text-rose-500">
-                    <Heart className="h-4 w-4 fill-rose-500" />
-                    <span className="text-sm font-medium">{selectedPost.likeCount || 0} likes</span>
+                <div className="flex items-center gap-5 mt-5 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div className="flex items-center gap-1.5" style={{ color: selectedPost.isLiked ? '#e57373' : 'rgba(255,255,255,0.4)' }}>
+                    <Heart className={cn("h-4 w-4", selectedPost.isLiked && "fill-current")} />
+                    <span className="text-sm">{selectedPost.likeCount || 0}</span>
                   </div>
-                  <div className="flex items-center gap-1.5 text-primary">
+                  <div className="flex items-center gap-1.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
                     <MessageCircle className="h-4 w-4" />
-                    <span className="text-sm font-medium">{selectedPost.replies?.length || 0} replies</span>
+                    <span className="text-sm">{selectedPost.replies?.length || 0}</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Replies Section */}
             <div className="mb-6">
-              <h3 className="font-bold text-lg text-foreground mb-4 flex items-center gap-2">
-                <MessageCircle className="h-5 w-5 text-primary" />
+              <h3 className="font-bold text-foreground mb-4 flex items-center gap-2 text-sm uppercase tracking-wide">
+                <MessageCircle className="h-4 w-4" style={{ color: BROWN_LIGHT }} />
                 Replies
               </h3>
 
               <div className="space-y-3">
                 {selectedPost.replies?.map((reply, index) => {
                   const isOwner = user?.uid === reply.user_id;
-                  const replyGradient = getAvatarGradient(reply.user_name);
                   
                   return (
                     <div 
                       key={reply.id} 
-                      className="bg-card/50 backdrop-blur-sm rounded-2xl p-4 border border-primary/5 animate-fade-in hover:bg-card/70 transition-colors duration-300"
-                      style={{ animationDelay: `${index * 50}ms` }}
+                      className="rounded-2xl p-4 animate-fade-in"
+                      style={{ 
+                        animationDelay: `${index * 50}ms`,
+                        background: 'rgba(255,255,255,0.03)',
+                      }}
                     >
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
-                          <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${replyGradient} flex items-center justify-center shadow-md`}>
-                            <span className="text-white font-bold text-sm">
-                              {reply.user_name.charAt(0).toUpperCase()}
-                            </span>
+                          <div className="w-9 h-9 rounded-full flex items-center justify-center"
+                            style={{ background: 'rgba(255,255,255,0.08)' }}
+                          >
+                            <User className="h-4 w-4" style={{ color: 'rgba(255,235,201,0.5)' }} />
                           </div>
                           <div>
                             <span className="font-semibold text-sm text-foreground">{reply.user_name}</span>
-                            <span className="text-xs text-muted-foreground/50 ml-2">• {formatTimeAgo(reply.created_at)}</span>
+                            <span className="text-xs text-muted-foreground/50 ml-2">{formatTimeAgo(reply.created_at)}</span>
                           </div>
                         </div>
                         {isOwner && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10"
+                          <button
+                            className="text-muted-foreground/30 hover:text-destructive transition-colors p-1"
                             onClick={() => handleDeleteReply(reply.id)}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
+                          </button>
                         )}
                       </div>
                       <p className="text-sm text-foreground/85 leading-relaxed pl-12">{renderContentWithMentions(reply.content)}</p>
@@ -749,41 +808,40 @@ export const Forum = () => {
                 })}
 
                 {(!selectedPost.replies || selectedPost.replies.length === 0) && (
-                  <div className="text-center py-12 bg-card/30 rounded-2xl border border-dashed border-primary/10">
-                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                      <MessageCircle className="h-8 w-8 text-primary/40" />
-                    </div>
-                    <p className="text-muted-foreground/70 font-medium mb-1">No replies yet</p>
-                    <p className="text-sm text-muted-foreground/50">Be the first to reply!</p>
+                  <div className="text-center py-12 rounded-2xl" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                    <MessageCircle className="h-8 w-8 mx-auto mb-3" style={{ color: 'rgba(255,235,201,0.2)' }} />
+                    <p className="text-muted-foreground/50 font-medium text-sm">No replies yet</p>
+                    <p className="text-xs text-muted-foreground/30 mt-1">Be the first to reply!</p>
                   </div>
                 )}
               </div>
 
-              {/* Reply Input */}
               <div className="mt-6 flex gap-3">
-                <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getAvatarGradient(currentUserName)} flex items-center justify-center shadow-md shrink-0`}>
-                  <span className="text-white font-bold text-sm">
-                    {currentUserName.charAt(0).toUpperCase()}
-                  </span>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                  style={{ background: 'rgba(255,255,255,0.08)' }}
+                >
+                  <User className="h-4 w-4" style={{ color: 'rgba(255,235,201,0.5)' }} />
                 </div>
                 <div className="flex-1 flex gap-2">
                   <div className="relative flex-1">
                     <Textarea
                       value={newReply}
                       onChange={(e) => handleContentChange(e.target.value, 'reply')}
-                      placeholder="Write a reply... Use @ to tag users"
-                      className="min-h-[48px] max-h-[120px] resize-none bg-card/60 border-primary/10 focus:border-primary/30 rounded-xl"
+                      placeholder="Write a reply..."
+                      className="min-h-[48px] max-h-[120px] resize-none rounded-xl border-0"
+                      style={{ background: 'rgba(255,255,255,0.05)' }}
                     />
-                    {/* Mention suggestions for reply */}
                     {showMentionSuggestions && mentionTarget === 'reply' && filteredSuggestions.length > 0 && (
-                      <div className="absolute bottom-full left-0 right-0 mb-1 bg-card border border-primary/20 rounded-lg shadow-lg overflow-hidden z-50">
+                      <div className="absolute bottom-full left-0 right-0 mb-1 rounded-lg shadow-lg overflow-hidden z-50 border"
+                        style={{ background: 'rgba(30,30,30,0.95)', borderColor: 'rgba(255,255,255,0.1)' }}
+                      >
                         {filteredSuggestions.map((name) => (
                           <button
                             key={name}
                             onClick={() => insertMention(name)}
-                            className="w-full px-3 py-2 text-left text-sm hover:bg-primary/10 flex items-center gap-2 transition-colors"
+                            className="w-full px-3 py-2 text-left text-sm hover:bg-white/5 flex items-center gap-2 transition-colors"
                           >
-                            <AtSign className="h-3 w-3 text-primary" />
+                            <AtSign className="h-3 w-3" style={{ color: BROWN_LIGHT }} />
                             <span className="font-medium">{name}</span>
                           </button>
                         ))}
@@ -794,7 +852,8 @@ export const Forum = () => {
                     onClick={handleAddReply}
                     disabled={!newReply.trim() || submitting}
                     size="icon"
-                    className="h-12 w-12 rounded-xl shadow-lg shadow-primary/20 shrink-0"
+                    className="h-12 w-12 rounded-xl shrink-0 border-0"
+                    style={{ background: BROWN }}
                   >
                     {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                   </Button>
@@ -807,8 +866,20 @@ export const Forum = () => {
     );
   }
 
+  const headerRight = (
+    <button
+      onClick={() => {
+        setSearchOpen(!searchOpen);
+        if (searchOpen) setSearchQuery('');
+      }}
+      className="text-foreground hover:text-primary transition-colors p-2"
+    >
+      {searchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
+    </button>
+  );
+
   return (
-    <Layout>
+    <Layout headerTitle="Guftagu" headerRight={headerRight}>
       <div 
         ref={containerRef}
         className="min-h-screen pb-24 overflow-auto"
@@ -816,110 +887,170 @@ export const Forum = () => {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Hero gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/8 via-primary/3 to-transparent pointer-events-none" />
-        
         {/* Pull to refresh indicator */}
         <div 
           className="flex items-center justify-center transition-all duration-200 overflow-hidden"
           style={{ height: pullDistance > 0 ? pullDistance : refreshing ? 50 : 0 }}
         >
           <RefreshCw 
-            className={`h-6 w-6 text-primary transition-transform duration-200 ${
-              refreshing ? 'animate-spin' : ''
-            }`}
+            className={`h-5 w-5 transition-transform duration-200 ${refreshing ? 'animate-spin' : ''}`}
             style={{ 
+              color: BROWN_LIGHT,
               transform: `rotate(${Math.min(pullDistance * 3, 360)}deg)`,
               opacity: pullDistance > 20 || refreshing ? 1 : 0
             }}
           />
         </div>
 
-        <div className="relative px-4 pt-6">
-          {/* Enhanced Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-3">
+        <div className="relative px-4 pt-2">
+          {/* Search Bar */}
+          {searchOpen && (
+            <div className="mb-4 animate-fade-in">
               <div className="relative">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center shadow-lg shadow-primary/25">
-                  <MessageCircle className="h-6 w-6 text-primary-foreground" />
-                </div>
-                <Sparkles className="absolute -top-1 -right-1 h-4 w-4 text-amber-400 animate-pulse" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-primary tracking-tight">Guftagu</h1>
-                <p className="text-sm text-muted-foreground/70">Share & connect with the community</p>
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search posts..."
+                  className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm text-foreground placeholder:text-muted-foreground/40 outline-none"
+                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+                  autoFocus
+                />
               </div>
             </div>
-            
-            {/* Stats Row */}
-            {!loading && posts.length > 0 && (
-              <div className="flex items-center gap-4 mt-4 animate-fade-in">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/60 backdrop-blur-sm border border-primary/10">
-                  <Users className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium text-foreground/80">{posts.length} posts</span>
-                </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/60 backdrop-blur-sm border border-primary/10">
-                  <Heart className="h-4 w-4 text-rose-500" />
-                  <span className="text-sm font-medium text-foreground/80">{totalLikes} likes</span>
-                </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/60 backdrop-blur-sm border border-primary/10">
-                  <TrendingUp className="h-4 w-4 text-emerald-500" />
-                  <span className="text-sm font-medium text-foreground/80">{totalReplies} replies</span>
-                </div>
-              </div>
-            )}
+          )}
 
-            {/* Category Filter Tabs */}
-            <div className="flex gap-2 overflow-x-auto pb-2 mt-4 scrollbar-hide">
-              {CATEGORIES.map(({ id, label, icon: Icon }) => (
-                <button
-                  key={id}
-                  onClick={() => setSelectedCategory(id)}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-300",
-                    selectedCategory === id
-                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                      : "bg-card/60 text-muted-foreground hover:bg-card hover:text-foreground border border-primary/10"
-                  )}
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                  {label}
-                </button>
-              ))}
-            </div>
+          {/* Tabs */}
+          <div className="flex items-center mb-4">
+            <button
+              onClick={() => setActiveTab('announcements')}
+              className="relative pb-2.5 px-1 mr-6"
+            >
+              <span 
+                className="text-sm font-medium transition-colors"
+                style={{ color: activeTab === 'announcements' ? BROWN_LIGHT : 'rgba(255,255,255,0.4)' }}
+              >
+                Announcements
+              </span>
+              {activeTab === 'announcements' && (
+                <div 
+                  className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full"
+                  style={{ background: BROWN_LIGHT }}
+                />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('communities')}
+              className="relative pb-2.5 px-1"
+            >
+              <span 
+                className="text-sm font-medium transition-colors"
+                style={{ color: activeTab === 'communities' ? BROWN_LIGHT : 'rgba(255,255,255,0.4)' }}
+              >
+                My Communities
+              </span>
+              {activeTab === 'communities' && (
+                <div 
+                  className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full"
+                  style={{ background: BROWN_LIGHT }}
+                />
+              )}
+            </button>
           </div>
 
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <div className="relative">
-                <div className="w-16 h-16 rounded-full bg-primary/10 animate-pulse" />
-                <Loader2 className="h-8 w-8 animate-spin text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-              </div>
-              <p className="text-sm text-muted-foreground/60 mt-4">Loading conversations...</p>
-            </div>
-          ) : filteredPosts.length === 0 ? (
-            <div className="text-center py-20 bg-card/30 backdrop-blur-sm rounded-3xl border border-dashed border-primary/10">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mx-auto mb-5">
-                <MessageCircle className="h-10 w-10 text-primary/40" />
-              </div>
-              <p className="text-lg font-semibold text-foreground/80 mb-2">
-                {selectedCategory === 'all' ? 'No conversations yet' : `No ${CATEGORIES.find(c => c.id === selectedCategory)?.label} posts yet`}
-              </p>
-              <p className="text-sm text-muted-foreground/60 mb-6">Start the first Guftagu!</p>
-              <Button 
-                onClick={() => setIsCreateDialogOpen(true)}
-                className="shadow-lg shadow-primary/20"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Start a conversation
-              </Button>
+          {activeTab === 'communities' ? (
+            <div className="text-center py-20">
+              <Users className="h-10 w-10 mx-auto mb-4" style={{ color: 'rgba(255,235,201,0.2)' }} />
+              <p className="text-muted-foreground/60 font-medium">My Communities</p>
+              <p className="text-sm text-muted-foreground/40 mt-1">Coming soon</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {filteredPosts.map((post, index) => (
-                <PostCard key={post.id} post={post} index={index} />
-              ))}
-            </div>
+            <>
+              {/* Category Filter Pills */}
+              <div className="flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-hide">
+                {CATEGORIES.map(({ id, label }) => (
+                  <button
+                    key={id}
+                    onClick={() => setSelectedCategory(id)}
+                    className={cn(
+                      "px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-200 border",
+                      selectedCategory === id
+                        ? "text-white border-transparent"
+                        : "text-foreground/50 hover:text-foreground/70 border-white/10"
+                    )}
+                    style={selectedCategory === id ? { background: BROWN, borderColor: 'transparent' } : {}}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Today's Dua Card */}
+              <Card 
+                className="mb-5 border-0 overflow-hidden"
+                style={{ background: CREAM_BG }}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">🤲</span>
+                      <span 
+                        className="text-xs font-bold uppercase tracking-wider"
+                        style={{ color: BROWN_LIGHT }}
+                      >
+                        TODAY'S DUA
+                      </span>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${todaysDua.arabic}\n${todaysDua.translation}`);
+                        toast.success('Dua copied to clipboard');
+                      }}
+                      className="p-1 transition-colors"
+                      style={{ color: 'rgba(255,255,255,0.3)' }}
+                    >
+                      <Share2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <p className="text-center text-lg leading-loose mb-3 font-arabic" style={{ color: 'rgba(255,235,201,0.7)' }}>
+                    {todaysDua.arabic}
+                  </p>
+                  <p className="text-xs text-center leading-relaxed" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                    {todaysDua.translation}
+                  </p>
+                </CardContent>
+              </Card>
+
+              {loading ? (
+                <div className="flex flex-col items-center justify-center py-20">
+                  <Loader2 className="h-6 w-6 animate-spin" style={{ color: BROWN_LIGHT }} />
+                  <p className="text-sm text-muted-foreground/50 mt-3">Loading conversations...</p>
+                </div>
+              ) : filteredPosts.length === 0 ? (
+                <div className="text-center py-16 rounded-2xl" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                  <MessageCircle className="h-10 w-10 mx-auto mb-4" style={{ color: 'rgba(255,235,201,0.2)' }} />
+                  <p className="text-foreground/60 font-medium mb-1">
+                    {searchQuery ? 'No results found' : selectedCategory === 'all' ? 'No conversations yet' : `No ${CATEGORIES.find(c => c.id === selectedCategory)?.label} posts yet`}
+                  </p>
+                  <p className="text-sm text-muted-foreground/40 mb-5">Start the first Guftagu!</p>
+                  <Button 
+                    onClick={() => setIsCreateDialogOpen(true)}
+                    className="rounded-full px-5"
+                    style={{ background: BROWN }}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Start a conversation
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filteredPosts.map((post, index) => (
+                    <PostCard key={post.id} post={post} index={index} />
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -927,31 +1058,33 @@ export const Forum = () => {
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button
-              className="fixed bottom-24 right-4 h-14 w-14 rounded-full shadow-xl shadow-primary/30 hover:shadow-primary/40 hover:scale-105 transition-all duration-300 z-50"
+              className="fixed bottom-24 right-4 h-14 w-14 rounded-full shadow-xl transition-all duration-300 z-50 border-0"
               size="icon"
+              style={{ background: BROWN }}
             >
               <Plus className="h-6 w-6" />
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md bg-card/95 backdrop-blur-xl border-primary/15">
+          <DialogContent className="sm:max-w-md border-0"
+            style={{ background: 'rgba(25,25,25,0.98)' }}
+          >
             <DialogHeader>
-              <DialogTitle className="text-xl text-primary flex items-center gap-2">
+              <DialogTitle className="text-xl flex items-center gap-2" style={{ color: BROWN_LIGHT }}>
                 <Sparkles className="h-5 w-5" />
                 Share Your Thoughts
               </DialogTitle>
-              <DialogDescription className="text-muted-foreground/70">
+              <DialogDescription className="text-muted-foreground/50 text-sm">
                 Post a message for the community to see and engage with.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 mt-2">
-              {/* Category selector */}
               <div className="flex items-center gap-2">
-                <Hash className="h-4 w-4 text-muted-foreground" />
+                <Hash className="h-4 w-4 text-muted-foreground/50" />
                 <Select value={newPostCategory} onValueChange={setNewPostCategory}>
-                  <SelectTrigger className="w-[180px] bg-background/50 border-primary/10">
+                  <SelectTrigger className="w-[180px] text-sm border-0" style={{ background: 'rgba(255,255,255,0.05)' }}>
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent style={{ background: 'rgba(30,30,30,0.98)' }}>
                     {CATEGORIES.filter(c => c.id !== 'all').map(({ id, label }) => (
                       <SelectItem key={id} value={id}>{label}</SelectItem>
                     ))}
@@ -960,29 +1093,31 @@ export const Forum = () => {
               </div>
 
               <div className="flex items-start gap-3">
-                <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getAvatarGradient(currentUserName)} flex items-center justify-center shadow-md shrink-0`}>
-                  <span className="text-white font-bold text-sm">
-                    {currentUserName.charAt(0).toUpperCase()}
-                  </span>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                  style={{ background: 'rgba(255,255,255,0.08)' }}
+                >
+                  <User className="h-4 w-4" style={{ color: 'rgba(255,235,201,0.5)' }} />
                 </div>
                 <div className="relative flex-1">
                   <Textarea
                     value={newPostContent}
                     onChange={(e) => handleContentChange(e.target.value, 'post')}
-                    placeholder="What's on your mind... Use @ to tag users"
-                    className="min-h-[120px] resize-none bg-background/50 border-primary/10 focus:border-primary/30 rounded-xl"
+                    placeholder="What's on your mind..."
+                    className="min-h-[120px] resize-none rounded-xl border-0"
+                    style={{ background: 'rgba(255,255,255,0.05)' }}
                     maxLength={500}
                   />
-                  {/* Mention suggestions */}
                   {showMentionSuggestions && mentionTarget === 'post' && filteredSuggestions.length > 0 && (
-                    <div className="absolute bottom-full left-0 right-0 mb-1 bg-card border border-primary/20 rounded-lg shadow-lg overflow-hidden z-50">
+                    <div className="absolute bottom-full left-0 right-0 mb-1 rounded-lg shadow-lg overflow-hidden z-50 border"
+                      style={{ background: 'rgba(30,30,30,0.95)', borderColor: 'rgba(255,255,255,0.1)' }}
+                    >
                       {filteredSuggestions.map((name) => (
                         <button
                           key={name}
                           onClick={() => insertMention(name)}
-                          className="w-full px-3 py-2 text-left text-sm hover:bg-primary/10 flex items-center gap-2 transition-colors"
+                          className="w-full px-3 py-2 text-left text-sm hover:bg-white/5 flex items-center gap-2 transition-colors"
                         >
-                          <AtSign className="h-3 w-3 text-primary" />
+                          <AtSign className="h-3 w-3" style={{ color: BROWN_LIGHT }} />
                           <span className="font-medium">{name}</span>
                         </button>
                       ))}
@@ -991,13 +1126,14 @@ export const Forum = () => {
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground/60 tabular-nums">
+                <span className="text-xs text-muted-foreground/40 tabular-nums">
                   {newPostContent.length}/500
                 </span>
                 <Button
                   onClick={handleCreatePost}
                   disabled={!newPostContent.trim() || submitting}
-                  className="shadow-lg shadow-primary/20 px-6"
+                  className="rounded-full px-6 border-0"
+                  style={{ background: BROWN }}
                 >
                   {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
                   Post
