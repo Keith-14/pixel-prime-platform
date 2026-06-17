@@ -1,15 +1,25 @@
 import { useState, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Navigation, Search, MapPin, Loader2, AlertCircle, RefreshCw, UtensilsCrossed, Settings2, LocateFixed } from 'lucide-react';
+import { Search, MapPin, Loader2, AlertCircle, RefreshCw, Settings2, LocateFixed, ArrowRight, Star } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { toast } from 'sonner';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useGlobalLocation } from '@/contexts/LocationContext';
+import restaurantImg from '@/assets/place-restaurant.jpg';
+import mosqueImg from '@/assets/place-mosque.jpg';
+
+// Theme tokens matching Guftagu redesign
+const CREAM_BG = '#FFF0D9';
+const CREAM_DEEP = '#F4DDB6';
+const HEADER_TEXT = '#2C1309';
+const BROWN = '#7B3F1E';
+const BROWN_DARK = '#5C2E15';
+const SOFT_BORDER = '#E8D2A8';
+const MUTED_TEXT = '#8B6E4A';
 
 // Fix Leaflet default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -43,6 +53,7 @@ export const Places = () => {
   const [manualLon, setManualLon] = useState('');
   const [citySearch, setCitySearch] = useState('');
   const [searchingCity, setSearchingCity] = useState(false);
+  const [restaurantFilter, setRestaurantFilter] = useState<'Nearest' | 'Open Now' | 'Top Rated' | 'Turkish'>('Nearest');
 
   // Calculate distance between two points
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -261,40 +272,67 @@ export const Places = () => {
   const getPlaceIcon = (type: PlaceType) => type === 'mosque' ? '🕌' : '🍽️';
   const getPlaceLabel = (type: PlaceType) => type === 'mosque' ? 'Mosques' : 'Halal Restaurants';
 
+  // Deterministic mock helpers so each place card has plausible info
+  const hashNum = (id: string, mod: number) => {
+    let h = 0;
+    for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+    return h % mod;
+  };
+  const mockRating = (id: string) => (40 + hashNum(id, 10)) / 10; // 4.0 - 4.9
+  const mockReviews = (id: string) => 50 + hashNum(id, 250);
+  const mockOpen = (id: string) => hashNum(id, 4) !== 0; // ~75% open
+  const mockPrice = (id: string) => ['£', '££', '£££'][hashNum(id, 3)];
+  const cuisines = ['Indian Cuisine', 'Turkish Cuisine', 'Middle Eastern', 'Pakistani Cuisine', 'Arabic Cuisine'];
+  const mockCuisine = (id: string) => cuisines[hashNum(id, cuisines.length)];
+
+  const cityLabel = userLocation ? `${userLocation.city || 'Your area'}${userLocation.country ? ', ' + userLocation.country : ''}` : 'Set your location';
+
+  // Filter restaurants by chip
+  const chippedPlaces = filteredPlaces.filter((p) => {
+    if (placeType !== 'restaurant') return true;
+    if (restaurantFilter === 'Open Now') return mockOpen(p.id);
+    if (restaurantFilter === 'Top Rated') return mockRating(p.id) >= 4.5;
+    if (restaurantFilter === 'Turkish') return mockCuisine(p.id) === 'Turkish Cuisine';
+    return true; // Nearest – already sorted
+  });
+
   return (
-    <Layout>
-      <div className="px-4 py-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-primary">Nearby Places</h1>
-            {userLocation && (
-              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                {userLocation.isManual ? '📌' : '📍'} {userLocation.city}, {userLocation.country}
-                {userLocation.isManual && <span className="text-primary text-[10px]">(manual)</span>}
-              </p>
-            )}
-          </div>
-          <div className="flex gap-2">
+    <Layout
+      headerTitle="Places"
+      leftAlignHeaderTitle
+      headerClassName="bg-white border-b border-[#F0E0C2]"
+      headerTitleClassName="font-bold text-lg"
+      headerTitleStyle={{ color: HEADER_TEXT }}
+      headerButtonClassName="text-[#2C1309] hover:bg-[#FFF0D9]"
+    >
+      <div className="min-h-full" style={{ backgroundColor: CREAM_BG }}>
+        <div className="px-4 py-5 space-y-5">
+          {/* Location pill */}
+          <div
+            className="flex items-center justify-between rounded-full px-5 py-3"
+            style={{ backgroundColor: CREAM_DEEP }}
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <MapPin className="h-5 w-5 shrink-0" style={{ color: BROWN }} />
+              <span className="font-semibold truncate" style={{ color: HEADER_TEXT }}>
+                {cityLabel}
+              </span>
+            </div>
             <Dialog open={locationDialogOpen} onOpenChange={setLocationDialogOpen}>
               <DialogTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="icon"
-                  className="rounded-full border-primary text-primary"
-                >
-                  <Settings2 className="h-4 w-4" />
-                </Button>
+                <button className="underline font-semibold text-sm" style={{ color: BROWN }}>
+                  Change
+                </button>
               </DialogTrigger>
-              <DialogContent className="max-w-sm">
+              <DialogContent className="max-w-sm" style={{ backgroundColor: CREAM_BG }}>
                 <DialogHeader>
-                  <DialogTitle>Change Location</DialogTitle>
+                  <DialogTitle style={{ color: HEADER_TEXT }}>Change Location</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 pt-4">
-                  {/* Use GPS */}
                   <Button 
                     onClick={useCurrentLocation} 
-                    className="w-full bg-primary text-primary-foreground"
+                    className="w-full text-white"
+                    style={{ backgroundColor: BROWN }}
                     disabled={locationLoading}
                   >
                     <LocateFixed className="h-4 w-4 mr-2" />
@@ -306,19 +344,19 @@ export const Places = () => {
                       <span className="w-full border-t" />
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">Or search city</span>
+                      <span className="px-2" style={{ backgroundColor: CREAM_BG, color: MUTED_TEXT }}>Or search city</span>
                     </div>
                   </div>
                   
-                  {/* Search by city */}
                   <div className="flex gap-2">
                     <Input
                       placeholder="Enter city name..."
                       value={citySearch}
                       onChange={(e) => setCitySearch(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && searchCity()}
+                      className="bg-white"
                     />
-                    <Button onClick={searchCity} disabled={searchingCity}>
+                    <Button onClick={searchCity} disabled={searchingCity} style={{ backgroundColor: BROWN }} className="text-white">
                       {searchingCity ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                     </Button>
                   </div>
@@ -328,11 +366,10 @@ export const Places = () => {
                       <span className="w-full border-t" />
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">Or enter coordinates</span>
+                      <span className="px-2" style={{ backgroundColor: CREAM_BG, color: MUTED_TEXT }}>Or enter coordinates</span>
                     </div>
                   </div>
                   
-                  {/* Manual coordinates */}
                   <div className="grid grid-cols-2 gap-2">
                     <Input
                       placeholder="Latitude"
@@ -340,6 +377,7 @@ export const Places = () => {
                       step="any"
                       value={manualLat}
                       onChange={(e) => setManualLat(e.target.value)}
+                      className="bg-white"
                     />
                     <Input
                       placeholder="Longitude"
@@ -347,12 +385,14 @@ export const Places = () => {
                       step="any"
                       value={manualLon}
                       onChange={(e) => setManualLon(e.target.value)}
+                      className="bg-white"
                     />
                   </div>
                   <Button 
                     onClick={handleManualCoordinates} 
                     variant="outline" 
-                    className="w-full"
+                    className="w-full border-2"
+                    style={{ borderColor: BROWN, color: BROWN }}
                     disabled={!manualLat || !manualLon}
                   >
                     Set Coordinates
@@ -360,90 +400,104 @@ export const Places = () => {
                 </div>
               </DialogContent>
             </Dialog>
-            <Button 
-              variant="outline" 
-              size="icon"
-              className="rounded-full border-primary text-primary"
-              onClick={handleRefresh}
-              disabled={isLoading}
-            >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            </Button>
-            <Button 
-              variant="outline" 
-              className="rounded-full border-primary text-primary"
-              onClick={() => setShowMap(!showMap)}
-            >
-              <MapPin className="h-4 w-4 mr-2" />
-              {showMap ? 'List' : 'Map'}
-            </Button>
           </div>
-        </div>
 
-        {/* Place Type Toggle */}
-        <div className="flex gap-2">
-          <Button
-            variant={placeType === 'mosque' ? 'default' : 'outline'}
-            className={`flex-1 rounded-full ${placeType === 'mosque' ? 'bg-primary text-primary-foreground' : 'border-primary text-primary'}`}
-            onClick={() => setPlaceType('mosque')}
-            disabled={isLoading}
-          >
-            <span className="mr-2">🕌</span>
-            Mosques
-          </Button>
-          <Button
-            variant={placeType === 'restaurant' ? 'default' : 'outline'}
-            className={`flex-1 rounded-full ${placeType === 'restaurant' ? 'bg-primary text-primary-foreground' : 'border-primary text-primary'}`}
-            onClick={() => setPlaceType('restaurant')}
-            disabled={isLoading}
-          >
-            <UtensilsCrossed className="h-4 w-4 mr-2" />
-            Halal Food
-          </Button>
-        </div>
-
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input 
-            placeholder={`Search ${getPlaceLabel(placeType).toLowerCase()}...`}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-card border-border rounded-full"
-          />
-        </div>
-
-        {/* Loading State */}
-        {isLoading && (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin mr-2 text-primary" />
-            <span className="text-foreground">
-              {locationLoading ? 'Getting your location...' : `Finding ${getPlaceLabel(placeType).toLowerCase()} within 5km...`}
-            </span>
+          {/* Tabs */}
+          <div className="flex gap-8 border-b" style={{ borderColor: SOFT_BORDER }}>
+            {([
+              { id: 'mosque', label: 'Mosque Finder' },
+              { id: 'restaurant', label: 'Halal Restaurants' },
+            ] as { id: PlaceType; label: string }[]).map((t) => {
+              const active = placeType === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setPlaceType(t.id)}
+                  className="pb-2 -mb-px font-semibold transition-colors"
+                  style={{
+                    color: active ? BROWN_DARK : MUTED_TEXT,
+                    borderBottom: active ? `3px solid ${BROWN}` : '3px solid transparent',
+                  }}
+                >
+                  {t.label}
+                </button>
+              );
+            })}
           </div>
-        )}
 
-        {/* Location Error */}
-        {!isLoading && locationError && (
-          <div className="flex flex-col items-center justify-center py-8 space-y-4">
-            <AlertCircle className="h-12 w-12 text-muted-foreground" />
-            <p className="text-center text-muted-foreground">{locationError}</p>
-            <div className="flex gap-2">
-              <Button onClick={refreshLocation} className="bg-primary text-primary-foreground hover:bg-primary/90">
-                <MapPin className="h-4 w-4 mr-2" />
-                Try Again
-              </Button>
-              <Button onClick={() => setLocationDialogOpen(true)} variant="outline">
-                <Settings2 className="h-4 w-4 mr-2" />
-                Set Manually
-              </Button>
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5" style={{ color: MUTED_TEXT }} />
+            <Input
+              placeholder={placeType === 'mosque' ? 'Search for Mosques...' : 'Search for restaurants...'}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-12 h-12 rounded-full border-0"
+              style={{ backgroundColor: '#EAE3D2', color: HEADER_TEXT }}
+            />
+          </div>
+
+          {/* Filter chips (restaurants only) */}
+          {placeType === 'restaurant' && (
+            <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 no-scrollbar">
+              {(['Nearest', 'Open Now', 'Top Rated', 'Turkish'] as const).map((c) => {
+                const active = restaurantFilter === c;
+                return (
+                  <button
+                    key={c}
+                    onClick={() => setRestaurantFilter(c)}
+                    className="px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all"
+                    style={
+                      active
+                        ? { backgroundColor: BROWN_DARK, color: '#FFF' }
+                        : { backgroundColor: CREAM_DEEP, color: HEADER_TEXT }
+                    }
+                  >
+                    {c}
+                  </button>
+                );
+              })}
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Map View */}
-        {showMap && userLocation && !isLoading && (
-          <div className="h-96 rounded-2xl overflow-hidden">
+          {/* Count */}
+          {!isLoading && userLocation && (
+            <p className="text-sm italic" style={{ color: MUTED_TEXT }}>
+              {chippedPlaces.length} {placeType === 'mosque' ? 'Mosque' : 'restaurants'} nearby
+            </p>
+          )}
+
+          {/* Loading State */}
+          {isLoading && (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin mr-2" style={{ color: BROWN }} />
+              <span style={{ color: HEADER_TEXT }}>
+                {locationLoading ? 'Getting your location...' : `Finding ${getPlaceLabel(placeType).toLowerCase()}...`}
+              </span>
+            </div>
+          )}
+
+          {/* Location Error */}
+          {!isLoading && locationError && (
+            <div className="flex flex-col items-center justify-center py-8 space-y-4">
+              <AlertCircle className="h-12 w-12" style={{ color: MUTED_TEXT }} />
+              <p className="text-center" style={{ color: MUTED_TEXT }}>{locationError}</p>
+              <div className="flex gap-2">
+                <Button onClick={refreshLocation} className="text-white" style={{ backgroundColor: BROWN }}>
+                  <MapPin className="h-4 w-4 mr-2" />
+                  Try Again
+                </Button>
+                <Button onClick={() => setLocationDialogOpen(true)} variant="outline" style={{ borderColor: BROWN, color: BROWN }}>
+                  <Settings2 className="h-4 w-4 mr-2" />
+                  Set Manually
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Map View */}
+          {showMap && userLocation && !isLoading && (
+            <div className="h-96 rounded-2xl overflow-hidden">
             <MapContainer
               center={[userLocation.latitude, userLocation.longitude]}
               zoom={14}
@@ -453,12 +507,10 @@ export const Places = () => {
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               />
-              {/* User location marker */}
               <Marker position={[userLocation.latitude, userLocation.longitude]}>
                 <Popup>Your Location</Popup>
               </Marker>
-              {/* Place markers */}
-              {filteredPlaces.map((place) => (
+              {chippedPlaces.map((place) => (
                 <Marker key={place.id} position={[place.lat, place.lon]}>
                   <Popup>
                     <div className="text-center">
@@ -466,7 +518,8 @@ export const Places = () => {
                       <p className="text-sm text-muted-foreground">{place.distance?.toFixed(2)} km away</p>
                       <Button 
                         size="sm" 
-                        className="mt-2 bg-primary text-primary-foreground"
+                        className="mt-2 text-white"
+                        style={{ backgroundColor: BROWN }}
                         onClick={() => openDirections(place)}
                       >
                         Get Directions
@@ -479,53 +532,184 @@ export const Places = () => {
           </div>
         )}
 
-        {/* Places Grid */}
-        {!showMap && userLocation && !isLoading && (
-          <div className="grid grid-cols-1 gap-4">
-            {filteredPlaces.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">No {getPlaceLabel(placeType).toLowerCase()} found within 5km</p>
-                <div className="flex gap-2 justify-center mt-4">
-                  <Button onClick={handleRefresh} className="bg-primary text-primary-foreground hover:bg-primary/90">
-                    <Search className="h-4 w-4 mr-2" />
-                    Search Again
-                  </Button>
-                  <Button onClick={() => setLocationDialogOpen(true)} variant="outline">
-                    <Settings2 className="h-4 w-4 mr-2" />
-                    Change Location
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              filteredPlaces.map((place) => (
-                <Card key={place.id} className="p-4 rounded-2xl bg-card card-interactive">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center">
-                      <span className="text-2xl">{getPlaceIcon(place.type)}</span>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-primary mb-1">{place.name}</h3>
-                      <p className="text-sm text-muted-foreground mb-2">{place.address}</p>
-                      <p className="text-xs text-muted-foreground mb-3">
-                        {place.distance?.toFixed(2)} km away
-                      </p>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        className="rounded-full border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-                        onClick={() => openDirections(place)}
-                      >
-                        <Navigation className="h-4 w-4 mr-2" />
-                        Directions
-                      </Button>
-                    </div>
+          {/* Places List */}
+          {!showMap && userLocation && !isLoading && (
+            <div className="flex flex-col gap-5 pb-6">
+              {chippedPlaces.length === 0 ? (
+                <div className="text-center py-8">
+                  <p style={{ color: MUTED_TEXT }}>No {getPlaceLabel(placeType).toLowerCase()} found</p>
+                  <div className="flex gap-2 justify-center mt-4">
+                    <Button onClick={handleRefresh} className="text-white" style={{ backgroundColor: BROWN }}>
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Search Again
+                    </Button>
+                    <Button onClick={() => setLocationDialogOpen(true)} variant="outline" style={{ borderColor: BROWN, color: BROWN }}>
+                      <Settings2 className="h-4 w-4 mr-2" />
+                      Change Location
+                    </Button>
                   </div>
-                </Card>
-              ))
-            )}
-          </div>
-        )}
+                </div>
+              ) : (
+                chippedPlaces.map((place) =>
+                  place.type === 'restaurant' ? (
+                    <RestaurantCard
+                      key={place.id}
+                      place={place}
+                      open={mockOpen(place.id)}
+                      rating={mockRating(place.id)}
+                      reviews={mockReviews(place.id)}
+                      cuisine={mockCuisine(place.id)}
+                      price={mockPrice(place.id)}
+                      onDirections={() => openDirections(place)}
+                    />
+                  ) : (
+                    <MosqueCard
+                      key={place.id}
+                      place={place}
+                      onDirections={() => openDirections(place)}
+                    />
+                  )
+                )
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </Layout>
+  );
+};
+
+// ---------- Sub-components ----------
+
+interface RestaurantCardProps {
+  place: Place;
+  open: boolean;
+  rating: number;
+  reviews: number;
+  cuisine: string;
+  price: string;
+  onDirections: () => void;
+}
+
+const RestaurantCard = ({ place, open, rating, reviews, cuisine, price, onDirections }: RestaurantCardProps) => {
+  const miles = place.distance ? (place.distance * 0.621371).toFixed(1) : '—';
+  return (
+    <div
+      className="bg-white rounded-3xl overflow-hidden"
+      style={{ boxShadow: '0 1px 3px rgba(123, 63, 30, 0.06)' }}
+    >
+      <div className="relative">
+        <img
+          src={restaurantImg}
+          alt={place.name}
+          width={800}
+          height={640}
+          loading="lazy"
+          className="w-full h-48 object-cover"
+        />
+        <span
+          className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold text-white"
+          style={{ backgroundColor: open ? '#1F7A3D' : '#C0392B' }}
+        >
+          {open ? 'OPEN' : 'Closed'}
+        </span>
+      </div>
+      <div className="p-5">
+        <h3 className="text-2xl italic mb-3" style={{ color: HEADER_TEXT, fontFamily: 'Georgia, serif' }}>
+          {place.name}
+        </h3>
+        <div className="flex items-center gap-2 text-sm mb-2 flex-wrap">
+          <span
+            className="flex items-center gap-1 px-2 py-0.5 rounded-md font-semibold"
+            style={{ backgroundColor: CREAM_DEEP, color: HEADER_TEXT }}
+          >
+            <Star className="h-3.5 w-3.5 fill-current" />
+            {rating.toFixed(1)}
+          </span>
+          <span style={{ color: MUTED_TEXT }}>({reviews} reviews)</span>
+          <span style={{ color: MUTED_TEXT }}>•</span>
+          <span style={{ color: HEADER_TEXT }}>{cuisine}</span>
+        </div>
+        <div className="flex items-center gap-3 text-sm mb-4">
+          <span className="flex items-center gap-1 font-semibold" style={{ color: BROWN }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+            {miles} miles
+          </span>
+          <span style={{ color: HEADER_TEXT }}>{price}</span>
+        </div>
+        <Button
+          onClick={onDirections}
+          className="w-full rounded-full h-12 text-white font-semibold text-base"
+          style={{ backgroundColor: BROWN }}
+        >
+          Directions <ArrowRight className="h-4 w-4 ml-2" />
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+interface MosqueCardProps {
+  place: Place;
+  onDirections: () => void;
+}
+
+const MosqueCard = ({ place, onDirections }: MosqueCardProps) => {
+  const miles = place.distance ? (place.distance * 0.621371).toFixed(1) : '—';
+  // Static representative prayer times — page does not fetch per-mosque times
+  const prayers = [
+    { label: 'FAJR', time: '05:22' },
+    { label: 'DHUHR', time: '13:10' },
+    { label: 'ASR', time: '16:45' },
+  ];
+  return (
+    <div
+      className="bg-white rounded-3xl overflow-hidden"
+      style={{ boxShadow: '0 1px 3px rgba(123, 63, 30, 0.06)' }}
+    >
+      <img
+        src={mosqueImg}
+        alt={place.name}
+        width={800}
+        height={640}
+        loading="lazy"
+        className="w-full h-48 object-cover"
+      />
+      <div className="p-5">
+        <div className="flex items-start justify-between gap-3 mb-1">
+          <h3 className="text-xl italic" style={{ color: HEADER_TEXT, fontFamily: 'Georgia, serif' }}>
+            {place.name}
+          </h3>
+          <span className="text-sm whitespace-nowrap" style={{ color: HEADER_TEXT }}>
+            {miles} miles away
+          </span>
+        </div>
+        <p className="text-base mb-4" style={{ color: HEADER_TEXT }}>
+          {place.address}
+        </p>
+        <div
+          className="grid grid-cols-3 rounded-2xl px-2 py-3 mb-4"
+          style={{ backgroundColor: CREAM_DEEP }}
+        >
+          {prayers.map((p) => (
+            <div key={p.label} className="text-center">
+              <div className="text-xs font-semibold tracking-wider" style={{ color: MUTED_TEXT }}>
+                {p.label}
+              </div>
+              <div className="text-lg font-bold" style={{ color: BROWN_DARK }}>
+                {p.time}
+              </div>
+            </div>
+          ))}
+        </div>
+        <Button
+          onClick={onDirections}
+          className="w-full rounded-full h-12 text-white font-semibold text-base"
+          style={{ backgroundColor: BROWN }}
+        >
+          Directions <ArrowRight className="h-4 w-4 ml-2" />
+        </Button>
+      </div>
+    </div>
   );
 };
