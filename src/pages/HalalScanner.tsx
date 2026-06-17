@@ -1,30 +1,49 @@
-import { Layout } from '@/components/Layout';
-import { useLanguage } from '@/contexts/LanguageContext';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
-import { ArrowLeft, ScanBarcode } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
+import { ArrowLeft, Flashlight, ScanLine, Check, Shield, Sparkles, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import scannerHero from '@/assets/scanner-hero.jpg';
+import scannerProduct from '@/assets/scanner-product.jpg';
+import scannerAlt1 from '@/assets/scanner-alt-1.jpg';
+import scannerAlt2 from '@/assets/scanner-alt-2.jpg';
 
-type HalalStatus = 'halal' | 'not_halal' | 'doubtful' | null;
+const CREAM_BG = '#FFF0D9';
+const CARD_CREAM = '#FBE6C8';
+const BROWN = '#2C1309';
+const BROWN_BTN = '#6B3520';
+const MUTED = '#8A6A55';
 
-// Simple mock database of barcodes - in production this would be an API call
-const checkHalalStatus = (barcode: string): { status: HalalStatus; productName: string } => {
-  // Simulate checking - even barcodes ending in 0,2,4 are halal, odd ending in 1,3 are not, others doubtful
-  const lastDigit = parseInt(barcode.slice(-1));
-  if ([0, 2, 4, 6, 8].includes(lastDigit)) {
-    return { status: 'halal', productName: `Product #${barcode.slice(-6)}` };
-  } else if ([1, 3].includes(lastDigit)) {
-    return { status: 'not_halal', productName: `Product #${barcode.slice(-6)}` };
-  }
-  return { status: 'doubtful', productName: `Product #${barcode.slice(-6)}` };
+const SERIF = "'Reem Kufi', serif";
+
+type Ingredient = { name: string; ok: boolean };
+
+const PRODUCT = {
+  name: 'Golden Saffron Tea Biscuits',
+  image: scannerProduct,
+  keyIngredient: 'Pure Iranian Saffron',
+  totalScanned: 12,
+  ingredients: [
+    { name: 'Organic Wheat Flour', ok: true },
+    { name: 'Cane Sugar', ok: true },
+    { name: 'Vegetable Shortening', ok: true },
+    { name: 'Whole Milk Powder', ok: true },
+    { name: 'Pure Vanilla Extract', ok: true },
+    { name: 'Sea Salt', ok: true },
+    { name: 'Baking Soda', ok: true },
+    { name: 'Lecithin', ok: true },
+  ] as Ingredient[],
 };
 
+const ALTERNATIVES = [
+  { brand: 'MEDINA ORGANICS', name: 'Medina Date Crisps', price: '$12.50', rating: '4.9', image: scannerAlt1 },
+  { brand: 'PERSIAN HOUSE', name: 'Saffron Shortbread', price: '$14.00', rating: '4.8', image: scannerAlt2 },
+];
+
 export const HalalScanner = () => {
-  const { t } = useLanguage();
   const navigate = useNavigate();
+  const [view, setView] = useState<'scan' | 'result'>('scan');
   const [scanning, setScanning] = useState(false);
-  const [result, setResult] = useState<{ status: HalalStatus; productName: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const scannerDivRef = useRef<HTMLDivElement>(null);
@@ -41,47 +60,36 @@ export const HalalScanner = () => {
       }
       scanner.clear();
     } catch {
-      // ignore cleanup errors
+      // ignore
     }
     scannerRef.current = null;
   }, []);
 
   const startScanning = async () => {
-    setResult(null);
     setError(null);
-
     await cleanupScanner();
-
     const el = scannerDivRef.current;
     if (!el) return;
-
-    // Clear any leftover DOM content from previous scan
     el.innerHTML = '';
-
-    // Create a fresh child div for the scanner to own
-    const scannerContainer = document.createElement('div');
-    scannerContainer.id = scannerIdRef.current;
-    scannerContainer.style.width = '100%';
-    scannerContainer.style.height = '100%';
-    el.appendChild(scannerContainer);
-
+    const container = document.createElement('div');
+    container.id = scannerIdRef.current;
+    container.style.width = '100%';
+    container.style.height = '100%';
+    el.appendChild(container);
     try {
       const scanner = new Html5Qrcode(scannerIdRef.current);
       scannerRef.current = scanner;
-
       await scanner.start(
         { facingMode: 'environment' },
-        { fps: 10, qrbox: { width: 280, height: 200 } },
-        (decodedText) => {
+        { fps: 10, qrbox: { width: 260, height: 180 } },
+        () => {
           if (!mountedRef.current) return;
-          const halalResult = checkHalalStatus(decodedText);
-          setResult(halalResult);
           cleanupScanner();
           setScanning(false);
+          setView('result');
         },
         () => {}
       );
-
       if (mountedRef.current) setScanning(true);
     } catch {
       if (mountedRef.current) {
@@ -104,132 +112,30 @@ export const HalalScanner = () => {
     };
   }, [cleanupScanner]);
 
-  const statusConfig = {
-    halal: {
-      label: 'HALAL',
-      message: 'This item is Halal certified!\nMay Allah bless what you consume.',
-      bgClass: 'bg-primary/20 border-primary/40',
-      textClass: 'text-primary',
-      badgeBg: 'bg-[#d4c9a8]/90 text-[#2d3a2e]',
-      messageBg: 'bg-[#d4c9a8]/90',
-    },
-    not_halal: {
-      label: 'NOT HALAL',
-      message: 'This item is NOT Halal.\nPlease avoid consuming this product.',
-      bgClass: 'bg-destructive/20 border-destructive/40',
-      textClass: 'text-destructive',
-      badgeBg: 'bg-destructive/20 text-destructive',
-      messageBg: 'bg-destructive/10',
-    },
-    doubtful: {
-      label: 'DOUBTFUL',
-      message: 'The Halal status of this item is uncertain.\nWhen in doubt, leave it out.',
-      bgClass: 'bg-yellow-500/20 border-yellow-500/40',
-      textClass: 'text-yellow-500',
-      badgeBg: 'bg-yellow-500/20 text-yellow-600',
-      messageBg: 'bg-yellow-500/10',
-    },
+  const handleScanAnother = () => {
+    setView('scan');
   };
 
+  // Demo: tapping "Enter barcode manually" jumps to result
+  const handleManual = () => setView('result');
+
   return (
-    <Layout>
-      <div className="min-h-screen flex flex-col items-center px-5 py-6 pb-32 font-arabic">
-        {/* Back button */}
-        <div className="w-full flex items-center mb-6">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate('/')}
-            className="text-foreground hover:bg-primary/8 rounded-xl h-10 w-10"
-          >
-            <ArrowLeft className="h-5 w-5" strokeWidth={1.5} />
-          </Button>
-        </div>
-
-        {/* Title */}
-        <h1 className="text-2xl font-bold text-foreground text-center mb-1">
-          Scan a product barcode
-        </h1>
-        <p className="text-muted-foreground text-center mb-6">
-          Check if the product is Halal
-        </p>
-
-        {/* Scanner viewfinder */}
-        <div className="relative w-full max-w-[320px] aspect-square rounded-2xl overflow-hidden border-2 border-[#d4c9a8]/40 bg-[#d4c9a8]/10 mb-6">
-          {/* Corner brackets */}
-          <div className="absolute top-3 left-3 w-8 h-8 border-t-2 border-l-2 border-primary/70 rounded-tl-md z-10" />
-          <div className="absolute top-3 right-3 w-8 h-8 border-t-2 border-r-2 border-primary/70 rounded-tr-md z-10" />
-          <div className="absolute bottom-3 left-3 w-8 h-8 border-b-2 border-l-2 border-primary/70 rounded-bl-md z-10" />
-          <div className="absolute bottom-3 right-3 w-8 h-8 border-b-2 border-r-2 border-primary/70 rounded-br-md z-10" />
-
-          {/* Scanning line animation */}
-          {scanning && (
-            <div className="absolute left-4 right-4 h-0.5 bg-destructive z-10 animate-[scanline_2s_ease-in-out_infinite]" />
-          )}
-
-          {/* Camera feed container - React does NOT render children here */}
-          <div
-            ref={scannerDivRef}
-            className="w-full h-full"
-          />
-
-          {/* Overlay placeholder when not scanning */}
-          {!scanning && !result && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-muted-foreground pointer-events-none">
-              <ScanBarcode className="h-16 w-16 opacity-30" />
-              <p className="text-sm">Tap scan to start</p>
-            </div>
-          )}
-        </div>
-
-        {/* Scan button */}
-        <button
-          onClick={scanning ? stopScanning : startScanning}
-          className="mb-6 w-16 h-16 rounded-full bg-card border-2 border-primary/30 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
-        >
-          <ScanBarcode className="h-8 w-8 text-foreground" strokeWidth={1.5} />
-        </button>
-
-        {/* Error message */}
-        {error && (
-          <p className="text-destructive text-sm text-center mb-4">{error}</p>
-        )}
-
-        {/* Status badges */}
-        <div className="flex gap-3 mb-5">
-          {(['halal', 'not_halal', 'doubtful'] as const).map((status) => {
-            const config = statusConfig[status];
-            const isActive = result?.status === status;
-            return (
-              <div
-                key={status}
-                className={`px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider border transition-all duration-300 ${
-                  isActive
-                    ? config.badgeBg + ' border-current scale-105 shadow-md'
-                    : 'bg-card/50 border-border/30 text-muted-foreground'
-                }`}
-              >
-                {config.label}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Result message */}
-        {result && result.status && (
-          <div className={`w-full max-w-[340px] rounded-2xl px-6 py-5 text-center ${statusConfig[result.status].messageBg} border border-[#d4c9a8]/30`}>
-            <p className="text-[#2d3a2e] font-semibold text-base whitespace-pre-line leading-relaxed">
-              {statusConfig[result.status].message}
-            </p>
-          </div>
-        )}
-      </div>
+    <div className="min-h-screen max-w-md mx-auto font-arabic" style={{ backgroundColor: CREAM_BG, color: BROWN }}>
+      {view === 'scan' ? (
+        <ScanView
+          onBack={() => navigate('/')}
+          scannerDivRef={scannerDivRef}
+          scanning={scanning}
+          error={error}
+          startScanning={startScanning}
+          stopScanning={stopScanning}
+          onManual={handleManual}
+        />
+      ) : (
+        <ResultView onBack={() => navigate('/')} onScanAnother={handleScanAnother} />
+      )}
 
       <style>{`
-        @keyframes scanline {
-          0%, 100% { top: 20%; }
-          50% { top: 75%; }
-        }
         #${scannerIdRef.current},
         #${scannerIdRef.current} > div {
           width: 100% !important;
@@ -243,14 +149,355 @@ export const HalalScanner = () => {
           height: 100% !important;
           border-radius: 0 !important;
         }
-        #${scannerIdRef.current} img {
-          display: none !important;
-        }
-        /* Hide the built-in qr shaded region borders */
-        #${scannerIdRef.current} #qr-shaded-region {
-          display: none !important;
-        }
+        #${scannerIdRef.current} img { display: none !important; }
+        #${scannerIdRef.current} #qr-shaded-region { display: none !important; }
       `}</style>
-    </Layout>
+    </div>
   );
 };
+
+/* ---------------- Scan View ---------------- */
+
+const ScanView = ({
+  onBack,
+  scannerDivRef,
+  scanning,
+  error,
+  startScanning,
+  stopScanning,
+  onManual,
+}: {
+  onBack: () => void;
+  scannerDivRef: React.RefObject<HTMLDivElement>;
+  scanning: boolean;
+  error: string | null;
+  startScanning: () => void;
+  stopScanning: () => void;
+  onManual: () => void;
+}) => {
+  return (
+    <div className="px-5 pt-4 pb-10">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <button onClick={onBack} className="h-9 w-9 flex items-center justify-center -ml-1" aria-label="Back">
+          <ArrowLeft className="h-5 w-5" strokeWidth={1.75} style={{ color: BROWN }} />
+        </button>
+        <h1 className="italic text-[17px] tracking-tight" style={{ fontFamily: SERIF, color: BROWN }}>
+          Ingredient Scanner
+        </h1>
+        <button className="h-9 w-9 flex items-center justify-center" aria-label="Flashlight">
+          <Flashlight className="h-5 w-5" strokeWidth={1.75} style={{ color: BROWN }} />
+        </button>
+      </div>
+
+      {/* Camera / Hero card */}
+      <div
+        className="relative w-full rounded-[28px] overflow-hidden mb-6"
+        style={{ aspectRatio: '4 / 5', backgroundColor: '#E9D6B5' }}
+      >
+        {/* Corner brackets */}
+        <Corner pos="tl" />
+        <Corner pos="tr" />
+        <Corner pos="bl" />
+        <Corner pos="br" />
+
+        {/* Camera feed */}
+        <div ref={scannerDivRef} className="absolute inset-0" />
+
+        {/* Hero image when not scanning */}
+        {!scanning && (
+          <img
+            src={scannerHero}
+            alt="Scan a product"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        )}
+
+        {/* Scanning line */}
+        {scanning && (
+          <div
+            className="absolute left-6 right-6 h-[2px] z-10 animate-[scanline_2s_ease-in-out_infinite]"
+            style={{ background: 'rgba(220,38,38,0.9)' }}
+          />
+        )}
+      </div>
+
+      {/* Captions */}
+      <p className="text-center text-[15px] leading-snug" style={{ color: BROWN }}>
+        Point camera at any barcode or ingredient list
+      </p>
+      <p className="text-center text-[13px] mt-1" style={{ color: MUTED }}>
+        Processing requires a clear, steady view
+      </p>
+
+      {/* Scan button */}
+      <div className="flex justify-center mt-6">
+        <button
+          onClick={scanning ? stopScanning : startScanning}
+          className="h-14 w-14 rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform"
+          style={{ backgroundColor: BROWN_BTN }}
+          aria-label="Start scan"
+        >
+          <Flashlight className="h-6 w-6 text-white" strokeWidth={1.75} />
+        </button>
+      </div>
+
+      <button
+        onClick={onManual}
+        className="block mx-auto mt-3 text-[14px] font-medium"
+        style={{ color: BROWN_BTN }}
+      >
+        Enter barcode manually
+      </button>
+
+      {error && (
+        <p className="text-center text-sm mt-3" style={{ color: '#B22' }}>{error}</p>
+      )}
+
+      {/* How it works */}
+      <div
+        className="mt-7 rounded-2xl px-5 py-5"
+        style={{ backgroundColor: CARD_CREAM }}
+      >
+        <h3 className="italic text-[15px] mb-4" style={{ fontFamily: SERIF, color: BROWN }}>
+          How it works
+        </h3>
+        <div className="flex items-start justify-between gap-2">
+          <Step n={1} label="Point" />
+          <Dashes />
+          <Step n={2} label="Scan" />
+          <Dashes />
+          <Step n={3} label={'See\nresult'} />
+        </div>
+      </div>
+
+      {/* Footer links */}
+      <div className="mt-6 flex items-center justify-center gap-3 text-[13px]" style={{ color: MUTED }}>
+        <button>Report an issue</button>
+        <span className="opacity-50">•</span>
+        <button>Help Center</button>
+      </div>
+    </div>
+  );
+};
+
+const Corner = ({ pos }: { pos: 'tl' | 'tr' | 'bl' | 'br' }) => {
+  const base = 'absolute w-6 h-6 z-20 border-[#B5662C]';
+  const map = {
+    tl: 'top-3 left-3 border-t-2 border-l-2 rounded-tl-md',
+    tr: 'top-3 right-3 border-t-2 border-r-2 rounded-tr-md',
+    bl: 'bottom-3 left-3 border-b-2 border-l-2 rounded-bl-md',
+    br: 'bottom-3 right-3 border-b-2 border-r-2 rounded-br-md',
+  };
+  return <div className={`${base} ${map[pos]}`} />;
+};
+
+const Step = ({ n, label }: { n: number; label: string }) => (
+  <div className="flex flex-col items-center gap-2 w-[64px]">
+    <div className="relative">
+      <div
+        className="h-12 w-12 rounded-full flex items-center justify-center"
+        style={{ backgroundColor: '#EAD3AE' }}
+      >
+        {n === 1 && <ScanLine className="h-5 w-5" style={{ color: BROWN }} strokeWidth={1.75} />}
+        {n === 2 && <Flashlight className="h-5 w-5" style={{ color: BROWN }} strokeWidth={1.75} />}
+        {n === 3 && <Check className="h-5 w-5" style={{ color: BROWN }} strokeWidth={2} />}
+      </div>
+      <div
+        className="absolute -top-1 -right-1 h-5 w-5 rounded-full text-white text-[11px] font-semibold flex items-center justify-center"
+        style={{ backgroundColor: BROWN_BTN }}
+      >
+        {n}
+      </div>
+    </div>
+    <span className="text-[12px] text-center leading-tight whitespace-pre-line" style={{ color: BROWN }}>
+      {label}
+    </span>
+  </div>
+);
+
+const Dashes = () => (
+  <div className="flex-1 mt-6 border-t border-dashed" style={{ borderColor: '#C9A77A' }} />
+);
+
+/* ---------------- Result View ---------------- */
+
+const ResultView = ({ onBack, onScanAnother }: { onBack: () => void; onScanAnother: () => void }) => {
+  return (
+    <div className="pb-12">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 pt-4 pb-3">
+        <button onClick={onBack} className="h-9 w-9 flex items-center justify-center -ml-1" aria-label="Back">
+          <ArrowLeft className="h-5 w-5" style={{ color: BROWN }} strokeWidth={1.75} />
+        </button>
+        <h1 className="italic text-[17px]" style={{ fontFamily: SERIF, color: BROWN }}>
+          Barakah
+        </h1>
+        <div className="h-9 w-9 rounded-full border flex items-center justify-center" style={{ borderColor: '#C9A77A' }}>
+          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: BROWN }} />
+        </div>
+      </div>
+
+      {/* Halal verified card */}
+      <div className="px-5">
+        <div
+          className="rounded-2xl px-6 py-5 flex flex-col items-center text-center"
+          style={{ backgroundColor: '#D8EBD3' }}
+        >
+          <div className="h-12 w-12 rounded-full flex items-center justify-center mb-2" style={{ backgroundColor: '#2E7D4E' }}>
+            <Check className="h-6 w-6 text-white" strokeWidth={2.5} />
+          </div>
+          <div className="text-[19px] font-semibold" style={{ color: '#1F5A37', fontFamily: SERIF }}>
+            Halal Verified
+          </div>
+          <div className="text-[10px] tracking-[0.18em] mt-1" style={{ color: '#3F7A55' }}>
+            COMPLIANT WITH ISLAMIC STANDARDS
+          </div>
+        </div>
+      </div>
+
+      {/* Product image */}
+      <div className="px-5 mt-5 flex justify-center">
+        <img
+          src={PRODUCT.image}
+          alt={PRODUCT.name}
+          className="w-[170px] h-[170px] rounded-2xl object-cover"
+          loading="lazy"
+        />
+      </div>
+
+      {/* Scan another */}
+      <div className="px-5 mt-5">
+        <button
+          onClick={onScanAnother}
+          className="w-full rounded-full py-3.5 text-white text-[13px] font-semibold tracking-[0.14em] flex items-center justify-center gap-2 shadow-sm"
+          style={{ backgroundColor: BROWN_BTN }}
+        >
+          <ScanLine className="h-4 w-4" strokeWidth={2} />
+          SCAN ANOTHER PRODUCT
+        </button>
+      </div>
+
+      {/* Product name */}
+      <h2
+        className="px-5 mt-5 text-center italic text-[28px] leading-tight"
+        style={{ fontFamily: SERIF, color: BROWN }}
+      >
+        {PRODUCT.name}
+      </h2>
+
+      {/* Verified by Barakah pill */}
+      <div className="flex justify-center mt-3">
+        <div
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-medium"
+          style={{ backgroundColor: '#F2E2A6', color: '#5C4710' }}
+        >
+          <Shield className="h-3.5 w-3.5" strokeWidth={2} />
+          Verified by Barakah
+        </div>
+      </div>
+
+      {/* Detailed ingredients header */}
+      <div className="px-5 mt-7 flex items-end justify-between">
+        <h3 className="italic text-[22px] leading-tight" style={{ fontFamily: SERIF, color: BROWN }}>
+          Detailed<br />Ingredients
+        </h3>
+        <div className="text-right">
+          <div className="text-[18px] font-semibold" style={{ color: BROWN }}>{PRODUCT.totalScanned}</div>
+          <div className="text-[10px] tracking-[0.2em]" style={{ color: MUTED }}>INGREDIENTS<br />SCANNED</div>
+        </div>
+      </div>
+
+      {/* Ingredients card */}
+      <div className="px-5 mt-4">
+        <div className="rounded-2xl p-4" style={{ backgroundColor: CARD_CREAM }}>
+          {/* Key ingredient */}
+          <div
+            className="rounded-xl px-4 py-3 mb-3 flex items-center gap-3 border-l-4"
+            style={{ backgroundColor: '#FFF4DA', borderColor: BROWN_BTN }}
+          >
+            <Sparkles className="h-4 w-4" style={{ color: BROWN_BTN }} strokeWidth={2} />
+            <div className="flex-1">
+              <div className="text-[10px] tracking-[0.18em] font-semibold" style={{ color: BROWN_BTN }}>
+                KEY INGREDIENT
+              </div>
+              <div className="italic text-[15px]" style={{ fontFamily: SERIF, color: BROWN }}>
+                {PRODUCT.keyIngredient}
+              </div>
+            </div>
+            <div className="h-6 w-6 rounded-full flex items-center justify-center" style={{ backgroundColor: '#2E7D4E' }}>
+              <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
+            </div>
+          </div>
+
+          {/* List */}
+          <ul className="divide-y" style={{ borderColor: 'rgba(139,90,43,0.15)' }}>
+            {PRODUCT.ingredients.map((ing) => (
+              <li key={ing.name} className="flex items-center justify-between py-3">
+                <span className="text-[14px] font-medium" style={{ color: BROWN }}>{ing.name}</span>
+                <Check className="h-4 w-4" style={{ color: '#2E7D4E' }} strokeWidth={2.5} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {/* Halal Alternatives */}
+      <div className="px-5 mt-10 flex items-start justify-between">
+        <h3 className="italic text-[24px] leading-tight" style={{ fontFamily: SERIF, color: BROWN }}>
+          Halal<br />Alternatives
+        </h3>
+        <div className="flex gap-1.5 mt-2">
+          <button className="h-8 w-8 rounded-full border flex items-center justify-center" style={{ borderColor: '#C9A77A', color: BROWN }}>
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button className="h-8 w-8 rounded-full border flex items-center justify-center" style={{ borderColor: '#C9A77A', color: BROWN }}>
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+      <p className="px-5 mt-2 text-[13px]" style={{ color: MUTED }}>
+        Recommended similar items from verified brands.
+      </p>
+
+      <div className="mt-4 flex gap-3 overflow-x-auto px-5 pb-2 snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
+        {ALTERNATIVES.map((a) => (
+          <div
+            key={a.name}
+            className="min-w-[78%] snap-start rounded-2xl overflow-hidden"
+            style={{ backgroundColor: CARD_CREAM }}
+          >
+            <div className="relative">
+              <img src={a.image} alt={a.name} className="w-full h-44 object-cover" loading="lazy" />
+              <div
+                className="absolute bottom-2 right-2 inline-flex items-center gap-1 text-[10px] font-semibold text-white px-2 py-1 rounded-full"
+                style={{ backgroundColor: 'rgba(46,125,78,0.92)' }}
+              >
+                On Marketplace <ExternalLink className="h-3 w-3" />
+              </div>
+            </div>
+            <div className="px-4 py-3">
+              <div className="text-[10px] tracking-[0.18em] font-semibold" style={{ color: BROWN_BTN }}>
+                {a.brand}
+              </div>
+              <div className="text-[15px] font-semibold mt-1" style={{ color: BROWN }}>{a.name}</div>
+              <div className="flex items-center justify-between mt-1">
+                <div className="text-[15px] font-bold" style={{ color: BROWN }}>{a.price}</div>
+                <div className="text-[12px]" style={{ color: BROWN }}>★ {a.rating}</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// scanline keyframes
+const styleTag = document.getElementById('halal-scanner-keyframes');
+if (!styleTag && typeof document !== 'undefined') {
+  const s = document.createElement('style');
+  s.id = 'halal-scanner-keyframes';
+  s.innerHTML = `@keyframes scanline { 0%,100% { top: 18%; } 50% { top: 78%; } }`;
+  document.head.appendChild(s);
+}
