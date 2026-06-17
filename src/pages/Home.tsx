@@ -351,7 +351,7 @@ const BottomNav = () => {
   const navItems = [
     { icon: HomeIcon, label: 'Home', path: '/' },
     { icon: ShoppingBasket, label: 'Marketplace', path: '/shop' },
-    { icon: MosqueIcon, label: 'Prayer', path: '/prayer-times' },
+    { label: 'Prayer', path: '/prayer-times', isImage: true },
     { icon: ScanLine, label: 'Halal Scan', path: '/halal-scanner' },
   ];
 
