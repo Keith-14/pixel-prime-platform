@@ -1,6 +1,6 @@
 import { Layout } from '@/components/Layout';
 import { useCart } from '@/contexts/CartContext';
-import { ArrowLeft, HelpCircle, ShieldCheck, ShoppingBag, Loader2, Check } from 'lucide-react';
+import { ArrowLeft, HelpCircle, ShieldCheck, ShoppingBag, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
