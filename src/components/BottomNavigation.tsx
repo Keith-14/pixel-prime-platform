@@ -1,4 +1,4 @@
-import { Home, ShoppingBag, Users, MapPin, User } from 'lucide-react';
+import { Home, ShoppingBasket, ScanLine, MessageSquare } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
