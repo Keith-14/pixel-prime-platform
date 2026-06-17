@@ -609,32 +609,34 @@ export const Forum = () => {
 
     return (
       <Card 
-        className="group relative overflow-hidden border-0 shadow-none animate-fade-in"
+        className="group relative overflow-hidden border-0 animate-fade-in rounded-2xl"
         style={{ 
           animationDelay: `${index * 80}ms`,
           background: WARM_CARD,
+          boxShadow: '0 1px 3px rgba(123, 63, 30, 0.06)',
         }}
       >
         <CardContent className="p-4">
           {/* Header: Avatar + Name + Category + Time */}
           <div className="flex items-start gap-3 mb-3">
             <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0"
-              style={{ background: 'rgba(255,255,255,0.08)' }}
+              style={{ background: '#EAD9BE' }}
             >
-              <User className="h-5 w-5" style={{ color: 'rgba(255,235,201,0.5)' }} />
+              <User className="h-5 w-5" style={{ color: '#A88B66' }} />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-semibold text-foreground text-sm">{post.user_name}</span>
+                <span className="font-semibold text-sm" style={{ color: BROWN_DARK }}>{post.user_name}</span>
                 <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-medium uppercase tracking-wide", getCategoryBadgeColor(post.category))}>
                   {getCategoryLabel(post.category)}
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground/50 mt-0.5">{formatTimeAgo(post.created_at)}</p>
+              <p className="text-xs mt-0.5" style={{ color: '#9C8569' }}>{formatTimeAgo(post.created_at)}</p>
             </div>
             {isOwner && (
               <button
-                className="text-muted-foreground/30 hover:text-destructive transition-colors p-1"
+                className="hover:text-destructive transition-colors p-1"
+                style={{ color: '#C4A98A' }}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDeletePost(post.id);
@@ -647,13 +649,13 @@ export const Forum = () => {
 
           {/* Content */}
           <div className="mb-3">
-            <p className="text-foreground/85 text-sm leading-relaxed">
+            <p className="text-sm leading-relaxed" style={{ color: '#3D2A1E' }}>
               {renderContentWithMentions(contentPreview)}
               {hasMore && (
                 <button 
                   onClick={() => setSelectedPost(post)}
-                  className="text-sm ml-1 hover:underline"
-                  style={{ color: BROWN_LIGHT }}
+                  className="text-sm ml-1 hover:underline font-semibold"
+                  style={{ color: BROWN }}
                 >
                   Read more
                 </button>
@@ -665,23 +667,23 @@ export const Forum = () => {
           {post.content.length > 250 && (
             <div 
               className="w-full h-40 rounded-xl mb-3 flex items-center justify-center"
-              style={{ background: 'rgba(139, 94, 60, 0.15)' }}
+              style={{ background: '#EAD3B0' }}
               onClick={() => setSelectedPost(post)}
             >
-              <span className="text-xs uppercase tracking-widest" style={{ color: 'rgba(255,235,201,0.3)' }}>
+              <span className="text-xs uppercase tracking-widest" style={{ color: '#B59A78' }}>
                 IMAGE_PLACEHOLDER
               </span>
             </div>
           )}
 
           {/* Actions Row */}
-          <div className="flex items-center justify-between pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+          <div className="flex items-center justify-between pt-3" style={{ borderTop: `1px solid ${SOFT_BORDER}` }}>
             <div className="flex items-center gap-5">
               <button
                 onClick={() => handleToggleLike(post.id, post.isLiked || false)}
                 disabled={isLiking}
                 className="flex items-center gap-1.5 text-sm transition-colors"
-                style={{ color: post.isLiked ? '#e57373' : 'rgba(255,255,255,0.4)' }}
+                style={{ color: post.isLiked ? '#D9534F' : '#9C8569' }}
               >
                 <Heart className={cn("h-4 w-4", post.isLiked && "fill-current")} />
                 <span className="text-xs tabular-nums">{post.likeCount || 0}</span>
@@ -689,7 +691,7 @@ export const Forum = () => {
               <button
                 onClick={() => setSelectedPost(post)}
                 className="flex items-center gap-1.5 text-sm transition-colors"
-                style={{ color: 'rgba(255,255,255,0.4)' }}
+                style={{ color: '#9C8569' }}
               >
                 <MessageCircle className="h-4 w-4" />
                 <span className="text-xs tabular-nums">{post.replies?.length || 0}</span>
@@ -699,14 +701,14 @@ export const Forum = () => {
               <button
                 onClick={() => handleToggleBookmark(post.id)}
                 className="transition-colors"
-                style={{ color: isBookmarked ? BROWN_LIGHT : 'rgba(255,255,255,0.4)' }}
+                style={{ color: isBookmarked ? BROWN : '#9C8569' }}
               >
-                <Bookmark className={cn("h-4 w-4", isBookmarked && "fill-current")} />
+                <Flag className={cn("h-4 w-4", isBookmarked && "fill-current")} />
               </button>
               <button
                 onClick={() => handleShare(post)}
                 className="transition-colors"
-                style={{ color: 'rgba(255,255,255,0.4)' }}
+                style={{ color: '#9C8569' }}
               >
                 <Share2 className="h-4 w-4" />
               </button>
