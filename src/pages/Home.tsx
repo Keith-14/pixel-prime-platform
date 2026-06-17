@@ -6,6 +6,7 @@ import { useGlobalLocation } from '@/contexts/LocationContext';
 import { supabase } from '@/integrations/supabase/client';
 import { ChatAssistant } from '@/components/ChatAssistant';
 import { SideMenu } from '@/components/SideMenu';
+import prayerIcon from '@/assets/prayer-icon.png.asset.json';
 import qaQuran from '@/assets/qa-quran.png';
 import qaAi from '@/assets/qa-ai.png';
 import qaPlaces from '@/assets/qa-places.png';
@@ -324,22 +325,18 @@ export const Home = () => {
   );
 };
 
-const MosqueIcon = ({ className }: { className?: string }) => (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <circle cx="12" cy="3.5" r="1" />
-    <path d="M7 13c0-3 2.2-5.5 5-5.5S17 10 17 13" />
-    <path d="M5 21h14" />
-    <path d="M6 21v-7h12v7" />
-    <path d="M9 21v-4h6v4" />
-  </svg>
+const PrayerIcon = ({ isActive }: { isActive: boolean }) => (
+  <img
+    src={prayerIcon.url}
+    alt="Prayer"
+    className="h-[22px] w-[22px] object-contain"
+    style={{
+      filter: isActive
+        ? 'brightness(0) saturate(100%) invert(24%) sepia(50%) saturate(2000%) hue-rotate(350deg)'
+        : 'none',
+      opacity: isActive ? 1 : 0.6,
+    }}
+  />
 );
 
 const PILL_BG = '#FFFFFF';
@@ -354,7 +351,7 @@ const BottomNav = () => {
   const navItems = [
     { icon: HomeIcon, label: 'Home', path: '/' },
     { icon: ShoppingBasket, label: 'Marketplace', path: '/shop' },
-    { icon: MosqueIcon, label: 'Prayer', path: '/prayer-times' },
+    { label: 'Prayer', path: '/prayer-times', isImage: true },
     { icon: ScanLine, label: 'Halal Scan', path: '/halal-scanner' },
   ];
 
@@ -369,7 +366,7 @@ const BottomNav = () => {
             boxShadow: '0 8px 24px rgba(60, 30, 15, 0.12), 0 2px 6px rgba(60, 30, 15, 0.06)',
           }}
         >
-          {navItems.map(({ icon: Icon, label, path }) => {
+          {navItems.map(({ icon: Icon, label, path, isImage }) => {
             const isActive = location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
             return (
               <button
@@ -380,10 +377,14 @@ const BottomNav = () => {
                   backgroundColor: isActive ? ACTIVE_BG : 'transparent',
                 }}
               >
-                <Icon
-                  className="h-[22px] w-[22px]"
-                  style={{ color: isActive ? TEXT_ACTIVE : TEXT_INACTIVE }}
-                />
+                {isImage ? (
+                  <PrayerIcon isActive={isActive} />
+                ) : Icon && (
+                  <Icon
+                    className="h-[22px] w-[22px]"
+                    style={{ color: isActive ? TEXT_ACTIVE : TEXT_INACTIVE }}
+                  />
+                )}
                 <span
                   className="text-[11px] font-semibold leading-none mt-0.5"
                   style={{ color: isActive ? TEXT_ACTIVE : TEXT_INACTIVE }}
