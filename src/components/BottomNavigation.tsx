@@ -1,4 +1,4 @@
-import { Home, ShoppingBasket, ScanLine, MessageSquare } from 'lucide-react';
+import { Home, ShoppingBasket, ScanLine, MessagesSquare } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -8,24 +8,25 @@ const MosqueIcon = ({ className }: { className?: string }) => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="1.8"
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
   >
-    <path d="M12 2c-2 2-4 4-4 7v2h8V9c0-3-2-5-4-7z" />
-    <path d="M6 11h12v3H6z" />
-    <path d="M4 14h16v8H4z" />
-    <path d="M8 14v8M16 14v8M12 14v8" />
-    <path d="M10 5c1-1 3-1 4 0" />
+    {/* Crescent + dome */}
+    <circle cx="12" cy="3.5" r="1" />
+    <path d="M7 13c0-3 2.2-5.5 5-5.5S17 10 17 13" />
+    {/* Base building */}
+    <path d="M5 21h14" />
+    <path d="M6 21v-7h12v7" />
+    <path d="M9 21v-4h6v4" />
   </svg>
 );
 
-const PILL_BG = '#3A1E12';
-const ACTIVE_BG = '#5C3A2A';
-const CHAT_BG = '#B54A22';
-const TEXT_ACTIVE = '#FFFFFF';
-const TEXT_INACTIVE = 'rgba(255, 255, 255, 0.6)';
+const PILL_BG = '#FFFFFF';
+const ACTIVE_BG = '#F5E3D3';
+const TEXT_ACTIVE = '#7A3B1E';
+const TEXT_INACTIVE = '#8A8A8A';
 
 export const BottomNavigation = () => {
   const location = useLocation();
@@ -44,8 +45,11 @@ export const BottomNavigation = () => {
       <div className="flex items-center gap-3">
         {/* Main pill nav */}
         <div
-          className="flex-1 rounded-full flex items-center justify-between py-2.5 px-3"
-          style={{ backgroundColor: PILL_BG }}
+          className="flex-1 rounded-full flex items-center justify-between py-2 px-2.5"
+          style={{
+            backgroundColor: PILL_BG,
+            boxShadow: '0 8px 24px rgba(60, 30, 15, 0.12), 0 2px 6px rgba(60, 30, 15, 0.06)',
+          }}
         >
           {navItems.map(({ icon: Icon, labelKey, path }) => {
             const isActive = location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
@@ -54,19 +58,18 @@ export const BottomNavigation = () => {
                 key={path}
                 onClick={() => navigate(path)}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 py-2 px-3 rounded-full transition-all duration-200 min-w-[60px]",
-                  isActive && "shadow-sm"
+                  "flex flex-col items-center justify-center gap-0.5 py-2 px-3 rounded-full transition-all duration-200 min-w-[64px]"
                 )}
                 style={{
                   backgroundColor: isActive ? ACTIVE_BG : 'transparent',
                 }}
               >
                 <Icon
-                  className="h-5 w-5"
+                  className="h-[22px] w-[22px]"
                   style={{ color: isActive ? TEXT_ACTIVE : TEXT_INACTIVE }}
                 />
                 <span
-                  className="text-[10px] font-medium leading-none"
+                  className="text-[11px] font-semibold leading-none mt-0.5"
                   style={{ color: isActive ? TEXT_ACTIVE : TEXT_INACTIVE }}
                 >
                   {t(labelKey)}
@@ -79,11 +82,14 @@ export const BottomNavigation = () => {
         {/* Chat / Guftagu button */}
         <button
           onClick={() => navigate('/forum')}
-          className="h-14 w-14 rounded-full flex items-center justify-center shrink-0 shadow-lg transition-transform duration-200 active:scale-95"
-          style={{ backgroundColor: CHAT_BG }}
+          className="h-14 w-14 rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 active:scale-95"
+          style={{
+            background: 'radial-gradient(circle at 30% 25%, #C9663A 0%, #8B3A18 70%, #5C2410 100%)',
+            boxShadow: '0 8px 20px rgba(139, 58, 24, 0.45), inset 0 1px 2px rgba(255,255,255,0.25)',
+          }}
           aria-label="Guftagu"
         >
-          <MessageSquare className="h-6 w-6 text-white" strokeWidth={2} />
+          <MessagesSquare className="h-6 w-6 text-white" strokeWidth={2} />
         </button>
       </div>
     </nav>
