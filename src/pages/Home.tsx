@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Menu, Bell, MapPin, ChevronDown, Newspaper, Home as HomeIcon, ShoppingBag, ScanLine, MessageCircle } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Menu, Bell, MapPin, ChevronDown, Newspaper, Home as HomeIcon, ShoppingBasket, ScanLine, MessagesSquare } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGlobalLocation } from '@/contexts/LocationContext';
 import { supabase } from '@/integrations/supabase/client';
