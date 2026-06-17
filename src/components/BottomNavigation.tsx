@@ -61,7 +61,7 @@ export const BottomNavigation = () => {
               >
                 {isImage ? (
                   <PrayerIcon isActive={isActive} />
-                ) : (
+                ) : Icon && (
                   <Icon
                     className="h-[22px] w-[22px]"
                     style={{ color: isActive ? TEXT_ACTIVE : TEXT_INACTIVE }}
