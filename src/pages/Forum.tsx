@@ -723,42 +723,43 @@ export const Forum = () => {
   if (selectedPost) {
     return (
       <Layout>
-        <div className="min-h-screen pb-24">
+        <div className="min-h-screen pb-24" style={{ background: CREAM_BG }}>
           <div className="relative px-4 pt-6">
             <button
               onClick={() => setSelectedPost(null)}
-              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6 group"
+              className="flex items-center gap-2 transition-colors mb-6 group"
+              style={{ color: BROWN }}
             >
               <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform duration-300" />
               <span className="font-medium text-sm">Back to Guftagu</span>
             </button>
 
-            <Card className="relative overflow-hidden border-0 mb-6" style={{ background: WARM_CARD }}>
+            <Card className="relative overflow-hidden border-0 mb-6 rounded-2xl" style={{ background: WARM_CARD, boxShadow: '0 1px 3px rgba(123, 63, 30, 0.06)' }}>
               <CardContent className="p-5">
                 <div className="flex items-start gap-3 mb-4">
                   <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
-                    style={{ background: 'rgba(255,255,255,0.08)' }}
+                    style={{ background: '#EAD9BE' }}
                   >
-                    <User className="h-6 w-6" style={{ color: 'rgba(255,235,201,0.5)' }} />
+                    <User className="h-6 w-6" style={{ color: '#A88B66' }} />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-foreground">{selectedPost.user_name}</span>
+                      <span className="font-bold" style={{ color: BROWN_DARK }}>{selectedPost.user_name}</span>
                       <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-medium uppercase", getCategoryBadgeColor(selectedPost.category))}>
                         {getCategoryLabel(selectedPost.category)}
                       </span>
                     </div>
-                    <p className="text-xs text-muted-foreground/50 mt-0.5">{formatTimeAgo(selectedPost.created_at)}</p>
+                    <p className="text-xs mt-0.5" style={{ color: '#9C8569' }}>{formatTimeAgo(selectedPost.created_at)}</p>
                   </div>
                 </div>
-                <p className="text-foreground/90 text-[15px] leading-relaxed whitespace-pre-wrap">{renderContentWithMentions(selectedPost.content)}</p>
+                <p className="text-[15px] leading-relaxed whitespace-pre-wrap" style={{ color: '#3D2A1E' }}>{renderContentWithMentions(selectedPost.content)}</p>
                 
-                <div className="flex items-center gap-5 mt-5 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                  <div className="flex items-center gap-1.5" style={{ color: selectedPost.isLiked ? '#e57373' : 'rgba(255,255,255,0.4)' }}>
+                <div className="flex items-center gap-5 mt-5 pt-4" style={{ borderTop: `1px solid ${SOFT_BORDER}` }}>
+                  <div className="flex items-center gap-1.5" style={{ color: selectedPost.isLiked ? '#D9534F' : '#9C8569' }}>
                     <Heart className={cn("h-4 w-4", selectedPost.isLiked && "fill-current")} />
                     <span className="text-sm">{selectedPost.likeCount || 0}</span>
                   </div>
-                  <div className="flex items-center gap-1.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  <div className="flex items-center gap-1.5" style={{ color: '#9C8569' }}>
                     <MessageCircle className="h-4 w-4" />
                     <span className="text-sm">{selectedPost.replies?.length || 0}</span>
                   </div>
@@ -767,8 +768,8 @@ export const Forum = () => {
             </Card>
 
             <div className="mb-6">
-              <h3 className="font-bold text-foreground mb-4 flex items-center gap-2 text-sm uppercase tracking-wide">
-                <MessageCircle className="h-4 w-4" style={{ color: BROWN_LIGHT }} />
+              <h3 className="font-bold mb-4 flex items-center gap-2 text-sm uppercase tracking-wide" style={{ color: BROWN_DARK }}>
+                <MessageCircle className="h-4 w-4" style={{ color: BROWN }} />
                 Replies
               </h3>
 
@@ -782,49 +783,51 @@ export const Forum = () => {
                       className="rounded-2xl p-4 animate-fade-in"
                       style={{ 
                         animationDelay: `${index * 50}ms`,
-                        background: 'rgba(255,255,255,0.03)',
+                        background: '#FFFFFF',
+                        boxShadow: '0 1px 3px rgba(123, 63, 30, 0.05)',
                       }}
                     >
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-full flex items-center justify-center"
-                            style={{ background: 'rgba(255,255,255,0.08)' }}
+                            style={{ background: '#EAD9BE' }}
                           >
-                            <User className="h-4 w-4" style={{ color: 'rgba(255,235,201,0.5)' }} />
+                            <User className="h-4 w-4" style={{ color: '#A88B66' }} />
                           </div>
                           <div>
-                            <span className="font-semibold text-sm text-foreground">{reply.user_name}</span>
-                            <span className="text-xs text-muted-foreground/50 ml-2">{formatTimeAgo(reply.created_at)}</span>
+                            <span className="font-semibold text-sm" style={{ color: BROWN_DARK }}>{reply.user_name}</span>
+                            <span className="text-xs ml-2" style={{ color: '#9C8569' }}>{formatTimeAgo(reply.created_at)}</span>
                           </div>
                         </div>
                         {isOwner && (
                           <button
-                            className="text-muted-foreground/30 hover:text-destructive transition-colors p-1"
+                            className="hover:text-destructive transition-colors p-1"
+                            style={{ color: '#C4A98A' }}
                             onClick={() => handleDeleteReply(reply.id)}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         )}
                       </div>
-                      <p className="text-sm text-foreground/85 leading-relaxed pl-12">{renderContentWithMentions(reply.content)}</p>
+                      <p className="text-sm leading-relaxed pl-12" style={{ color: '#3D2A1E' }}>{renderContentWithMentions(reply.content)}</p>
                     </div>
                   );
                 })}
 
                 {(!selectedPost.replies || selectedPost.replies.length === 0) && (
-                  <div className="text-center py-12 rounded-2xl" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                    <MessageCircle className="h-8 w-8 mx-auto mb-3" style={{ color: 'rgba(255,235,201,0.2)' }} />
-                    <p className="text-muted-foreground/50 font-medium text-sm">No replies yet</p>
-                    <p className="text-xs text-muted-foreground/30 mt-1">Be the first to reply!</p>
+                  <div className="text-center py-12 rounded-2xl" style={{ background: '#FFFFFF' }}>
+                    <MessageCircle className="h-8 w-8 mx-auto mb-3" style={{ color: '#C4A98A' }} />
+                    <p className="font-medium text-sm" style={{ color: BROWN_DARK }}>No replies yet</p>
+                    <p className="text-xs mt-1" style={{ color: '#9C8569' }}>Be the first to reply!</p>
                   </div>
                 )}
               </div>
 
               <div className="mt-6 flex gap-3">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                  style={{ background: 'rgba(255,255,255,0.08)' }}
+                  style={{ background: '#EAD9BE' }}
                 >
-                  <User className="h-4 w-4" style={{ color: 'rgba(255,235,201,0.5)' }} />
+                  <User className="h-4 w-4" style={{ color: '#A88B66' }} />
                 </div>
                 <div className="flex-1 flex gap-2">
                   <div className="relative flex-1">
@@ -833,19 +836,20 @@ export const Forum = () => {
                       onChange={(e) => handleContentChange(e.target.value, 'reply')}
                       placeholder="Write a reply..."
                       className="min-h-[48px] max-h-[120px] resize-none rounded-xl border-0"
-                      style={{ background: 'rgba(255,255,255,0.05)' }}
+                      style={{ background: '#FFFFFF', color: BROWN_DARK, border: `1px solid ${SOFT_BORDER}` }}
                     />
                     {showMentionSuggestions && mentionTarget === 'reply' && filteredSuggestions.length > 0 && (
                       <div className="absolute bottom-full left-0 right-0 mb-1 rounded-lg shadow-lg overflow-hidden z-50 border"
-                        style={{ background: 'rgba(30,30,30,0.95)', borderColor: 'rgba(255,255,255,0.1)' }}
+                        style={{ background: '#FFFFFF', borderColor: SOFT_BORDER }}
                       >
                         {filteredSuggestions.map((name) => (
                           <button
                             key={name}
                             onClick={() => insertMention(name)}
-                            className="w-full px-3 py-2 text-left text-sm hover:bg-white/5 flex items-center gap-2 transition-colors"
+                            className="w-full px-3 py-2 text-left text-sm hover:bg-amber-50 flex items-center gap-2 transition-colors"
+                            style={{ color: BROWN_DARK }}
                           >
-                            <AtSign className="h-3 w-3" style={{ color: BROWN_LIGHT }} />
+                            <AtSign className="h-3 w-3" style={{ color: BROWN }} />
                             <span className="font-medium">{name}</span>
                           </button>
                         ))}
@@ -856,7 +860,7 @@ export const Forum = () => {
                     onClick={handleAddReply}
                     disabled={!newReply.trim() || submitting}
                     size="icon"
-                    className="h-12 w-12 rounded-xl shrink-0 border-0"
+                    className="h-12 w-12 rounded-xl shrink-0 border-0 text-white"
                     style={{ background: BROWN }}
                   >
                     {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
