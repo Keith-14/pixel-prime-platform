@@ -315,7 +315,7 @@ export const Home = () => {
       />
 
       {/* Bottom nav */}
-      <BottomNav onChat={() => setIsChatOpen(true)} />
+      <BottomNav />
 
       {/* Chat overlay + side menu */}
       <ChatAssistant open={isChatOpen} onClose={() => setIsChatOpen(false)} />
