@@ -325,22 +325,18 @@ export const Home = () => {
   );
 };
 
-const MosqueIcon = ({ className }: { className?: string }) => (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <circle cx="12" cy="3.5" r="1" />
-    <path d="M7 13c0-3 2.2-5.5 5-5.5S17 10 17 13" />
-    <path d="M5 21h14" />
-    <path d="M6 21v-7h12v7" />
-    <path d="M9 21v-4h6v4" />
-  </svg>
+const PrayerIcon = ({ isActive }: { isActive: boolean }) => (
+  <img
+    src={prayerIcon.url}
+    alt="Prayer"
+    className="h-[22px] w-[22px] object-contain"
+    style={{
+      filter: isActive
+        ? 'brightness(0) saturate(100%) invert(24%) sepia(50%) saturate(2000%) hue-rotate(350deg)'
+        : 'none',
+      opacity: isActive ? 1 : 0.6,
+    }}
+  />
 );
 
 const PILL_BG = '#FFFFFF';
