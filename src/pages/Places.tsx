@@ -310,7 +310,7 @@ export const Places = () => {
           {/* Location pill */}
           <div
             className="flex items-center justify-between rounded-full px-5 py-3"
-            style={{ backgroundColor: CREAM_DEEP }}
+            style={{ backgroundColor: '#FFF2DF' }}
           >
             <div className="flex items-center gap-2 min-w-0">
               <MapPin className="h-5 w-5 shrink-0" style={{ color: BROWN }} />
