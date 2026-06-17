@@ -5,28 +5,18 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { getSelectedAddress, ShippingAddress } from '@/lib/addresses';
 
 const CREAM = '#FBEBD0';
 const BROWN = '#A35233';
 const BROWN_DARK = '#5C2A14';
-
-type Address = {
-  name: string;
-  line1: string;
-  city: string;
-};
 
 type Card = {
   id: string;
   brand: string;
   last4: string;
 };
-
-const DEFAULT_ADDRESSES: Address[] = [
-  { name: 'Jane Doe', line1: '3 Newbridge Court', city: 'Chino Hills, CA 91709, United States' },
-  { name: 'Jane Doe', line1: '742 Evergreen Terrace', city: 'Springfield, IL 62704, United States' },
-];
 
 const DEFAULT_CARDS: Card[] = [
   { id: 'c1', brand: 'Mastercard', last4: '3947' },
@@ -40,14 +30,16 @@ export const Checkout = () => {
   const navigate = useNavigate();
   const [processing, setProcessing] = useState(false);
   const [selectedCard, setSelectedCard] = useState<string>(DEFAULT_CARDS[0].id);
-  const [addressIdx, setAddressIdx] = useState(0);
-  const [changingAddress, setChangingAddress] = useState(false);
   const [changingCard, setChangingCard] = useState(false);
+  const [address, setAddress] = useState<ShippingAddress | null>(null);
+
+  useEffect(() => {
+    setAddress(getSelectedAddress());
+  }, []);
 
   const subtotal = getTotalPrice();
   const shipping = subtotal > 0 ? 15 : 0;
   const total = subtotal + shipping;
-  const address = DEFAULT_ADDRESSES[addressIdx];
 
   if (items.length === 0) {
     navigate('/cart');
@@ -118,37 +110,31 @@ export const Checkout = () => {
           {/* Shipping address */}
           <div>
             <h3 className="text-base font-bold mb-3" style={{ color: BROWN_DARK }}>Shipping address</h3>
-            <div className="bg-white rounded-2xl p-4">
-              <div className="flex items-start justify-between gap-3">
-                <p className="font-bold" style={{ color: BROWN_DARK }}>{address.name}</p>
-                <button onClick={() => setChangingAddress(v => !v)} className="font-semibold text-sm" style={{ color: BROWN }}>
-                  Change
-                </button>
-              </div>
-              <p className="text-sm mt-1" style={{ color: BROWN_DARK, opacity: 0.85 }}>{address.line1}</p>
-              <p className="text-sm" style={{ color: BROWN_DARK, opacity: 0.85 }}>{address.city}</p>
-
-              {changingAddress && (
-                <div className="mt-3 pt-3 border-t space-y-2" style={{ borderColor: `${BROWN_DARK}20` }}>
-                  {DEFAULT_ADDRESSES.map((a, i) => (
-                    <button
-                      key={i}
-                      onClick={() => { setAddressIdx(i); setChangingAddress(false); }}
-                      className="w-full flex items-start gap-3 text-left p-2 rounded-lg"
-                      style={{ backgroundColor: i === addressIdx ? '#F5E6D0' : 'transparent' }}
-                    >
-                      <span className="mt-1 h-4 w-4 rounded-full flex items-center justify-center" style={{ backgroundColor: i === addressIdx ? BROWN : '#D9D9D9' }}>
-                        {i === addressIdx && <Check className="h-3 w-3 text-white" />}
-                      </span>
-                      <span className="flex-1">
-                        <span className="block font-semibold text-sm" style={{ color: BROWN_DARK }}>{a.name}</span>
-                        <span className="block text-xs" style={{ color: BROWN_DARK, opacity: 0.7 }}>{a.line1}, {a.city}</span>
-                      </span>
-                    </button>
-                  ))}
+            {address ? (
+              <div className="bg-white rounded-2xl p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="font-bold" style={{ color: BROWN_DARK }}>{address.fullName}</p>
+                  <button onClick={() => navigate('/shipping-address')} className="font-semibold text-sm" style={{ color: BROWN }}>
+                    Change
+                  </button>
                 </div>
-              )}
-            </div>
+                <p className="text-sm mt-1" style={{ color: BROWN_DARK, opacity: 0.85 }}>{address.address}</p>
+                <p className="text-sm" style={{ color: BROWN_DARK, opacity: 0.85 }}>
+                  {address.city}, {address.state} {address.zip}, {address.country}
+                </p>
+              </div>
+            ) : (
+              <button
+                onClick={() => navigate('/shipping-address/new')}
+                className="w-full bg-white rounded-2xl p-4 text-left"
+                style={{ color: BROWN }}
+              >
+                <p className="font-bold">+ Add shipping address</p>
+                <p className="text-xs mt-1" style={{ color: BROWN_DARK, opacity: 0.7 }}>
+                  You haven't added an address yet.
+                </p>
+              </button>
+            )}
           </div>
 
           {/* Payment */}
