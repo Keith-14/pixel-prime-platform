@@ -31,7 +31,7 @@ export const BottomNavigation = () => {
   const navItems = [
     { icon: Home, labelKey: 'nav.home', path: '/' },
     { icon: ShoppingBasket, labelKey: 'nav.store', path: '/shop' },
-    { icon: PrayerIcon, labelKey: 'nav.prayer', path: '/prayer-times', isImage: true },
+    { labelKey: 'nav.prayer', path: '/prayer-times', isImage: true },
     { icon: ScanLine, labelKey: 'nav.halalScan', path: '/halal-scanner' },
   ];
 
