@@ -174,7 +174,7 @@ export const Quran = () => {
         {/* Olive hero card */}
         <div className="px-5 mt-2">
           <div
-            className="rounded-[28px] px-6 py-7 text-center text-white shadow-sm"
+            className="rounded-[28px] px-6 pt-7 pb-10 text-center text-white shadow-sm overflow-hidden"
             style={{ backgroundColor: OLIVE }}
           >
             <h2 className="text-[32px] font-bold leading-tight" style={{ fontFamily: SERIF }}>
