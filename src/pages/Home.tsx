@@ -525,21 +525,3 @@ const ArcTimeline = ({
     </div>
   );
 };
-
-const PrayerIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <path
-      d="M12 3v2M5 12H3M21 12h-2M6.3 6.3l1.4 1.4M16.3 7.7l1.4-1.4"
-      stroke="#8F8F8F"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-    />
-    <path
-      d="M6 21V13a6 6 0 0112 0v8"
-      stroke="#8F8F8F"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-    />
-    <path d="M4 21h16" stroke="#8F8F8F" strokeWidth="1.6" strokeLinecap="round" />
-  </svg>
-);
