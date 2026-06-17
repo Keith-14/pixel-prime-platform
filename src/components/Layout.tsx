@@ -13,9 +13,14 @@ interface LayoutProps {
   headerRight?: ReactNode;
   onSearchClick?: () => void;
   showSearch?: boolean;
+  headerClassName?: string;
+  headerTitleClassName?: string;
+  headerTitleStyle?: React.CSSProperties;
+  headerButtonClassName?: string;
+  leftAlignHeaderTitle?: boolean;
 }
 
-export const Layout = ({ children, showNavigation = true, showHeader = true, headerTitle, headerRight, onSearchClick, showSearch }: LayoutProps) => {
+export const Layout = ({ children, showNavigation = true, showHeader = true, headerTitle, headerRight, onSearchClick, showSearch, headerClassName, headerTitleClassName, headerTitleStyle, headerButtonClassName, leftAlignHeaderTitle }: LayoutProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(true);
   const location = useLocation();
@@ -64,7 +69,7 @@ export const Layout = ({ children, showNavigation = true, showHeader = true, hea
         />
       </div>
       
-      {showHeader && <TopHeader onMenuClick={handleMenuClick} title={headerTitle} rightContent={headerRight} onSearchClick={onSearchClick} showSearch={showSearch} />}
+      {showHeader && <TopHeader onMenuClick={handleMenuClick} title={headerTitle} rightContent={headerRight} onSearchClick={onSearchClick} showSearch={showSearch} className={headerClassName} titleClassName={headerTitleClassName} titleStyle={headerTitleStyle} buttonClassName={headerButtonClassName} leftAlignTitle={leftAlignHeaderTitle} />}
       
       <main className={cn(
         "flex-1 relative z-10",

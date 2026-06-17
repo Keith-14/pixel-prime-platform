@@ -122,7 +122,7 @@ const renderContentWithMentions = (content: string) => {
 const BROWN = '#7B3F1E';
 const BROWN_LIGHT = '#A35233';
 const BROWN_DARK = '#5C2E15';
-const CREAM_BG = '#FBEFD9';
+const CREAM_BG = '#FFF0D9';
 const CREAM_DEEP = '#F4DDB6';
 const WARM_CARD = '#FFFFFF';
 const SOFT_BORDER = 'rgba(123, 63, 30, 0.12)';
@@ -880,14 +880,22 @@ export const Forum = () => {
         setSearchOpen(!searchOpen);
         if (searchOpen) setSearchQuery('');
       }}
-      className="text-foreground hover:text-primary transition-colors p-2"
+      className="text-[#2C1309] hover:opacity-70 transition-colors p-2"
     >
       {searchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
     </button>
   );
 
   return (
-    <Layout headerTitle="Guftagu" headerRight={headerRight}>
+    <Layout 
+      headerTitle="Guftagu" 
+      headerRight={headerRight}
+      headerClassName="bg-white"
+      headerTitleClassName="text-[#2C1309]"
+      headerTitleStyle={{ color: '#2C1309' }}
+      headerButtonClassName="text-[#2C1309] hover:bg-[#2C1309]/10 hover:text-[#2C1309] border-transparent hover:border-[#2C1309]/25"
+      leftAlignHeaderTitle
+    >
       <div 
         ref={containerRef}
         className="min-h-screen pb-24 overflow-auto"
