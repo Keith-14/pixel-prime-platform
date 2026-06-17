@@ -1069,7 +1069,7 @@ export const Forum = () => {
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button
-              className="fixed bottom-24 right-4 h-14 w-14 rounded-full shadow-xl transition-all duration-300 z-50 border-0"
+              className="fixed bottom-24 right-4 h-14 w-14 rounded-full shadow-xl transition-all duration-300 z-50 border-0 text-white"
               size="icon"
               style={{ background: BROWN }}
             >
@@ -1077,25 +1077,25 @@ export const Forum = () => {
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-md border-0"
-            style={{ background: 'rgba(25,25,25,0.98)' }}
+            style={{ background: '#FFF8EA' }}
           >
             <DialogHeader>
-              <DialogTitle className="text-xl flex items-center gap-2" style={{ color: BROWN_LIGHT }}>
+              <DialogTitle className="text-xl flex items-center gap-2" style={{ color: BROWN }}>
                 <Sparkles className="h-5 w-5" />
                 Share Your Thoughts
               </DialogTitle>
-              <DialogDescription className="text-muted-foreground/50 text-sm">
+              <DialogDescription className="text-sm" style={{ color: '#9C8569' }}>
                 Post a message for the community to see and engage with.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 mt-2">
               <div className="flex items-center gap-2">
-                <Hash className="h-4 w-4 text-muted-foreground/50" />
+                <Hash className="h-4 w-4" style={{ color: BROWN_LIGHT }} />
                 <Select value={newPostCategory} onValueChange={setNewPostCategory}>
-                  <SelectTrigger className="w-[180px] text-sm border-0" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                  <SelectTrigger className="w-[180px] text-sm" style={{ background: '#FFFFFF', borderColor: SOFT_BORDER, color: BROWN_DARK }}>
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
-                  <SelectContent style={{ background: 'rgba(30,30,30,0.98)' }}>
+                  <SelectContent style={{ background: '#FFFFFF' }}>
                     {CATEGORIES.filter(c => c.id !== 'all').map(({ id, label }) => (
                       <SelectItem key={id} value={id}>{label}</SelectItem>
                     ))}
@@ -1105,30 +1105,31 @@ export const Forum = () => {
 
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                  style={{ background: 'rgba(255,255,255,0.08)' }}
+                  style={{ background: '#EAD9BE' }}
                 >
-                  <User className="h-4 w-4" style={{ color: 'rgba(255,235,201,0.5)' }} />
+                  <User className="h-4 w-4" style={{ color: '#A88B66' }} />
                 </div>
                 <div className="relative flex-1">
                   <Textarea
                     value={newPostContent}
                     onChange={(e) => handleContentChange(e.target.value, 'post')}
                     placeholder="What's on your mind..."
-                    className="min-h-[120px] resize-none rounded-xl border-0"
-                    style={{ background: 'rgba(255,255,255,0.05)' }}
+                    className="min-h-[120px] resize-none rounded-xl"
+                    style={{ background: '#FFFFFF', color: BROWN_DARK, border: `1px solid ${SOFT_BORDER}` }}
                     maxLength={500}
                   />
                   {showMentionSuggestions && mentionTarget === 'post' && filteredSuggestions.length > 0 && (
                     <div className="absolute bottom-full left-0 right-0 mb-1 rounded-lg shadow-lg overflow-hidden z-50 border"
-                      style={{ background: 'rgba(30,30,30,0.95)', borderColor: 'rgba(255,255,255,0.1)' }}
+                      style={{ background: '#FFFFFF', borderColor: SOFT_BORDER }}
                     >
                       {filteredSuggestions.map((name) => (
                         <button
                           key={name}
                           onClick={() => insertMention(name)}
-                          className="w-full px-3 py-2 text-left text-sm hover:bg-white/5 flex items-center gap-2 transition-colors"
+                          className="w-full px-3 py-2 text-left text-sm hover:bg-amber-50 flex items-center gap-2 transition-colors"
+                          style={{ color: BROWN_DARK }}
                         >
-                          <AtSign className="h-3 w-3" style={{ color: BROWN_LIGHT }} />
+                          <AtSign className="h-3 w-3" style={{ color: BROWN }} />
                           <span className="font-medium">{name}</span>
                         </button>
                       ))}
@@ -1137,13 +1138,13 @@ export const Forum = () => {
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground/40 tabular-nums">
+                <span className="text-xs tabular-nums" style={{ color: '#9C8569' }}>
                   {newPostContent.length}/500
                 </span>
                 <Button
                   onClick={handleCreatePost}
                   disabled={!newPostContent.trim() || submitting}
-                  className="rounded-full px-6 border-0"
+                  className="rounded-full px-6 border-0 text-white"
                   style={{ background: BROWN }}
                 >
                   {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
