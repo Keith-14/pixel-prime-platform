@@ -324,69 +324,91 @@ export const Home = () => {
   );
 };
 
-const BottomNav = ({ onChat }: { onChat: () => void }) => {
+const MosqueIcon = ({ className }: { className?: string }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <circle cx="12" cy="3.5" r="1" />
+    <path d="M7 13c0-3 2.2-5.5 5-5.5S17 10 17 13" />
+    <path d="M5 21h14" />
+    <path d="M6 21v-7h12v7" />
+    <path d="M9 21v-4h6v4" />
+  </svg>
+);
+
+const PILL_BG = '#FFFFFF';
+const ACTIVE_BG = '#F5E3D3';
+const TEXT_ACTIVE = '#7A3B1E';
+const TEXT_INACTIVE = '#8A8A8A';
+
+const BottomNav = () => {
   const navigate = useNavigate();
-  const items = [
-    { label: 'Home', Icon: HomeIcon, path: '/', active: true },
-    { label: 'Marketplace', Icon: ShoppingBag, path: '/shop' },
-    { label: 'Prayer', Icon: () => <PrayerIcon />, path: '/prayer-times' },
-    { label: 'Halal Scan', Icon: ScanLine, path: '/halal-scanner' },
+  const location = useLocation();
+
+  const navItems = [
+    { icon: HomeIcon, label: 'Home', path: '/' },
+    { icon: ShoppingBasket, label: 'Marketplace', path: '/shop' },
+    { icon: MosqueIcon, label: 'Prayer', path: '/prayer-times' },
+    { icon: ScanLine, label: 'Halal Scan', path: '/halal-scanner' },
   ];
 
   return (
-    <div className="fixed bottom-3 left-1/2 -translate-x-1/2 max-w-md w-full px-5 z-30">
-      <div className="flex items-center gap-2">
-        <nav
-          className="flex-1 flex items-center justify-between px-2 py-2 rounded-full"
+    <nav className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md z-30 px-4 pb-4 font-arabic">
+      <div className="flex items-center gap-3">
+        {/* Main pill nav */}
+        <div
+          className="flex-1 rounded-full flex items-center justify-between py-2 px-2.5"
           style={{
-            background: 'rgba(255,255,255,0.75)',
-            boxShadow:
-              '0 2px 30px rgba(0,0,0,0.05), 0 8px 30px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.6)',
-            backdropFilter: 'blur(8px)',
+            backgroundColor: PILL_BG,
+            boxShadow: '0 8px 24px rgba(60, 30, 15, 0.12), 0 2px 6px rgba(60, 30, 15, 0.06)',
           }}
         >
-          {items.map(({ label, Icon, path, active }) => (
-            <button
-              key={label}
-              onClick={() => navigate(path)}
-              className="flex flex-col items-center justify-center rounded-full px-3 py-1.5 min-w-[60px]"
-              style={
-                active
-                  ? { background: 'rgba(133,59,30,0.10)' }
-                  : undefined
-              }
-            >
-              <Icon
-                className="h-5 w-5"
-                strokeWidth={active ? 2.2 : 1.6}
-                color={active ? '#7A3D26' : '#8F8F8F'}
-              />
-              <span
-                className="text-[10px] mt-0.5"
+          {navItems.map(({ icon: Icon, label, path }) => {
+            const isActive = location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
+            return (
+              <button
+                key={path}
+                onClick={() => navigate(path)}
+                className="flex flex-col items-center justify-center gap-0.5 py-2 px-3 rounded-full transition-all duration-200 min-w-[64px]"
                 style={{
-                  color: active ? '#7A3D26' : 'rgba(0,0,0,0.5)',
-                  fontWeight: active ? 700 : 600,
+                  backgroundColor: isActive ? ACTIVE_BG : 'transparent',
                 }}
               >
-                {label}
-              </span>
-            </button>
-          ))}
-        </nav>
+                <Icon
+                  className="h-[22px] w-[22px]"
+                  style={{ color: isActive ? TEXT_ACTIVE : TEXT_INACTIVE }}
+                />
+                <span
+                  className="text-[11px] font-semibold leading-none mt-0.5"
+                  style={{ color: isActive ? TEXT_ACTIVE : TEXT_INACTIVE }}
+                >
+                  {label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Chat / Guftagu button */}
         <button
-          onClick={onChat}
-          aria-label="Chat"
-          className="w-14 h-14 rounded-full flex items-center justify-center shrink-0"
+          onClick={() => navigate('/forum')}
+          className="h-14 w-14 rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 active:scale-95"
           style={{
-            background: 'linear-gradient(180deg, #5A2611 0%, #C94E1D 100%)',
-            boxShadow:
-              '0 8px 24px rgba(90,38,17,0.35), inset 0 1px 0 rgba(255,255,255,0.4)',
+            background: 'radial-gradient(circle at 30% 25%, #C9663A 0%, #8B3A18 70%, #5C2410 100%)',
+            boxShadow: '0 8px 20px rgba(139, 58, 24, 0.45), inset 0 1px 2px rgba(255,255,255,0.25)',
           }}
+          aria-label="Guftagu"
         >
-          <MessageCircle className="h-6 w-6 text-white" strokeWidth={2} />
+          <MessagesSquare className="h-6 w-6 text-white" strokeWidth={2} />
         </button>
       </div>
-    </div>
+    </nav>
   );
 };
 
