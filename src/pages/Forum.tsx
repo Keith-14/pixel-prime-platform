@@ -887,6 +887,7 @@ export const Forum = () => {
       <div 
         ref={containerRef}
         className="min-h-screen pb-24 overflow-auto"
+        style={{ background: CREAM_BG }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
