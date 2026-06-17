@@ -329,7 +329,7 @@ const PrayerIcon = ({ isActive }: { isActive: boolean }) => (
   <img
     src={prayerIcon.url}
     alt="Prayer"
-    className="h-[22px] w-[22px] object-contain"
+    className="h-[26px] w-[26px] object-contain"
     style={{
       filter: isActive
         ? 'brightness(0) saturate(100%) invert(24%) sepia(50%) saturate(2000%) hue-rotate(350deg)'
