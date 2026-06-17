@@ -200,10 +200,12 @@ const translations: Record<Language, Record<string, string>> = {
     
     // Bottom Navigation
     'nav.home': 'ہوم',
-    'nav.store': 'اسٹور',
+    'nav.store': 'مارکیٹ',
     'nav.guftagu': 'گفتگو',
     'nav.places': 'مقامات',
     'nav.account': 'اکاؤنٹ',
+    'nav.prayer': 'نماز',
+    'nav.halalScan': 'حلال اسکین',
     
     // News page
     'news.title': 'اسلامی خبریں',
