@@ -20,6 +20,7 @@ import { Places } from "./pages/Places";
 import { Account } from "./pages/Account";
 import { PrayerTimes } from "./pages/PrayerTimes";
 import { Progress } from "./pages/Progress";
+import { MonthlyStreak } from "./pages/MonthlyStreak";
 import { FAQ } from "./pages/FAQ";
 import { Zakat } from "./pages/Zakat";
 import { Hajj } from "./pages/Hajj";
@@ -80,6 +81,7 @@ const App = () => (
                   <Route path="/seller-dashboard" element={<ProtectedRoute><SellerDashboard /></ProtectedRoute>} />
                   <Route path="/prayer-times" element={<ProtectedRoute><PrayerTimes /></ProtectedRoute>} />
                   <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
+                  <Route path="/monthly-streak" element={<ProtectedRoute><MonthlyStreak /></ProtectedRoute>} />
                   <Route path="/faq" element={<ProtectedRoute><FAQ /></ProtectedRoute>} />
                   <Route path="/zakat" element={<ProtectedRoute><Zakat /></ProtectedRoute>} />
                   <Route path="/hajj" element={<ProtectedRoute><Hajj /></ProtectedRoute>} />

@@ -205,7 +205,7 @@ export const Progress = () => {
 
         {/* See Whole Month Streak */}
         <button
-          onClick={() => setShowMonth(true)}
+          onClick={() => navigate('/monthly-streak')}
           className="w-full rounded-full pl-5 pr-1.5 py-1.5 flex items-center justify-between"
           style={{ background: CREAM_CARD }}
         >
