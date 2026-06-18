@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, Bell, MapPin, ChevronDown, Sun, Sunrise, Sunset, Moon, Cloud, CloudSun, Sparkles, Calculator, Smile, Compass, CheckCircle2, Package } from 'lucide-react';
+import { Menu, Bell, MapPin, ChevronDown, Sun, Sunrise, Sunset, Moon, Cloud, CloudSun, Sparkles, Smile, Compass, CheckCircle2, Package } from 'lucide-react';
 import { SideMenu } from '@/components/SideMenu';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import { useGlobalLocation } from '@/contexts/LocationContext';
@@ -9,6 +9,7 @@ import hadithIcon from '@/assets/hadith-icon.png.asset.json';
 import quranIcon from '@/assets/quran-icon.png.asset.json';
 import hajjIcon from '@/assets/hajj-icon.png.asset.json';
 import placesIcon from '@/assets/places-icon.png.asset.json';
+import zakatIcon from '@/assets/zakat-icon.png.asset.json';
 
 const CREAM = '#FFF1DD';
 const CREAM_CARD = '#FFF7E8';
@@ -42,7 +43,7 @@ const essentials = [
   { label: 'Quran', img: quranIcon.url, icon: null, path: '/quran' },
   { label: 'Hajj Packages', img: hajjIcon.url, icon: null, path: '/hajj' },
   { label: 'Places', img: placesIcon.url, icon: null, path: '/places' },
-  { label: 'Zakat Calc.', img: null, icon: Calculator, path: '/zakat' },
+  { label: 'Zakat Calc.', img: zakatIcon.url, icon: null, path: '/zakat' },
   { label: 'Mood Tracker', img: null, icon: Smile, path: '/mood' },
   { label: 'Qibla', img: null, icon: Compass, path: '/qibla' },
   { label: 'Prayer Mark', img: null, icon: CheckCircle2, path: '/progress' },
