@@ -1,7 +1,8 @@
 import navHomeIcon from '@/assets/nav-home-icon.png.asset.json';
 import navMarketplaceIcon from '@/assets/nav-marketplace-icon.png.asset.json';
 import navPrayerIcon from '@/assets/nav-prayer-icon.png.asset.json';
-import { ScanLine, MessageSquare } from 'lucide-react';
+import navChatIcon from '@/assets/nav-chat-icon.png.asset.json';
+import { ScanLine } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -114,7 +115,12 @@ export const BottomNavigation = () => {
           }}
           aria-label="Guftagu"
         >
-          <MessageSquare className="h-6 w-6 text-white" strokeWidth={2.2} fill="white" />
+          <img
+            src={navChatIcon.url}
+            alt="Guftagu"
+            className="shrink-0"
+            style={{ width: 26, height: 26, objectFit: 'contain' }}
+          />
         </button>
       </div>
     </nav>
