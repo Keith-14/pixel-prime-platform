@@ -123,7 +123,7 @@ export const PrayerTimes = () => {
             className="w-12 h-12 rounded-full flex items-center justify-center"
             style={{ background: '#FFF1DD', boxShadow: '0 4px 16px rgba(0,0,0,0.18)' }}
           >
-            <span style={{ color: BROWN_ACCENT, fontFamily: "'Reem Kufi', serif", fontWeight: 700, fontSize: 22 }}>
+            <span style={{ color: BROWN_ACCENT, fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, fontSize: 22 }}>
               ɞ
             </span>
           </div>
@@ -248,7 +248,7 @@ export const PrayerTimes = () => {
           </div>
           <p
             className="mt-4 text-[18px] italic leading-snug"
-            style={{ color: '#FFF5E5', fontFamily: "'Amiri', serif" }}
+            style={{ color: '#FFF5E5', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
           >
             "For indeed, with hardship [will be] ease."
           </p>

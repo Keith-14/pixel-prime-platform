@@ -129,7 +129,7 @@ export const Onboarding = () => {
       >
         <h1
           className="text-center text-[28px] leading-tight font-bold mb-4"
-          style={{ color: '#1a1a1a', fontFamily: 'Reem Kufi, sans-serif' }}
+          style={{ color: '#1a1a1a', fontFamily: 'Plus Jakarta Sans, sans-serif' }}
         >
           {slide.title}
         </h1>

@@ -111,7 +111,7 @@ export const Zakat = () => {
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <h1 className="font-serif italic text-xl font-bold" style={{ color: BROWN_DARK, fontFamily: 'Amiri, serif' }}>
+          <h1 className="font-serif italic text-xl font-bold" style={{ color: BROWN_DARK, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
             Checkout
           </h1>
           <span className="text-sm" style={{ color: BROWN_DARK, opacity: 0.75 }}>Step 1 of 2</span>
@@ -134,7 +134,7 @@ export const Zakat = () => {
             <p className="mt-5 text-white/85 text-xs tracking-[0.18em] font-semibold">CURRENT NISAB VALUE</p>
             <p
               className="mt-2 text-white text-5xl font-bold italic"
-              style={{ fontFamily: 'Amiri, serif' }}
+              style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}
             >
               {fmt(active.nisab, active.symbol)}
             </p>
@@ -164,7 +164,7 @@ export const Zakat = () => {
           {/* Title */}
           <h2
             className="text-center mt-8 mb-5 italic text-3xl"
-            style={{ color: BROWN_DEEP, fontFamily: 'Amiri, serif' }}
+            style={{ color: BROWN_DEEP, fontFamily: 'Plus Jakarta Sans, sans-serif' }}
           >
             Your Wealth
           </h2>
@@ -234,7 +234,7 @@ export const Zakat = () => {
             </span>
             <span
               className="text-xl italic font-bold"
-              style={{ color: BROWN_DEEP, fontFamily: 'Amiri, serif' }}
+              style={{ color: BROWN_DEEP, fontFamily: 'Plus Jakarta Sans, sans-serif' }}
             >
               {fmt(zakatable, active.symbol)}
             </span>

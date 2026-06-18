@@ -30,8 +30,8 @@ const BROWN_ACCENT = '#5A2A18';
 const BADGE_BROWN = '#4A2418';
 const ACCENT_ORANGE = '#B54A22';
 const MUTED = '#9A8270';
-const SERIF = "'Reem Kufi', serif";
-const ITALIC = "'Cormorant Garamond', 'Reem Kufi', serif";
+const SERIF = "'Plus Jakarta Sans', sans-serif";
+const ITALIC = "'Cormorant Garamond', 'Plus Jakarta Sans', sans-serif";
 
 const LANG_OPTIONS: { code: Language; label: string }[] = [
   { code: 'en', label: 'English' },

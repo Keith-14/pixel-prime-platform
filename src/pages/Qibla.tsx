@@ -134,7 +134,7 @@ export const Qibla = () => {
           </button>
           <h1
             className="text-xl italic"
-            style={{ color: BROWN, fontFamily: "'Reem Kufi', serif" }}
+            style={{ color: BROWN, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
           >
             Qibla Finder
           </h1>

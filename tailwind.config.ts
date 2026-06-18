@@ -19,8 +19,8 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				'arabic': ['"Reem Kufi"', 'sans-serif'],
-				'body': ['"Reem Kufi"', '"Amiri"', 'sans-serif'],
+				'arabic': ['"Plus Jakarta Sans"', 'sans-serif'],
+				'body': ['"Plus Jakarta Sans"', 'sans-serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',

@@ -277,7 +277,7 @@ export const Register = () => {
               <ArrowLeft className="h-4 w-4" /> Back
             </button>
             <div className="text-center mb-3">
-              <h2 className="text-xl font-semibold" style={{ color: '#A35334', fontFamily: 'Reem Kufi, sans-serif' }}>
+              <h2 className="text-xl font-semibold" style={{ color: '#A35334', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
                 {t('login.choose_profile')}
               </h2>
               <p className="text-sm text-[#7c6a4f]">{t('login.select_account_type')}</p>
@@ -308,7 +308,7 @@ export const Register = () => {
               <ArrowLeft className="h-4 w-4" /> Back
             </button>
             <div className="text-center mb-2">
-              <h2 className="text-lg font-semibold" style={{ color: '#A35334', fontFamily: 'Reem Kufi, sans-serif' }}>
+              <h2 className="text-lg font-semibold" style={{ color: '#A35334', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
                 {isSignIn ? t('login.welcome_back') : t('login.create_your_account')}
               </h2>
               <p className="text-sm text-[#7c6a4f]">

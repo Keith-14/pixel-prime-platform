@@ -110,11 +110,11 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Reem Kufi', 'Amiri', sans-serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
   }
-  
+
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Reem Kufi', serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     font-weight: 600;
   }
 }
@@ -173,7 +173,7 @@ All colors MUST be HSL.
   
   /* Arabic-style font utility */
   .font-arabic {
-    font-family: 'Scheherazade New', 'Amiri', serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
   }
   
   /* Premium glow effects */

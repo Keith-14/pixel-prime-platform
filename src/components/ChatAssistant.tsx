@@ -15,7 +15,7 @@ const BROWN_BTN = '#A0431D';
 const OLIVE = '#7A8B2A';
 const MUTED = '#8B6F5C';
 const BORDER = '#E8D3AE';
-const SERIF = "'Reem Kufi', serif";
+const SERIF = "'Plus Jakarta Sans', sans-serif";
 
 const SAMPLE_HISTORY: Thread[] = [
   {

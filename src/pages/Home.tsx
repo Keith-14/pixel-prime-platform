@@ -155,7 +155,7 @@ export const Home = () => {
           </button>
           <h1
             className="text-[#FFE8CA] text-[22px] tracking-wide"
-            style={{ fontFamily: 'Reem Kufi, sans-serif', fontWeight: 600 }}
+            style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontWeight: 600 }}
           >
             Barakah
           </h1>
@@ -477,7 +477,7 @@ const ArcTimeline = ({
         <div className="relative flex items-center justify-center">
           <span
             className="text-[#A35334] text-[22px] leading-none"
-            style={{ fontFamily: 'Reem Kufi, sans-serif', fontWeight: 700 }}
+            style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontWeight: 700 }}
           >
             B
           </span>

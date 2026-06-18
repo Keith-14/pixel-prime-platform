@@ -16,8 +16,8 @@ const BROWN_ACCENT = '#B0431E';
 const BROWN_RING = '#B5662C';
 const MUTED = '#8B6F5C';
 const BORDER = '#E8D3AE';
-const SERIF = "'Reem Kufi', serif";
-const ARABIC_FONT = "'Amiri', 'Reem Kufi', serif";
+const SERIF = "'Plus Jakarta Sans', sans-serif";
+const ARABIC_FONT = "'Plus Jakarta Sans', sans-serif";
 
 /* ---------------- Types ---------------- */
 interface Surah {

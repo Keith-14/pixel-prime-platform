@@ -35,7 +35,7 @@ export const OrderConfirmation = () => {
       {/* Title */}
       <h1
         className="mt-8 text-4xl italic font-serif"
-        style={{ color: BROWN_DARK, fontFamily: "'Amiri', serif" }}
+        style={{ color: BROWN_DARK, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
       >
         Order placed!
       </h1>

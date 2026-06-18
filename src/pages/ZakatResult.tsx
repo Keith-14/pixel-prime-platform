@@ -38,7 +38,7 @@ const StatCard = ({ label, value, icon, color, bg }: { label: string; value: str
     </div>
     <div>
       <p className="text-xs font-semibold tracking-wider opacity-70" style={{ color: BROWN_DARK }}>{label}</p>
-      <p className="text-lg font-bold italic" style={{ color: BROWN_DARK, fontFamily: 'Amiri, serif' }}>{value}</p>
+      <p className="text-lg font-bold italic" style={{ color: BROWN_DARK, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{value}</p>
     </div>
   </div>
 );
@@ -98,7 +98,7 @@ export const ZakatResult = () => {
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <h1 className="font-serif italic text-xl font-bold" style={{ color: BROWN_DARK, fontFamily: 'Amiri, serif' }}>
+          <h1 className="font-serif italic text-xl font-bold" style={{ color: BROWN_DARK, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
             Zakat Result
           </h1>
           <div className="w-9" />
@@ -124,7 +124,7 @@ export const ZakatResult = () => {
                 {isNisabMet ? 'NISAB THRESHOLD MET' : 'BELOW NISAB THRESHOLD'}
               </span>
             </div>
-            <p className="mt-2 text-white text-5xl font-bold italic" style={{ fontFamily: 'Amiri, serif' }}>
+            <p className="mt-2 text-white text-5xl font-bold italic" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
               {fmt(zakatPayable, symbol)}
             </p>
             <p className="mt-2 text-white/80 text-sm">
@@ -174,7 +174,7 @@ export const ZakatResult = () => {
             ))}
             <div className="flex items-center justify-between pt-4 mt-1">
               <span className="text-sm font-bold" style={{ color: BROWN_DARK }}>Total Wealth</span>
-              <span className="text-lg font-bold italic" style={{ color: BROWN_DEEP, fontFamily: 'Amiri, serif' }}>
+              <span className="text-lg font-bold italic" style={{ color: BROWN_DEEP, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
                 {fmt(total, symbol)}
               </span>
             </div>
@@ -213,7 +213,7 @@ export const ZakatResult = () => {
               </div>
               <div className="pt-2 border-t flex justify-between" style={{ borderColor: `${BROWN_DARK}20` }}>
                 <span className="font-bold">Zakat Payable</span>
-                <span className="font-bold italic text-lg" style={{ color: BROWN_DEEP, fontFamily: 'Amiri, serif' }}>
+                <span className="font-bold italic text-lg" style={{ color: BROWN_DEEP, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
                   {fmt(zakatPayable, symbol)}
                 </span>
               </div>

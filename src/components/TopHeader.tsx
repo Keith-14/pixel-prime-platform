@@ -30,7 +30,7 @@ export const TopHeader = ({ onMenuClick, title, rightContent, onSearchClick, sho
       </Button>
       
       {title && (
-        <h1 className={cn("text-xl font-semibold tracking-tight", titleClassName || "text-foreground")} style={{ fontFamily: "'Reem Kufi', serif", ...titleStyle }}>
+        <h1 className={cn("text-xl font-semibold tracking-tight", titleClassName || "text-foreground")} style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", ...titleStyle }}>
           {title}
         </h1>
       )}

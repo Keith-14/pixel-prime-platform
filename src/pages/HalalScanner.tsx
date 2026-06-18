@@ -14,7 +14,7 @@ const BROWN = '#2C1309';
 const BROWN_BTN = '#6B3520';
 const MUTED = '#8A6A55';
 
-const SERIF = "'Reem Kufi', serif";
+const SERIF = "'Plus Jakarta Sans', sans-serif";
 
 type Ingredient = { name: string; ok: boolean };
 
