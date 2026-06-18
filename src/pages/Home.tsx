@@ -1,19 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, Bell, MapPin, ChevronDown, Newspaper, ScanLine, MessagesSquare } from 'lucide-react';
+import { Menu, Bell, MapPin, ChevronDown, Newspaper } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGlobalLocation } from '@/contexts/LocationContext';
 import { supabase } from '@/integrations/supabase/client';
 import { ChatAssistant } from '@/components/ChatAssistant';
 import { SideMenu } from '@/components/SideMenu';
+import { BottomNavigation } from '@/components/BottomNavigation';
 import qaQuranAsset from '@/assets/qa-quran-new.png.asset.json';
 import qaAiAsset from '@/assets/qa-ai-new.png.asset.json';
 import qaPlacesAsset from '@/assets/qa-places-new.png.asset.json';
 import qaHajjAsset from '@/assets/qa-hajj-new.png.asset.json';
 import barakahArcLogo from '@/assets/barakah-arc-logo.png.asset.json';
-import navHomeIcon from '@/assets/nav-home-icon.png.asset.json';
-import navMarketplaceIcon from '@/assets/nav-marketplace-icon.png.asset.json';
-import navPrayerIcon from '@/assets/nav-prayer-icon.png.asset.json';
 
 interface NewsItem {
   id: string;
@@ -319,7 +317,7 @@ export const Home = () => {
       />
 
       {/* Bottom nav */}
-      <BottomNav />
+      <BottomNavigation />
 
       {/* Chat overlay + side menu */}
       <ChatAssistant open={isChatOpen} onClose={() => setIsChatOpen(false)} />
