@@ -1,6 +1,8 @@
+import navPrayerIcon from '@/assets/nav-prayer-icon.png.asset.json';
 import { Home as HomeIcon, ShoppingBasket, ScanLine, MessageSquare } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
+
 
 const PILL_BG = '#FFFFFF';
 const ACTIVE_BG = '#F5E3D3';
