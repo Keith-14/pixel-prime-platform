@@ -4,11 +4,11 @@ import { Menu, Bell, MapPin, ChevronDown, Sun, Sunrise, Sunset, Moon, Cloud, Clo
 import { SideMenu } from '@/components/SideMenu';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import { useGlobalLocation } from '@/contexts/LocationContext';
-import qaPlaces from '@/assets/qa-places.png';
 import prayerArcLogo from '@/assets/prayer-arc-logo.png.asset.json';
 import hadithIcon from '@/assets/hadith-icon.png.asset.json';
 import quranIcon from '@/assets/quran-icon.png.asset.json';
 import hajjIcon from '@/assets/hajj-icon.png.asset.json';
+import placesIcon from '@/assets/places-icon.png.asset.json';
 
 const CREAM = '#FFF1DD';
 const CREAM_CARD = '#FFF7E8';
@@ -41,7 +41,7 @@ const essentials = [
   { label: 'Hadith', img: hadithIcon.url, icon: null, path: '/quran' },
   { label: 'Quran', img: quranIcon.url, icon: null, path: '/quran' },
   { label: 'Hajj Packages', img: hajjIcon.url, icon: null, path: '/hajj' },
-  { label: 'Places', img: qaPlaces, icon: null, path: '/places' },
+  { label: 'Places', img: placesIcon.url, icon: null, path: '/places' },
   { label: 'Zakat Calc.', img: null, icon: Calculator, path: '/zakat' },
   { label: 'Mood Tracker', img: null, icon: Smile, path: '/mood' },
   { label: 'Qibla', img: null, icon: Compass, path: '/qibla' },
