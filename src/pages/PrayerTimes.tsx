@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, Bell, MapPin, ChevronDown, Sun, Sunrise, Sunset, Moon, Cloud, CloudSun, Sparkles, CheckCircle2, Package } from 'lucide-react';
+import { Menu, Bell, MapPin, ChevronDown, Sun, Sunrise, Sunset, Moon, Cloud, CloudSun, Sparkles, Package } from 'lucide-react';
 import { SideMenu } from '@/components/SideMenu';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import { useGlobalLocation } from '@/contexts/LocationContext';
@@ -12,6 +12,7 @@ import placesIcon from '@/assets/places-icon.png.asset.json';
 import zakatIcon from '@/assets/zakat-icon.png.asset.json';
 import moodTrackerIcon from '@/assets/mood-tracker-icon.png.asset.json';
 import qiblaIcon from '@/assets/qibla-icon.png.asset.json';
+import prayerMarkIcon from '@/assets/prayer-mark-icon.png.asset.json';
 
 const CREAM = '#FFF1DD';
 const CREAM_CARD = '#FFF7E8';
@@ -48,7 +49,7 @@ const essentials = [
   { label: 'Zakat Calc.', img: zakatIcon.url, icon: null, path: '/zakat' },
   { label: 'Mood Tracker', img: moodTrackerIcon.url, icon: null, path: '/mood' },
   { label: 'Qibla', img: qiblaIcon.url, icon: null, path: '/qibla' },
-  { label: 'Prayer Mark', img: null, icon: CheckCircle2, path: '/progress' },
+  { label: 'Prayer Mark', img: prayerMarkIcon.url, icon: null, path: '/progress' },
 ];
 
 
