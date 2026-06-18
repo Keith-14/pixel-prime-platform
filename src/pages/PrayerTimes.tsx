@@ -39,7 +39,7 @@ const fmt12 = (h: number, m: number) => {
 
 const essentials = [
   { label: 'Hadith', img: hadithIcon.url, icon: null, path: '/quran' },
-  { label: 'Quran', img: qaQuran, icon: null, path: '/quran' },
+  { label: 'Quran', img: quranIcon.url, icon: null, path: '/quran' },
   { label: 'Hajj Packages', img: qaHajj, icon: null, path: '/hajj' },
   { label: 'Places', img: qaPlaces, icon: null, path: '/places' },
   { label: 'Zakat Calc.', img: null, icon: Calculator, path: '/zakat' },
