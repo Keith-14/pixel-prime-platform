@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, Bell, MapPin, ChevronDown, Newspaper, Home as HomeIcon, ShoppingBasket, ScanLine, MessagesSquare } from 'lucide-react';
+import { Menu, Bell, MapPin, ChevronDown, Newspaper, ShoppingBasket, ScanLine, MessagesSquare } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGlobalLocation } from '@/contexts/LocationContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +12,7 @@ import qaAiAsset from '@/assets/qa-ai-new.png.asset.json';
 import qaPlacesAsset from '@/assets/qa-places-new.png.asset.json';
 import qaHajjAsset from '@/assets/qa-hajj-new.png.asset.json';
 import barakahArcLogo from '@/assets/barakah-arc-logo.png.asset.json';
+import navHomeIcon from '@/assets/nav-home-icon.png.asset.json';
 
 interface NewsItem {
   id: string;
@@ -342,6 +343,15 @@ const PrayerIcon = ({ isActive }: { isActive: boolean }) => (
 
 const PILL_BG = '#FFFFFF';
 const ACTIVE_BG = '#F5E3D3';
+const HomeIconImg = ({ isActive }: { isActive: boolean }) => (
+  <img
+    src={navHomeIcon.url}
+    alt="Home"
+    className="h-[32px] w-auto object-contain"
+    style={{ opacity: isActive ? 1 : 0.6 }}
+  />
+);
+
 const TEXT_ACTIVE = '#7A3B1E';
 const TEXT_INACTIVE = '#8A8A8A';
 
@@ -350,7 +360,7 @@ const BottomNav = () => {
   const location = useLocation();
 
   const navItems = [
-    { icon: HomeIcon, label: 'Home', path: '/' },
+    { label: 'Home', path: '/', isHomeImage: true },
     { icon: ShoppingBasket, label: 'Marketplace', path: '/shop' },
     { label: 'Prayer', path: '/prayer-times', isImage: true },
     { icon: ScanLine, label: 'Halal Scan', path: '/halal-scanner' },
@@ -367,7 +377,7 @@ const BottomNav = () => {
             boxShadow: '0 8px 24px rgba(60, 30, 15, 0.12), 0 2px 6px rgba(60, 30, 15, 0.06)',
           }}
         >
-          {navItems.map(({ icon: Icon, label, path, isImage }) => {
+          {navItems.map(({ icon: Icon, label, path, isImage, isHomeImage }) => {
             const isActive = location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
             return (
               <button
@@ -378,7 +388,9 @@ const BottomNav = () => {
                   backgroundColor: isActive ? ACTIVE_BG : 'transparent',
                 }}
               >
-                {isImage ? (
+                {isHomeImage ? (
+                  <HomeIconImg isActive={isActive} />
+                ) : isImage ? (
                   <PrayerIcon isActive={isActive} />
                 ) : Icon && (
                   <Icon
@@ -386,12 +398,14 @@ const BottomNav = () => {
                     style={{ color: isActive ? TEXT_ACTIVE : TEXT_INACTIVE }}
                   />
                 )}
-                <span
-                  className="text-[11px] font-semibold leading-none mt-0.5"
-                  style={{ color: isActive ? TEXT_ACTIVE : TEXT_INACTIVE }}
-                >
-                  {label}
-                </span>
+                {!isHomeImage && (
+                  <span
+                    className="text-[11px] font-semibold leading-none mt-0.5"
+                    style={{ color: isActive ? TEXT_ACTIVE : TEXT_INACTIVE }}
+                  >
+                    {label}
+                  </span>
+                )}
               </button>
             );
           })}

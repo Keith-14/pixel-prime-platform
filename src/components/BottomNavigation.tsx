@@ -1,8 +1,9 @@
-import { Home, ShoppingBasket, ScanLine, MessagesSquare } from 'lucide-react';
+import { ShoppingBasket, ScanLine, MessagesSquare } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import prayerIcon from '@/assets/prayer-icon.png.asset.json';
+import navHomeIcon from '@/assets/nav-home-icon.png.asset.json';
 
 const PrayerIcon = ({ isActive }: { isActive: boolean }) => (
   <img
@@ -18,6 +19,15 @@ const PrayerIcon = ({ isActive }: { isActive: boolean }) => (
   />
 );
 
+const HomeIconImg = ({ isActive }: { isActive: boolean }) => (
+  <img
+    src={navHomeIcon.url}
+    alt="Home"
+    className="h-[32px] w-auto object-contain"
+    style={{ opacity: isActive ? 1 : 0.6 }}
+  />
+);
+
 const PILL_BG = '#FFFFFF';
 const ACTIVE_BG = '#F5E3D3';
 const TEXT_ACTIVE = '#7A3B1E';
@@ -29,7 +39,7 @@ export const BottomNavigation = () => {
   const { t } = useLanguage();
 
   const navItems = [
-    { icon: Home, labelKey: 'nav.home', path: '/' },
+    { labelKey: 'nav.home', path: '/', isHomeImage: true },
     { icon: ShoppingBasket, labelKey: 'nav.store', path: '/shop' },
     { labelKey: 'nav.prayer', path: '/prayer-times', isImage: true },
     { icon: ScanLine, labelKey: 'nav.halalScan', path: '/halal-scanner' },
@@ -46,7 +56,7 @@ export const BottomNavigation = () => {
             boxShadow: '0 8px 24px rgba(60, 30, 15, 0.12), 0 2px 6px rgba(60, 30, 15, 0.06)',
           }}
         >
-          {navItems.map(({ icon: Icon, labelKey, path, isImage }) => {
+          {navItems.map(({ icon: Icon, labelKey, path, isImage, isHomeImage }) => {
             const isActive = location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
             return (
               <button
@@ -59,7 +69,9 @@ export const BottomNavigation = () => {
                   backgroundColor: isActive ? ACTIVE_BG : 'transparent',
                 }}
               >
-                {isImage ? (
+                {isHomeImage ? (
+                  <HomeIconImg isActive={isActive} />
+                ) : isImage ? (
                   <PrayerIcon isActive={isActive} />
                 ) : Icon && (
                   <Icon
@@ -67,12 +79,14 @@ export const BottomNavigation = () => {
                     style={{ color: isActive ? TEXT_ACTIVE : TEXT_INACTIVE }}
                   />
                 )}
-                <span
-                  className="text-[11px] font-semibold leading-none mt-0.5"
-                  style={{ color: isActive ? TEXT_ACTIVE : TEXT_INACTIVE }}
-                >
-                  {t(labelKey)}
-                </span>
+                {!isHomeImage && (
+                  <span
+                    className="text-[11px] font-semibold leading-none mt-0.5"
+                    style={{ color: isActive ? TEXT_ACTIVE : TEXT_INACTIVE }}
+                  >
+                    {t(labelKey)}
+                  </span>
+                )}
               </button>
             );
           })}
