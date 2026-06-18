@@ -82,7 +82,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.places': 'Places',
     'nav.account': 'Account',
     'nav.prayer': 'Prayer',
-    'nav.halalScan': 'Halal Scan',
+    'nav.scanner': 'Scanner',
     
     // News page
     'news.title': 'Islamic News',
@@ -205,7 +205,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.places': 'مقامات',
     'nav.account': 'اکاؤنٹ',
     'nav.prayer': 'نماز',
-    'nav.halalScan': 'حلال اسکین',
+    'nav.scanner': 'اسکینر',
     
     // News page
     'news.title': 'اسلامی خبریں',
@@ -328,7 +328,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.places': 'الأماكن',
     'nav.account': 'الحساب',
     'nav.prayer': 'الصلاة',
-    'nav.halalScan': 'الماسح الحلال',
+    'nav.scanner': 'الماسح الضوئي',
     
     // News page
     'news.title': 'الأخبار الإسلامية',
@@ -451,7 +451,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.places': 'Yerler',
     'nav.account': 'Hesap',
     'nav.prayer': 'Namaz',
-    'nav.halalScan': 'Helal Tarama',
+    'nav.scanner': 'Tarayıcı',
     
     // News page
     'news.title': 'İslami Haberler',
@@ -574,7 +574,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.places': 'Tempat',
     'nav.account': 'Akun',
     'nav.prayer': 'Shalat',
-    'nav.halalScan': 'Pemindai Halal',
+    'nav.scanner': 'Pemindai',
     
     // News page
     'news.title': 'Berita Islam',
@@ -697,7 +697,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.places': 'Tempat',
     'nav.account': 'Akaun',
     'nav.prayer': 'Solat',
-    'nav.halalScan': 'Imbasan Halal',
+    'nav.scanner': 'Pengimbas',
     
     // News page
     'news.title': 'Berita Islam',
@@ -820,7 +820,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.places': 'இடங்கள்',
     'nav.account': 'கணக்கு',
     'nav.prayer': 'தொழுகை',
-    'nav.halalScan': 'ஹலால் ஸ்கேன்',
+    'nav.scanner': 'ஸ்கேனர்',
     
     // News page
     'news.title': 'இஸ்லாமிய செய்திகள்',
@@ -943,7 +943,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.places': 'স্থান',
     'nav.account': 'অ্যাকাউন্ট',
     'nav.prayer': 'নামাজ',
-    'nav.halalScan': 'হালাল স্ক্যান',
+    'nav.scanner': 'স্ক্যানার',
     
     
     // News page
