@@ -23,6 +23,7 @@ import { Progress } from "./pages/Progress";
 import { MonthlyStreak } from "./pages/MonthlyStreak";
 import { FAQ } from "./pages/FAQ";
 import { Zakat } from "./pages/Zakat";
+import { ZakatResult } from "./pages/ZakatResult";
 import { Hajj } from "./pages/Hajj";
 import { BusinessAccount } from "./pages/BusinessAccount";
 import { Cart } from "./pages/Cart";
