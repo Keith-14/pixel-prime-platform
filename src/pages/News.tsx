@@ -1,12 +1,13 @@
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Search, X, Loader2, RefreshCw, Sparkles, Home as HomeIcon, ShoppingBag, Moon, ScanLine, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Search, X, Loader2, RefreshCw, Sparkles, ShoppingBag, Moon, ScanLine, MessageCircle } from 'lucide-react';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import navHomeIcon from '@/assets/nav-home-icon.png.asset.json';
 
 type NewsCategory = 'all' | 'world' | 'education' | 'community' | 'charity' | 'business' | 'politics';
 

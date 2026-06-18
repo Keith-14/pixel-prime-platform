@@ -377,7 +377,7 @@ const BottomNav = () => {
             boxShadow: '0 8px 24px rgba(60, 30, 15, 0.12), 0 2px 6px rgba(60, 30, 15, 0.06)',
           }}
         >
-          {navItems.map(({ icon: Icon, label, path, isImage }) => {
+          {navItems.map(({ icon: Icon, label, path, isImage, isHomeImage }) => {
             const isActive = location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
             return (
               <button
@@ -388,7 +388,9 @@ const BottomNav = () => {
                   backgroundColor: isActive ? ACTIVE_BG : 'transparent',
                 }}
               >
-                {isImage ? (
+                {isHomeImage ? (
+                  <HomeIconImg isActive={isActive} />
+                ) : isImage ? (
                   <PrayerIcon isActive={isActive} />
                 ) : Icon && (
                   <Icon
@@ -396,12 +398,14 @@ const BottomNav = () => {
                     style={{ color: isActive ? TEXT_ACTIVE : TEXT_INACTIVE }}
                   />
                 )}
-                <span
-                  className="text-[11px] font-semibold leading-none mt-0.5"
-                  style={{ color: isActive ? TEXT_ACTIVE : TEXT_INACTIVE }}
-                >
-                  {label}
-                </span>
+                {!isHomeImage && (
+                  <span
+                    className="text-[11px] font-semibold leading-none mt-0.5"
+                    style={{ color: isActive ? TEXT_ACTIVE : TEXT_INACTIVE }}
+                  >
+                    {label}
+                  </span>
+                )}
               </button>
             );
           })}
