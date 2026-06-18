@@ -11,7 +11,7 @@ import qaQuranAsset from '@/assets/qa-quran-new.png.asset.json';
 import qaAiAsset from '@/assets/qa-ai-new.png.asset.json';
 import qaPlacesAsset from '@/assets/qa-places-new.png.asset.json';
 import qaHajjAsset from '@/assets/qa-hajj-new.png.asset.json';
-import barakahLogoIcon from '@/assets/barakah-logo-icon.png.asset.json';
+import barakahArcLogo from '@/assets/barakah-arc-logo.png.asset.json';
 
 interface NewsItem {
   id: string;
@@ -454,33 +454,12 @@ const ArcTimeline = ({
 
   return (
     <div className="relative h-[230px] mt-4">
-      <svg
-        className="absolute left-1/2 -translate-x-1/2 top-0"
-        width="280"
-        height="230"
-        viewBox="0 0 280 230"
-        fill="none"
-        aria-hidden="true"
-      >
-        <path
-          d="M10 200 A130 130 0 0 1 270 200"
-          stroke="rgba(255,255,255,0.4)"
-          strokeWidth="1"
-          fill="none"
-        />
-      </svg>
-
-      {/* B logo at top of arc */}
-      <div
-        className="absolute left-1/2 -translate-x-1/2 w-11 h-11 rounded-full bg-white flex items-center justify-center shadow-md z-10 overflow-hidden"
-        style={{ top: -2 }}
-      >
-        <img
-          src={barakahLogoIcon.url}
-          alt="Barakah"
-          className="w-7 h-7 object-contain"
-        />
-      </div>
+      {/* Arc + Logo image */}
+      <img
+        src={barakahArcLogo.url}
+        alt="Barakah"
+        className="absolute left-1/2 -translate-x-1/2 top-0 w-[280px] h-auto"
+      />
 
       {/* Date + prayer (centered inside the semicircle) */}
       <div className="absolute inset-x-0 flex flex-col items-center" style={{ top: 95 }}>
