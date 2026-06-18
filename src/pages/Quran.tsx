@@ -17,7 +17,7 @@ const BROWN_RING = '#B5662C';
 const MUTED = '#8B6F5C';
 const BORDER = '#E8D3AE';
 const SERIF = "'Plus Jakarta Sans', sans-serif";
-const ARABIC_FONT = "'Amiri', 'Plus Jakarta Sans', sans-serif";
+const ARABIC_FONT = "'Plus Jakarta Sans', sans-serif";
 
 /* ---------------- Types ---------------- */
 interface Surah {
