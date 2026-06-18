@@ -23,6 +23,7 @@ import { Progress } from "./pages/Progress";
 import { MonthlyStreak } from "./pages/MonthlyStreak";
 import { FAQ } from "./pages/FAQ";
 import { Zakat } from "./pages/Zakat";
+import { ZakatResult } from "./pages/ZakatResult";
 import { Hajj } from "./pages/Hajj";
 import { BusinessAccount } from "./pages/BusinessAccount";
 import { Cart } from "./pages/Cart";
@@ -84,6 +85,7 @@ const App = () => (
                   <Route path="/monthly-streak" element={<ProtectedRoute><MonthlyStreak /></ProtectedRoute>} />
                   <Route path="/faq" element={<ProtectedRoute><FAQ /></ProtectedRoute>} />
                   <Route path="/zakat" element={<ProtectedRoute><Zakat /></ProtectedRoute>} />
+                  <Route path="/zakat-result" element={<ProtectedRoute><ZakatResult /></ProtectedRoute>} />
                   <Route path="/hajj" element={<ProtectedRoute><Hajj /></ProtectedRoute>} />
                   <Route path="/business-account" element={<ProtectedRoute><BusinessAccount /></ProtectedRoute>} />
                   <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
