@@ -467,57 +467,44 @@ const ArcTimeline = ({
           strokeWidth="1"
           fill="none"
         />
-        {dots.map((d, i) => {
-          const isActive = i === activeIdx;
-          return (
-            <g key={d.name}>
-              <circle
-                cx={d.x}
-                cy={d.y}
-                r={isActive ? 6 : 3}
-                fill={isActive ? '#FFE8CA' : 'rgba(255,255,255,0.55)'}
-                stroke={isActive ? '#FFFFFF' : 'none'}
-                strokeWidth={isActive ? 2 : 0}
-              />
-              <text
-                x={d.x}
-                y={i === 0 || i === dots.length - 1 ? d.y + 18 : d.y - 10}
-                textAnchor="middle"
-                fill={isActive ? '#FFFFFF' : 'rgba(255,232,202,0.85)'}
-                fontSize="10"
-                fontWeight={isActive ? 700 : 500}
-                fontFamily="Plus Jakarta Sans, sans-serif"
-              >
-                {d.name}
-              </text>
-            </g>
-          );
-        })}
       </svg>
 
       {/* B logo at top of arc */}
       <div
-        className="absolute left-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-md z-10"
+        className="absolute left-1/2 -translate-x-1/2 w-11 h-11 rounded-full bg-white flex items-center justify-center shadow-md z-10"
         style={{ top: -2 }}
       >
-        <span
-          className="text-[#A35334] text-[18px]"
-          style={{ fontFamily: 'Reem Kufi, sans-serif', fontWeight: 700 }}
-        >
-          B
-        </span>
+        <div className="relative flex items-center justify-center">
+          <span
+            className="text-[#A35334] text-[22px] leading-none"
+            style={{ fontFamily: 'Reem Kufi, sans-serif', fontWeight: 700 }}
+          >
+            B
+          </span>
+          <span
+            className="absolute"
+            style={{
+              left: -5,
+              top: '50%',
+              width: 5,
+              height: 5,
+              background: '#8A9A3B',
+              transform: 'translateY(-50%) rotate(45deg)',
+            }}
+          />
+        </div>
       </div>
 
       {/* Date + prayer (centered inside the semicircle) */}
-      <div className="absolute inset-x-0 flex flex-col items-center" style={{ top: 105 }}>
+      <div className="absolute inset-x-0 flex flex-col items-center" style={{ top: 95 }}>
         <p
-          className="text-[14px] tracking-tight"
+          className="text-[15px] tracking-tight"
           style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 300 }}
         >
           {hijri}
         </p>
         <p
-          className="text-white text-[24px] mt-0.5 tracking-tight leading-none"
+          className="text-white text-[30px] mt-2 tracking-tight leading-none"
           style={{ fontWeight: 300 }}
         >
           {currentPrayer} {prayerTime}
