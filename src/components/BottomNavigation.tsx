@@ -1,24 +1,10 @@
-import { ShoppingBasket, ScanLine, MessagesSquare } from 'lucide-react';
+import { ScanLine, MessagesSquare } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
-import prayerIcon from '@/assets/prayer-icon.png.asset.json';
 import navHomeIcon from '@/assets/nav-home-icon.png.asset.json';
 import navMarketplaceIcon from '@/assets/nav-marketplace-icon.png.asset.json';
-
-const PrayerIcon = ({ isActive }: { isActive: boolean }) => (
-  <img
-    src={prayerIcon.url}
-    alt="Prayer"
-    className="h-[22px] w-[22px] object-contain"
-    style={{
-      filter: isActive
-        ? 'brightness(0) saturate(100%) invert(24%) sepia(50%) saturate(2000%) hue-rotate(350deg)'
-        : 'none',
-      opacity: isActive ? 1 : 0.6,
-    }}
-  />
-);
+import navPrayerIcon from '@/assets/nav-prayer-icon.png.asset.json';
 
 const HomeIconImg = ({ isActive }: { isActive: boolean }) => (
   <img
@@ -38,6 +24,15 @@ const MarketplaceIconImg = ({ isActive }: { isActive: boolean }) => (
   />
 );
 
+const PrayerIconImg = ({ isActive }: { isActive: boolean }) => (
+  <img
+    src={navPrayerIcon.url}
+    alt="Prayer"
+    className="h-[32px] w-auto object-contain"
+    style={{ opacity: isActive ? 1 : 0.6 }}
+  />
+);
+
 const PILL_BG = '#FFFFFF';
 const ACTIVE_BG = '#F5E3D3';
 const TEXT_ACTIVE = '#7A3B1E';
@@ -51,7 +46,7 @@ export const BottomNavigation = () => {
   const navItems = [
     { labelKey: 'nav.home', path: '/', isHomeImage: true },
     { labelKey: 'nav.store', path: '/shop', isMarketplaceImage: true },
-    { labelKey: 'nav.prayer', path: '/prayer-times', isImage: true },
+    { labelKey: 'nav.prayer', path: '/prayer-times', isPrayerImage: true },
     { icon: ScanLine, labelKey: 'nav.halalScan', path: '/halal-scanner' },
   ];
 
@@ -66,7 +61,7 @@ export const BottomNavigation = () => {
             boxShadow: '0 8px 24px rgba(60, 30, 15, 0.12), 0 2px 6px rgba(60, 30, 15, 0.06)',
           }}
         >
-          {navItems.map(({ icon: Icon, labelKey, path, isImage, isHomeImage, isMarketplaceImage }) => {
+          {navItems.map(({ icon: Icon, labelKey, path, isHomeImage, isMarketplaceImage, isPrayerImage }) => {
             const isActive = location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
             return (
               <button
@@ -83,15 +78,15 @@ export const BottomNavigation = () => {
                   <HomeIconImg isActive={isActive} />
                 ) : isMarketplaceImage ? (
                   <MarketplaceIconImg isActive={isActive} />
-                ) : isImage ? (
-                  <PrayerIcon isActive={isActive} />
+                ) : isPrayerImage ? (
+                  <PrayerIconImg isActive={isActive} />
                 ) : Icon && (
                   <Icon
                     className="h-[22px] w-[22px]"
                     style={{ color: isActive ? TEXT_ACTIVE : TEXT_INACTIVE }}
                   />
                 )}
-                {!isHomeImage && !isMarketplaceImage && (
+                {!isHomeImage && !isMarketplaceImage && !isPrayerImage && (
                   <span
                     className="text-[11px] font-semibold leading-none mt-0.5"
                     style={{ color: isActive ? TEXT_ACTIVE : TEXT_INACTIVE }}
