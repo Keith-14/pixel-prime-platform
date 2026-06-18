@@ -46,61 +46,6 @@ const essentials = [
   { label: 'Prayer Mark', img: null, icon: CheckCircle2, path: '/progress' },
 ];
 
-const prayerGuidelines = [
-  {
-    name: 'Fajr',
-    icon: Sunrise,
-    timeWindow: 'From dawn until just before sunrise',
-    rakaat: [
-      { type: 'Sunnah', count: 2, note: 'Muakkadah (Emphasized)' },
-      { type: 'Fard', count: 2, note: 'Obligatory' },
-    ],
-    notes: 'The Fajr prayer marks the beginning of the day. It is recommended to pray it as early as possible after the adhan.',
-  },
-  {
-    name: 'Dhuhr',
-    icon: Sun,
-    timeWindow: 'From sun passing its zenith until Asr time begins',
-    rakaat: [
-      { type: 'Sunnah', count: 4, note: 'Muakkadah (Before Fard)' },
-      { type: 'Fard', count: 4, note: 'Obligatory' },
-      { type: 'Sunnah', count: 2, note: 'Muakkadah (After Fard)' },
-    ],
-    notes: 'The midday prayer. On Fridays, Dhuhr is replaced by Jummah prayer for men, which consists of 2 Fard rakaat preceded by a sermon.',
-  },
-  {
-    name: 'Maghrib',
-    icon: Sunset,
-    timeWindow: 'From sunset until twilight disappears',
-    rakaat: [
-      { type: 'Fard', count: 3, note: 'Obligatory' },
-      { type: 'Sunnah', count: 2, note: 'Muakkadah (After Fard)' },
-    ],
-    notes: 'The sunset prayer. It should be prayed promptly after sunset and should not be delayed.',
-  },
-  {
-    name: 'Asr',
-    icon: SunDim,
-    timeWindow: 'From when shadow equals object height until sunset',
-    rakaat: [
-      { type: 'Sunnah', count: 4, note: 'Ghair Muakkadah (Non-emphasized)' },
-      { type: 'Fard', count: 4, note: 'Obligatory' },
-    ],
-    notes: 'The afternoon prayer. It is highly recommended to pray Asr before the sun starts to turn yellow.',
-  },
-  {
-    name: "Isha'a",
-    icon: Moon,
-    timeWindow: 'From twilight disappearing until midnight (or before Fajr)',
-    rakaat: [
-      { type: 'Sunnah', count: 4, note: 'Ghair Muakkadah (Before Fard)' },
-      { type: 'Fard', count: 4, note: 'Obligatory' },
-      { type: 'Sunnah', count: 2, note: 'Muakkadah (After Fard)' },
-      { type: 'Witr', count: 3, note: 'Wajib/Highly Emphasized' },
-    ],
-    notes: "The night prayer. Witr is prayed after Isha'a and can be delayed until before Fajr. It is the last prayer of the night.",
-  },
-];
 
 export const PrayerTimes = () => {
   const navigate = useNavigate();
