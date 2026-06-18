@@ -1,105 +1,84 @@
-import { ScanLine, MessagesSquare } from 'lucide-react';
+import { Home as HomeIcon, ShoppingBasket, ScanLine, MessageSquare } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
-import navHomeIcon from '@/assets/nav-home-icon.png.asset.json';
-import navMarketplaceIcon from '@/assets/nav-marketplace-icon.png.asset.json';
-import navPrayerIcon from '@/assets/nav-prayer-icon.png.asset.json';
-
-const HomeIconImg = ({ isActive }: { isActive: boolean }) => (
-  <img
-    src={navHomeIcon.url}
-    alt="Home"
-    className="h-[32px] w-auto object-contain"
-    style={{ opacity: isActive ? 1 : 0.6 }}
-  />
-);
-
-const MarketplaceIconImg = ({ isActive }: { isActive: boolean }) => (
-  <img
-    src={navMarketplaceIcon.url}
-    alt="Marketplace"
-    className="h-[32px] w-auto object-contain"
-    style={{ opacity: isActive ? 1 : 0.6 }}
-  />
-);
-
-const PrayerIconImg = ({ isActive }: { isActive: boolean }) => (
-  <img
-    src={navPrayerIcon.url}
-    alt="Prayer"
-    className="h-[32px] w-auto object-contain"
-    style={{ opacity: isActive ? 1 : 0.6 }}
-  />
-);
 
 const PILL_BG = '#FFFFFF';
 const ACTIVE_BG = '#F5E3D3';
 const TEXT_ACTIVE = '#7A3B1E';
-const TEXT_INACTIVE = '#8A8A8A';
+const TEXT_INACTIVE = '#9A9A9A';
+
+// Inline mosque icon matching screenshot (dome + crescent)
+const MosqueIcon = ({ color, size = 26 }: { color: string; size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    {/* crescent */}
+    <path
+      d="M16 3.2c.9.6 1.5 1.6 1.5 2.8 0 1.8-1.5 3.3-3.3 3.3-.4 0-.7 0-1-.1.6 1 1.7 1.7 3 1.7 1.9 0 3.5-1.6 3.5-3.5 0-1.9-1.6-3.5-3.5-3.5-.1 0-.2 0-.2.3z"
+      fill={color}
+    />
+    {/* dome */}
+    <path
+      d="M8 18c0-4.4 3.6-8 8-8s8 3.6 8 8v2H8v-2z"
+      fill={color}
+    />
+    {/* base */}
+    <rect x="7" y="20" width="18" height="8" rx="1" fill={color} />
+    {/* door */}
+    <path d="M14 23h4v5h-4z" fill={PILL_BG} />
+  </svg>
+);
+
+type NavItem = {
+  key: string;
+  labelKey: string;
+  path: string;
+  render: (color: string) => JSX.Element;
+};
+
+const NAV_ITEMS: NavItem[] = [
+  { key: 'home', labelKey: 'nav.home', path: '/', render: (c) => <HomeIcon size={24} color={c} strokeWidth={2} /> },
+  { key: 'shop', labelKey: 'nav.store', path: '/shop', render: (c) => <ShoppingBasket size={24} color={c} strokeWidth={1.8} /> },
+  { key: 'prayer', labelKey: 'nav.prayer', path: '/prayer-times', render: (c) => <MosqueIcon color={c} size={26} /> },
+  { key: 'scan', labelKey: 'nav.halalScan', path: '/halal-scanner', render: (c) => <ScanLine size={24} color={c} strokeWidth={1.8} /> },
+];
 
 export const BottomNavigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useLanguage();
 
-  const navItems = [
-    { labelKey: 'nav.home', path: '/', isHomeImage: true },
-    { labelKey: 'nav.store', path: '/shop', isMarketplaceImage: true },
-    { labelKey: 'nav.prayer', path: '/prayer-times', isPrayerImage: true },
-    { icon: ScanLine, labelKey: 'nav.halalScan', path: '/halal-scanner' },
-  ];
-
   return (
     <nav className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md z-30 px-4 pb-4 font-arabic">
       <div className="flex items-center gap-3">
-        {/* Main pill nav */}
         <div
-          className="flex-1 rounded-full flex items-center justify-between py-2 px-2.5"
+          className="flex-1 rounded-full flex items-center justify-between py-1.5 px-2"
           style={{
             backgroundColor: PILL_BG,
-            boxShadow: '0 8px 24px rgba(60, 30, 15, 0.12), 0 2px 6px rgba(60, 30, 15, 0.06)',
+            boxShadow: '0 10px 28px rgba(60, 30, 15, 0.14), 0 2px 6px rgba(60, 30, 15, 0.06)',
           }}
         >
-          {navItems.map(({ icon: Icon, labelKey, path, isHomeImage, isMarketplaceImage, isPrayerImage }) => {
-            const isActive = location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
+          {NAV_ITEMS.map(({ key, labelKey, path, render }) => {
+            const isActive = path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
+            const color = isActive ? TEXT_ACTIVE : TEXT_INACTIVE;
             return (
               <button
-                key={path}
+                key={key}
                 onClick={() => navigate(path)}
-                className={cn(
-                  "flex flex-col items-center justify-center gap-0.5 py-2 px-3 rounded-full transition-all duration-200 min-w-[64px]"
-                )}
-                style={{
-                  backgroundColor: isActive ? ACTIVE_BG : 'transparent',
-                }}
+                className="flex flex-col items-center justify-center gap-1 py-2 px-4 rounded-full transition-all duration-200"
+                style={{ backgroundColor: isActive ? ACTIVE_BG : 'transparent' }}
               >
-                {isHomeImage ? (
-                  <HomeIconImg isActive={isActive} />
-                ) : isMarketplaceImage ? (
-                  <MarketplaceIconImg isActive={isActive} />
-                ) : isPrayerImage ? (
-                  <PrayerIconImg isActive={isActive} />
-                ) : Icon && (
-                  <Icon
-                    className="h-[22px] w-[22px]"
-                    style={{ color: isActive ? TEXT_ACTIVE : TEXT_INACTIVE }}
-                  />
-                )}
-                {!isHomeImage && !isMarketplaceImage && !isPrayerImage && (
-                  <span
-                    className="text-[11px] font-semibold leading-none mt-0.5"
-                    style={{ color: isActive ? TEXT_ACTIVE : TEXT_INACTIVE }}
-                  >
-                    {t(labelKey)}
-                  </span>
-                )}
+                {render(color)}
+                <span
+                  className="text-[12px] leading-none"
+                  style={{ color, fontWeight: isActive ? 700 : 600 }}
+                >
+                  {t(labelKey)}
+                </span>
               </button>
             );
           })}
         </div>
 
-        {/* Chat / Guftagu button */}
+        {/* Chat / Guftagu FAB */}
         <button
           onClick={() => navigate('/forum')}
           className="h-14 w-14 rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 active:scale-95"
@@ -109,7 +88,7 @@ export const BottomNavigation = () => {
           }}
           aria-label="Guftagu"
         >
-          <MessagesSquare className="h-6 w-6 text-white" strokeWidth={2} />
+          <MessageSquare className="h-6 w-6 text-white" strokeWidth={2.2} fill="white" />
         </button>
       </div>
     </nav>
