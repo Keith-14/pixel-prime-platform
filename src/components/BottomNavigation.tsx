@@ -29,7 +29,7 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { key: 'home', labelKey: 'nav.home', path: '/', render: (c) => <HomeIcon size={24} color={c} strokeWidth={2} /> },
   { key: 'shop', labelKey: 'nav.store', path: '/shop', render: (c) => <ShoppingBasket size={24} color={c} strokeWidth={1.8} /> },
-  { key: 'prayer', labelKey: 'nav.prayer', path: '/prayer-times', render: (c) => <MosqueIcon color={c} size={26} /> },
+  { key: 'prayer', labelKey: 'nav.prayer', path: '/prayer-times', render: (c) => <PrayerIconImg color={c} size={26} /> },
   { key: 'scan', labelKey: 'nav.halalScan', path: '/halal-scanner', render: (c) => <ScanLine size={24} color={c} strokeWidth={1.8} /> },
 ];
 
