@@ -326,8 +326,7 @@ export const Home = () => {
   );
 };
 
-const PILL_BG = '#FFFFFF';
-const ACTIVE_BG = '#F5E3D3';
+type ArcTimelineProps = {
   hijri: string;
   currentPrayer: string;
   prayerTime: string;
