@@ -7,6 +7,7 @@ import { useGlobalLocation } from '@/contexts/LocationContext';
 import qaQuran from '@/assets/qa-quran.png';
 import qaHajj from '@/assets/qa-hajj.png';
 import qaPlaces from '@/assets/qa-places.png';
+import prayerArcLogo from '@/assets/prayer-arc-logo.png.asset.json';
 
 const CREAM = '#FFF1DD';
 const CREAM_CARD = '#FFF7E8';
@@ -112,21 +113,14 @@ export const PrayerTimes = () => {
         className="relative mx-0 px-5 pt-6 pb-10 overflow-hidden"
         style={{ background: HERO_GRAD, borderBottomLeftRadius: 32, borderBottomRightRadius: 32 }}
       >
-        {/* Arc */}
-        <svg viewBox="0 0 320 140" className="absolute inset-x-0 top-3 w-full" preserveAspectRatio="none" style={{ height: 150 }}>
-          <path d="M 30 140 Q 160 -20 290 140" fill="none" stroke="rgba(255,232,202,0.45)" strokeWidth="1" />
-        </svg>
-
-        {/* Center B badge */}
-        <div className="relative z-10 flex justify-center">
-          <div
-            className="w-12 h-12 rounded-full flex items-center justify-center"
-            style={{ background: '#FFF1DD', boxShadow: '0 4px 16px rgba(0,0,0,0.18)' }}
-          >
-            <span style={{ color: BROWN_ACCENT, fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, fontSize: 22 }}>
-              ɞ
-            </span>
-          </div>
+        {/* Arc + Logo image */}
+        <div className="absolute inset-x-0 top-3 flex justify-center">
+          <img
+            src={prayerArcLogo.url}
+            alt="Barakah"
+            className="w-full max-w-[300px] object-contain"
+            style={{ height: 150 }}
+          />
         </div>
 
         <div className="relative z-10 text-center mt-8">
