@@ -6,7 +6,7 @@ import { BottomNavigation } from '@/components/BottomNavigation';
 import { useGlobalLocation } from '@/contexts/LocationContext';
 import prayerArcLogo from '@/assets/prayer-arc-logo.png.asset.json';
 import hadithIcon from '@/assets/hadith-icon.png.asset.json';
-import quranIcon from '@/assets/quran-icon.png.asset.json';
+import quranIcon from '@/assets/quran-icon-new.png.asset.json';
 import hajjIcon from '@/assets/hajj-icon.png.asset.json';
 import placesIcon from '@/assets/places-icon.png.asset.json';
 import zakatIcon from '@/assets/zakat-icon.png.asset.json';
