@@ -8,7 +8,7 @@ import { ChatAssistant } from '@/components/ChatAssistant';
 import { SideMenu } from '@/components/SideMenu';
 import prayerIcon from '@/assets/prayer-icon.png.asset.json';
 import qaQuranAsset from '@/assets/qa-quran-new.png.asset.json';
-import qaAi from '@/assets/qa-ai.png';
+import qaAiAsset from '@/assets/qa-ai-new.png.asset.json';
 import qaPlaces from '@/assets/qa-places.png';
 import qaHajj from '@/assets/qa-hajj.png';
 
