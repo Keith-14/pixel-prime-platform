@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ChatAssistant } from '@/components/ChatAssistant';
 import { SideMenu } from '@/components/SideMenu';
 import prayerIcon from '@/assets/prayer-icon.png.asset.json';
-import qaQuran from '@/assets/qa-quran.png';
+import qaQuranAsset from '@/assets/qa-quran-new.png.asset.json';
 import qaAi from '@/assets/qa-ai.png';
 import qaPlaces from '@/assets/qa-places.png';
 import qaHajj from '@/assets/qa-hajj.png';
@@ -104,7 +104,7 @@ export const Home = () => {
   const cityLabel = location?.city || 'Dubai';
 
   const quickActions = [
-    { label: 'Quran', img: qaQuran, onClick: () => navigate('/quran') },
+    { label: 'Quran', img: qaQuranAsset.url, onClick: () => navigate('/quran') },
     { label: 'Islamic AI', img: qaAi, onClick: () => setIsChatOpen(true) },
     { label: 'Places', img: qaPlaces, onClick: () => navigate('/places') },
     { label: 'Hajj Packages', img: qaHajj, onClick: () => navigate('/hajj') },
