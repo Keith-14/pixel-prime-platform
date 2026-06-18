@@ -240,6 +240,25 @@ export const Zakat = () => {
             </span>
           </div>
           <button
+            onClick={() => navigate('/zakat-result', {
+              state: {
+                cash,
+                goldValue,
+                silver,
+                business,
+                moneyOwed,
+                investments,
+                total,
+                zakatable,
+                zakatPayable: zakatable * 0.025,
+                nisab: active.nisab,
+                symbol: active.symbol,
+                currency: active.code,
+                goldMode,
+                goldRaw: gold,
+                goldPricePerGram: GOLD_PRICE_PER_GRAM[currency],
+              }
+            })}
             className="w-full h-14 rounded-full text-white font-bold tracking-wider flex items-center justify-center gap-3"
             style={{ backgroundColor: BROWN_DEEP }}
           >
