@@ -362,7 +362,6 @@ const MarketplaceIconImg = ({ isActive }: { isActive: boolean }) => (
 );
 const TEXT_ACTIVE = '#7A3B1E';
 const TEXT_INACTIVE = '#8A8A8A';
-const TEXT_INACTIVE = '#8A8A8A';
 
 const BottomNav = () => {
   const navigate = useNavigate();
