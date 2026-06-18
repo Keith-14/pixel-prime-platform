@@ -352,8 +352,16 @@ const HomeIconImg = ({ isActive }: { isActive: boolean }) => (
     style={{ opacity: isActive ? 1 : 0.6 }}
   />
 );
-
+const MarketplaceIconImg = ({ isActive }: { isActive: boolean }) => (
+  <img
+    src={navMarketplaceIcon.url}
+    alt="Marketplace"
+    className="h-[32px] w-auto object-contain"
+    style={{ opacity: isActive ? 1 : 0.6 }}
+  />
+);
 const TEXT_ACTIVE = '#7A3B1E';
+const TEXT_INACTIVE = '#8A8A8A';
 const TEXT_INACTIVE = '#8A8A8A';
 
 const BottomNav = () => {
@@ -378,7 +386,7 @@ const BottomNav = () => {
             boxShadow: '0 8px 24px rgba(60, 30, 15, 0.12), 0 2px 6px rgba(60, 30, 15, 0.06)',
           }}
         >
-          {navItems.map(({ icon: Icon, label, path, isImage, isHomeImage }) => {
+          {navItems.map(({ icon: Icon, label, path, isImage, isHomeImage, isMarketplaceImage }) => {
             const isActive = location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
             return (
               <button
