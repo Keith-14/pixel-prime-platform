@@ -1,15 +1,13 @@
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Search, X, Loader2, RefreshCw, Sparkles, ScanLine, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Search, X, Loader2, RefreshCw, Sparkles } from 'lucide-react';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import navHomeIcon from '@/assets/nav-home-icon.png.asset.json';
-import navMarketplaceIcon from '@/assets/nav-marketplace-icon.png.asset.json';
-import navPrayerIcon from '@/assets/nav-prayer-icon.png.asset.json';
+import { BottomNavigation } from '@/components/BottomNavigation';
 
 type NewsCategory = 'all' | 'world' | 'education' | 'community' | 'charity' | 'business' | 'politics';
 
@@ -350,99 +348,7 @@ export const News = () => {
           )}
         </div>
       </div>
-      <NewsBottomNav />
+      <BottomNavigation />
     </Layout>
   );
 };
-
-const NEWS_NAV_BROWN = '#2B1810';
-const NEWS_NAV_ACCENT = '#A35233';
-
-const HomeIconImg = ({ active }: { active: boolean }) => (
-  <img
-    src={navHomeIcon.url}
-    alt="Home"
-    className="h-[28px] w-auto object-contain"
-    style={{ opacity: active ? 1 : 0.7 }}
-  />
-);
-const MarketplaceIconImg = ({ active }: { active: boolean }) => (
-  <img
-    src={navMarketplaceIcon.url}
-    alt="Marketplace"
-    className="h-[28px] w-auto object-contain"
-    style={{ opacity: active ? 1 : 0.7 }}
-  />
-);
-const PrayerIconImg = ({ active }: { active: boolean }) => (
-  <img
-    src={navPrayerIcon.url}
-    alt="Prayer"
-    className="h-[28px] w-auto object-contain"
-    style={{ opacity: active ? 1 : 0.7 }}
-  />
-);
-
-function NewsBottomNav() {
-  const navigate = useNavigate();
-  const items = [
-    { label: 'Home', path: '/', active: true, isHomeImage: true },
-    { label: 'Marketplace', path: '/shop', isMarketplaceImage: true },
-    { label: 'Prayer', path: '/prayer-times', isPrayerImage: true },
-    { icon: ScanLine, label: 'Halal Scan', path: '/halal-scanner' },
-  ];
-  return (
-    <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-30 px-4 pb-4 pointer-events-none">
-      <div className="flex items-center gap-3 pointer-events-auto">
-        <nav
-          className="flex-1 rounded-full px-2 py-2 flex items-center justify-around"
-          style={{ backgroundColor: NEWS_NAV_BROWN }}
-        >
-          {items.map(({ icon: Icon, label, path, active, isHomeImage, isMarketplaceImage, isPrayerImage }) => (
-            <button
-              key={label}
-              type="button"
-              onClick={() => navigate(path)}
-              className="flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-full"
-              style={active ? { border: '1.5px solid #FFF1DD' } : undefined}
-            >
-              {isHomeImage ? (
-                <HomeIconImg active={active || false} />
-              ) : isMarketplaceImage ? (
-                <MarketplaceIconImg active={active || false} />
-              ) : isPrayerImage ? (
-                <PrayerIconImg active={active || false} />
-              ) : Icon && (
-                <Icon
-                  className="h-5 w-5"
-                  style={{ color: '#FFF1DD' }}
-                  strokeWidth={active ? 2.2 : 1.7}
-                />
-              )}
-              {!isHomeImage && !isMarketplaceImage && !isPrayerImage && (
-                <span
-                  className="text-[10px] leading-none"
-                  style={{
-                    color: '#FFF1DD',
-                    fontWeight: active ? 700 : 500,
-                  }}
-                >
-                  {label}
-                </span>
-              )}
-            </button>
-          ))}
-        </nav>
-        <button
-          type="button"
-          onClick={() => navigate('/forum')}
-          className="h-14 w-14 rounded-full flex items-center justify-center shadow-lg shrink-0"
-          style={{ backgroundColor: NEWS_NAV_ACCENT }}
-          aria-label="Chat"
-        >
-          <MessageCircle className="h-6 w-6" style={{ color: '#FFF1DD' }} strokeWidth={2} />
-        </button>
-      </div>
-    </div>
-  );
-}
