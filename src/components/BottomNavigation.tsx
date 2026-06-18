@@ -115,7 +115,12 @@ export const BottomNavigation = () => {
           }}
           aria-label="Guftagu"
         >
-          <MessageSquare className="h-6 w-6 text-white" strokeWidth={2.2} fill="white" />
+          <img
+            src={navChatIcon.url}
+            alt="Guftagu"
+            className="shrink-0"
+            style={{ width: 26, height: 26, objectFit: 'contain' }}
+          />
         </button>
       </div>
     </nav>
