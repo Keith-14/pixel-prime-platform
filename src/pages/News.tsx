@@ -1,7 +1,7 @@
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Search, X, Loader2, RefreshCw, Sparkles, ShoppingBag, Moon, ScanLine, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Search, X, Loader2, RefreshCw, Sparkles, ScanLine, MessageCircle } from 'lucide-react';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -10,7 +10,6 @@ import { toast } from '@/hooks/use-toast';
 import navHomeIcon from '@/assets/nav-home-icon.png.asset.json';
 import navMarketplaceIcon from '@/assets/nav-marketplace-icon.png.asset.json';
 import navPrayerIcon from '@/assets/nav-prayer-icon.png.asset.json';
-import navMarketplaceIcon from '@/assets/nav-marketplace-icon.png.asset.json';
 
 type NewsCategory = 'all' | 'world' | 'education' | 'community' | 'charity' | 'business' | 'politics';
 
@@ -375,13 +374,21 @@ const MarketplaceIconImg = ({ active }: { active: boolean }) => (
     style={{ opacity: active ? 1 : 0.7 }}
   />
 );
+const PrayerIconImg = ({ active }: { active: boolean }) => (
+  <img
+    src={navPrayerIcon.url}
+    alt="Prayer"
+    className="h-[28px] w-auto object-contain"
+    style={{ opacity: active ? 1 : 0.7 }}
+  />
+);
 
 function NewsBottomNav() {
   const navigate = useNavigate();
   const items = [
     { label: 'Home', path: '/', active: true, isHomeImage: true },
     { label: 'Marketplace', path: '/shop', isMarketplaceImage: true },
-    { icon: Moon, label: 'Prayer', path: '/prayer-times' },
+    { label: 'Prayer', path: '/prayer-times', isPrayerImage: true },
     { icon: ScanLine, label: 'Halal Scan', path: '/halal-scanner' },
   ];
   return (
@@ -391,7 +398,7 @@ function NewsBottomNav() {
           className="flex-1 rounded-full px-2 py-2 flex items-center justify-around"
           style={{ backgroundColor: NEWS_NAV_BROWN }}
         >
-          {items.map(({ icon: Icon, label, path, active, isHomeImage, isMarketplaceImage }) => (
+          {items.map(({ icon: Icon, label, path, active, isHomeImage, isMarketplaceImage, isPrayerImage }) => (
             <button
               key={label}
               type="button"
@@ -403,6 +410,8 @@ function NewsBottomNav() {
                 <HomeIconImg active={active || false} />
               ) : isMarketplaceImage ? (
                 <MarketplaceIconImg active={active || false} />
+              ) : isPrayerImage ? (
+                <PrayerIconImg active={active || false} />
               ) : Icon && (
                 <Icon
                   className="h-5 w-5"
@@ -410,7 +419,7 @@ function NewsBottomNav() {
                   strokeWidth={active ? 2.2 : 1.7}
                 />
               )}
-              {!isHomeImage && !isMarketplaceImage && (
+              {!isHomeImage && !isMarketplaceImage && !isPrayerImage && (
                 <span
                   className="text-[10px] leading-none"
                   style={{
