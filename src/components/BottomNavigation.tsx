@@ -70,7 +70,6 @@ const NAV_ITEMS: NavItem[] = [
 export const BottomNavigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { t } = useLanguage();
 
   return (
     <nav className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md z-30 px-4 pb-4 font-arabic">
