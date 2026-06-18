@@ -4,11 +4,11 @@ import { Menu, Bell, MapPin, ChevronDown, Sun, Sunrise, Sunset, Moon, Cloud, Clo
 import { SideMenu } from '@/components/SideMenu';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import { useGlobalLocation } from '@/contexts/LocationContext';
-import qaQuran from '@/assets/qa-quran.png';
 import qaHajj from '@/assets/qa-hajj.png';
 import qaPlaces from '@/assets/qa-places.png';
 import prayerArcLogo from '@/assets/prayer-arc-logo.png.asset.json';
 import hadithIcon from '@/assets/hadith-icon.png.asset.json';
+import quranIcon from '@/assets/quran-icon.png.asset.json';
 
 const CREAM = '#FFF1DD';
 const CREAM_CARD = '#FFF7E8';
