@@ -5,7 +5,7 @@ import { ArrowRight, Check } from 'lucide-react';
 const CREAM = '#FFF5E5';
 const BROWN = '#A35233';
 const BROWN_DARK = '#5C2A14';
-const OLIVE = '#6B7C3E';
+const OLIVE = '#A35233';
 
 export const OrderConfirmation = () => {
   const { orderId } = useParams<{ orderId: string }>();

@@ -19,7 +19,7 @@ const CREAM_CARD = '#FFF5E5';
 const BROWN = '#2C1309';
 const BROWN_ACCENT = '#B0431E';
 const HERO_GRAD = 'linear-gradient(177deg, #78351A 2.14%, #CE5728 97.86%)';
-const DAILY_GREEN = '#3F5A2E';
+const DAILY_BROWN = '#5C2A14';
 
 type PrayerKey = 'sunrise' | 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
 
@@ -247,12 +247,12 @@ export const PrayerTimes = () => {
 
       {/* Daily Wisdom */}
       <div className="px-5 pt-5 pb-32">
-        <div className="rounded-2xl p-5" style={{ background: DAILY_GREEN }}>
+        <div className="rounded-2xl p-5" style={{ background: DAILY_BROWN }}>
           <div className="flex items-start justify-between">
-            <Sparkles className="h-7 w-7" style={{ color: '#D4E5A8' }} strokeWidth={1.5} />
+            <Sparkles className="h-7 w-7" style={{ color: '#E8C9A0' }} strokeWidth={1.5} />
             <span
               className="text-[11px] tracking-[0.15em]"
-              style={{ color: '#E8F0D0', fontWeight: 600 }}
+              style={{ color: '#F5E6D0', fontWeight: 600 }}
             >
               DAILY WISDOM
             </span>
@@ -265,7 +265,7 @@ export const PrayerTimes = () => {
           </p>
           <p
             className="mt-3 text-[11px] tracking-[0.15em]"
-            style={{ color: '#C9D4A8', fontWeight: 700 }}
+            style={{ color: '#C9A882', fontWeight: 700 }}
           >
             ASH-SHARH 94:5
           </p>

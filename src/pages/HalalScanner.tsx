@@ -342,15 +342,15 @@ const ResultView = ({ onBack, onScanAnother }: { onBack: () => void; onScanAnoth
       <div className="px-5">
         <div
           className="rounded-2xl px-6 py-5 flex flex-col items-center text-center"
-          style={{ backgroundColor: '#D8EBD3' }}
+          style={{ backgroundColor: '#F5E6D0' }}
         >
-          <div className="h-12 w-12 rounded-full flex items-center justify-center mb-2" style={{ backgroundColor: '#2E7D4E' }}>
+          <div className="h-12 w-12 rounded-full flex items-center justify-center mb-2" style={{ backgroundColor: '#A35233' }}>
             <Check className="h-6 w-6 text-white" strokeWidth={2.5} />
           </div>
-          <div className="text-[19px] font-semibold" style={{ color: '#1F5A37', fontFamily: SERIF }}>
+          <div className="text-[19px] font-semibold" style={{ color: '#5C2A14', fontFamily: SERIF }}>
             Halal Verified
           </div>
-          <div className="text-[10px] tracking-[0.18em] mt-1" style={{ color: '#3F7A55' }}>
+          <div className="text-[10px] tracking-[0.18em] mt-1" style={{ color: '#8B6E4A' }}>
             COMPLIANT WITH ISLAMIC STANDARDS
           </div>
         </div>
@@ -425,7 +425,7 @@ const ResultView = ({ onBack, onScanAnother }: { onBack: () => void; onScanAnoth
                 {PRODUCT.keyIngredient}
               </div>
             </div>
-            <div className="h-6 w-6 rounded-full flex items-center justify-center" style={{ backgroundColor: '#2E7D4E' }}>
+            <div className="h-6 w-6 rounded-full flex items-center justify-center" style={{ backgroundColor: '#A35233' }}>
               <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
             </div>
           </div>
@@ -435,7 +435,7 @@ const ResultView = ({ onBack, onScanAnother }: { onBack: () => void; onScanAnoth
             {PRODUCT.ingredients.map((ing) => (
               <li key={ing.name} className="flex items-center justify-between py-3">
                 <span className="text-[14px] font-medium" style={{ color: BROWN }}>{ing.name}</span>
-                <Check className="h-4 w-4" style={{ color: '#2E7D4E' }} strokeWidth={2.5} />
+                <Check className="h-4 w-4" style={{ color: '#A35233' }} strokeWidth={2.5} />
               </li>
             ))}
           </ul>

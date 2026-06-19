@@ -181,14 +181,14 @@ export const ZakatResult = () => {
           </div>
 
           {/* Educational Note */}
-          <div className="mt-5 rounded-[24px] p-5" style={{ backgroundColor: '#E8F5E9' }}>
+          <div className="mt-5 rounded-[24px] p-5" style={{ backgroundColor: '#F5E6D0' }}>
             <div className="flex items-start gap-3">
-              <div className="h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#2B5E2B' }}>
+              <div className="h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#A35233' }}>
                 <TrendingUp className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="font-bold mb-1" style={{ color: '#2B5E2B' }}>Understanding Your Zakat</p>
-                <p className="text-sm leading-relaxed" style={{ color: '#2B5E2B', opacity: 0.9 }}>
+                <p className="font-bold mb-1" style={{ color: '#5C2A14' }}>Understanding Your Zakat</p>
+                <p className="text-sm leading-relaxed" style={{ color: '#5C2A14', opacity: 0.9 }}>
                   {isNisabMet
                     ? `Your total wealth of ${fmt(total, symbol)} exceeds the Nisab threshold of ${fmt(nisab, symbol)}. You are required to pay 2.5% of your zakatable wealth (${fmt(zakatable, symbol)}) as Zakat, which equals ${fmt(zakatPayable, symbol)}.`
                     : `Your total wealth of ${fmt(total, symbol)} is below the Nisab threshold of ${fmt(nisab, symbol)}. You are not required to pay Zakat this year. Consider revisiting when your wealth grows.`}
