@@ -115,7 +115,7 @@ export const PrayerTimes = () => {
 
       {/* Hero arc card */}
       <div
-        className="relative mx-0 px-5 pt-6 pb-10 overflow-hidden"
+        className="relative mx-0 px-5 pt-6 pb-20 overflow-hidden"
         style={{ background: HERO_GRAD }}
       >
         {/* Arc + Logo image */}
@@ -128,7 +128,7 @@ export const PrayerTimes = () => {
           />
         </div>
 
-        <div className="relative z-10 text-center mt-8">
+        <div className="relative z-10 text-center mt-16">
           <p className="text-[14px]" style={{ color: '#FFE8CA', opacity: 0.9 }}>
             {hijri}
           </p>
