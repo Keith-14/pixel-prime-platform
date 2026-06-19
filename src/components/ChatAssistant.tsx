@@ -296,7 +296,7 @@ const ChatView = ({
                   style={
                     msg.role === 'user'
                       ? { backgroundColor: BROWN_BTN, color: '#FFF' }
-                      : { backgroundColor: CREAM_CARD, color: BROWN, border: `1px solid ${BORDER}` }
+                      : { backgroundColor: '#FFFFFF', color: BROWN, border: `1px solid ${BORDER}` }
                   }
                 >
                   {msg.role === 'assistant' ? (
@@ -313,7 +313,7 @@ const ChatView = ({
               <div className="flex justify-start">
                 <div
                   className="rounded-2xl px-4 py-3 border"
-                  style={{ backgroundColor: CREAM_CARD, borderColor: BORDER }}
+                  style={{ backgroundColor: '#FFFFFF', borderColor: BORDER }}
                 >
                   <div className="flex gap-1">
                     <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: BROWN_BTN, animationDelay: '0ms' }} />
