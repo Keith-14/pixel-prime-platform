@@ -349,7 +349,7 @@ const ChatView = ({
           onClick={send}
           disabled={!input.trim() || isLoading}
           className="h-12 w-12 rounded-full flex items-center justify-center disabled:opacity-50"
-          style={{ backgroundColor: '#C9A299' }}
+          style={{ backgroundColor: '#3A1E12' }}
           aria-label="Send"
         >
           <Send className="h-5 w-5" style={{ color: '#FFFFFF' }} strokeWidth={2} />
