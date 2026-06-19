@@ -332,22 +332,22 @@ const ChatView = ({
       {/* Composer */}
       <div
         className="px-4 pb-6 pt-3 flex items-center gap-3"
-        style={{ backgroundColor: CREAM_BG }}
+        style={{ backgroundColor: '#FFFFFF' }}
       >
         <div
           className="flex-1 flex items-center gap-2 rounded-full px-5 py-3.5 border"
-          style={{ backgroundColor: INPUT_BG, borderColor: '#D9C9AE' }}
+          style={{ backgroundColor: '#FFFFFF', borderColor: '#B0A89E' }}
         >
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && send()}
             placeholder="Ask me Anything..."
-            className="flex-1 bg-transparent outline-none text-[15px] placeholder:text-[#8B7355]"
+            className="flex-1 bg-transparent outline-none text-[15px] placeholder:text-[#9E948A]"
             style={{ color: BROWN }}
           />
           <button className="opacity-80" aria-label="Voice input">
-            <Mic className="h-5 w-5" style={{ color: '#5C4736' }} strokeWidth={1.75} />
+            <Mic className="h-5 w-5" style={{ color: '#7A6B5E' }} strokeWidth={1.75} />
           </button>
         </div>
         <button
