@@ -111,7 +111,7 @@ export const News = () => {
 
   const BROWN = '#A35233';
   const BROWN_SOFT = '#F5D9C4';
-  const CREAM = '#FFF1DD';
+  const CREAM = '#FFF5E5';
 
   return (
     <Layout showHeader={false} showNavigation={false}>

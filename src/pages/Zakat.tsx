@@ -3,8 +3,8 @@ import { Layout } from '@/components/Layout';
 import { ArrowLeft, ArrowRight, ChevronDown, Info, Lightbulb } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-const CREAM = '#FFF1DD';
-const CARD_CREAM = '#FCE7C8';
+const CREAM = '#FFF5E5';
+const CARD_CREAM = '#FFF8F0';
 const BROWN_DARK = '#2C1309';
 const BROWN = '#A35233';
 const BROWN_DEEP = '#78351A';
@@ -226,7 +226,7 @@ export const Zakat = () => {
         {/* Bottom CTA */}
         <div
           className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-5 pt-5 pb-7 rounded-t-[28px]"
-          style={{ backgroundColor: '#FFFBF1', boxShadow: '0 -8px 30px rgba(0,0,0,0.06)' }}
+          style={{ backgroundColor: '#FFF5E5', boxShadow: '0 -8px 30px rgba(0,0,0,0.06)' }}
         >
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold tracking-[0.18em]" style={{ color: BROWN_DARK }}>

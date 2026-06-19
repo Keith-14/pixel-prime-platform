@@ -122,8 +122,8 @@ const renderContentWithMentions = (content: string) => {
 const BROWN = '#7B3F1E';
 const BROWN_LIGHT = '#A35233';
 const BROWN_DARK = '#5C2E15';
-const CREAM_BG = '#FFF0D9';
-const CREAM_DEEP = '#F4DDB6';
+const CREAM_BG = '#FFF5E5';
+const CREAM_DEEP = '#F5E6D0';
 const WARM_CARD = '#FFFFFF';
 const SOFT_BORDER = 'rgba(123, 63, 30, 0.12)';
 

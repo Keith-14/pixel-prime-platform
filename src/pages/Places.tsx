@@ -13,8 +13,8 @@ import restaurantImg from '@/assets/place-restaurant.jpg';
 import mosqueImg from '@/assets/place-mosque.jpg';
 
 // Theme tokens matching Guftagu redesign
-const CREAM_BG = '#FFF0D9';
-const CREAM_DEEP = '#F4DDB6';
+const CREAM_BG = '#FFF5E5';
+const CREAM_DEEP = '#F5E6D0';
 const HEADER_TEXT = '#2C1309';
 const BROWN = '#7B3F1E';
 const BROWN_DARK = '#5C2E15';
@@ -303,7 +303,7 @@ export const Places = () => {
       headerClassName="bg-white border-b border-[#F0E0C2]"
       headerTitleClassName="font-bold text-lg"
       headerTitleStyle={{ color: HEADER_TEXT }}
-      headerButtonClassName="text-[#2C1309] hover:bg-[#FFF0D9]"
+      headerButtonClassName="text-[#2C1309] hover:bg-[#FFF5E5]"
     >
       <div className="min-h-full" style={{ backgroundColor: CREAM_BG }}>
         <div className="px-4 py-5 space-y-5">

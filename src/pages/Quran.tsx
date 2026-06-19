@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 /* ---------------- Theme ---------------- */
-const CREAM_BG = '#FFF0D9';
+const CREAM_BG = '#FFF5E5';
 const CREAM_CARD = '#FFF7E5';
 const OLIVE = '#7A8B2A';
 const OLIVE_DARK = '#6E7E26';

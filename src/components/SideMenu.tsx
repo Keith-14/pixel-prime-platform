@@ -24,7 +24,7 @@ interface SideMenuProps {
   onClose: () => void;
 }
 
-const CREAM = '#FBEAD0';
+const CREAM = '#FFF5E5';
 const BROWN = '#2C1309';
 const BROWN_ACCENT = '#5A2A18';
 const BADGE_BROWN = '#4A2418';
@@ -294,7 +294,7 @@ export const SideMenu = ({ isOpen, onClose }: SideMenuProps) => {
                       key={opt.code}
                       onClick={() => { setLanguage(opt.code); setLangOpen(false); }}
                       className="w-full flex items-center justify-between px-3 py-3 rounded-xl"
-                      style={{ color: BROWN, background: active ? '#F4DDB8' : 'transparent' }}
+                      style={{ color: BROWN, background: active ? '#F5E6D0' : 'transparent' }}
                     >
                       <span className="text-[15px]">{opt.label}</span>
                       {active && <Check className="w-4 h-4" style={{ color: ACCENT_ORANGE }} />}
@@ -337,7 +337,7 @@ const Row = ({
 }) => (
   <button
     onClick={onClick}
-    className="w-full flex items-center gap-4 px-3 py-3 rounded-xl transition-colors active:bg-[#F4DDB8]"
+    className="w-full flex items-center gap-4 px-3 py-3 rounded-xl transition-colors active:bg-[#F5E6D0]"
     style={{ color: BROWN }}
   >
     <span className="flex items-center justify-center w-9 h-9" style={{ color: BROWN }}>
