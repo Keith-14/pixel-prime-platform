@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { User, Briefcase, Plane, ArrowLeft, Apple, Star, Chrome } from 'lucide-react';
+import { User, Briefcase, Plane, ArrowLeft, Star, Chrome } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { useLanguage } from '@/contexts/LanguageContext';
