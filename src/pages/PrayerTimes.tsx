@@ -146,9 +146,9 @@ export const PrayerTimes = () => {
         className="relative"
         style={{
           background: CREAM,
-          borderTopLeftRadius: 32,
-          borderTopRightRadius: 32,
-          marginTop: -20,
+          borderTopLeftRadius: 80,
+          borderTopRightRadius: 80,
+          marginTop: -40,
           zIndex: 1,
         }}
       >
