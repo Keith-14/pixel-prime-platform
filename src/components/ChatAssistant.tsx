@@ -1,53 +1,24 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { ArrowLeft, HelpCircle, Mic, Plus, Send, Sparkles, ArrowUpRight } from 'lucide-react';
+import { ArrowLeft, HelpCircle, Mic, Send, Sparkles, ArrowUpRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ReactMarkdown from 'react-markdown';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
-type Thread = { id: string; title: string; preview: string; ago: string; messages: Msg[] };
 
-const CREAM_BG = '#FFF5E5';
-const CREAM_CARD = '#FFF5E5';
+const CREAM_BG = '#FFF1DD';
 const BROWN = '#2C1309';
-const BROWN_TITLE = '#B0431E';
-const BROWN_BTN = '#A0431D';
-const OLIVE = '#7A8B2A';
-const MUTED = '#8B6F5C';
-const BORDER = '#E8D3AE';
-const SERIF = "'Plus Jakarta Sans', sans-serif";
-
-const SAMPLE_HISTORY: Thread[] = [
-  {
-    id: 't1',
-    title: 'How can I forget a bad memory?',
-    preview:
-      'Forgetting a bad memory entirely may be challenging, as memories are complex and deeply ingrained in the brain. However, there are strategies you can use to cope with and reduce the i…',
-    ago: '28 mins ago',
-    messages: [],
-  },
-  {
-    id: 't2',
-    title: 'How can I forget a bad memory?',
-    preview:
-      'Forgetting a bad memory entirely may be challenging, as memories are complex and deeply ingrained in the brain. However, there are strategies you can use to cope with and reduce the i…',
-    ago: '28 mins ago',
-    messages: [],
-  },
-  {
-    id: 't3',
-    title: 'How can I forget a bad memory?',
-    preview:
-      'Forgetting a bad memory entirely may be challenging, as memories are complex and deeply ingrained in the brain. However, there are strategies you can use to cope with and reduce the i…',
-    ago: '28 mins ago',
-    messages: [],
-  },
-];
+const BROWN_BTN = '#B0552A';
+const OLIVE = '#8A8B2A';
+const MUTED = '#A89684';
+const BORDER = '#E6D4B8';
+const INPUT_BG = '#F6EFE2';
+const SERIF_ITALIC = "'Cormorant Garamond', 'Playfair Display', Georgia, serif";
 
 const SUGGESTIONS = [
   { title: '12 Divine Name of Allah S.W.T', sub: 'Learn the Divine Names of Allah S.W.T' },
-  { title: '99 Names of Allah', sub: 'Explore the beautiful names of Allah' },
-  { title: 'How to perform Wudu', sub: 'Step-by-step guide to ablution' },
+  { title: '12 Divine Name of Allah S.W.T', sub: 'Learn the Divine Names of Allah S.W.T' },
+  { title: '12 Divine Name of Allah S.W.T', sub: 'Learn the Divine Names of Allah S.W.T' },
 ];
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
@@ -118,7 +89,6 @@ interface ChatAssistantProps {
 export const ChatAssistant = ({ open, onClose }: ChatAssistantProps) => {
   const { user } = useAuth();
   const { t } = useLanguage();
-  const [view, setView] = useState<'home' | 'chat'>('home');
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -171,16 +141,6 @@ export const ChatAssistant = ({ open, onClose }: ChatAssistantProps) => {
 
   if (!open) return null;
 
-  const startNewChat = () => {
-    setMessages([]);
-    setView('chat');
-  };
-
-  const openThread = (t: Thread) => {
-    setMessages(t.messages);
-    setView('chat');
-  };
-
   const handleSuggestion = (s: string) => {
     setInput(s);
   };
@@ -190,112 +150,34 @@ export const ChatAssistant = ({ open, onClose }: ChatAssistantProps) => {
       className="fixed inset-0 z-40 flex flex-col font-arabic max-w-md mx-auto"
       style={{ backgroundColor: CREAM_BG, color: BROWN }}
     >
-      {view === 'home' ? (
-        <HomeView
-          onBack={onClose}
-          onNewChat={startNewChat}
-          onOpenThread={openThread}
-        />
-      ) : (
-        <ChatView
-          userName={userName}
-          onBack={() => setView('home')}
-          messages={messages}
-          input={input}
-          setInput={setInput}
-          isLoading={isLoading}
-          send={send}
-          scrollRef={scrollRef}
-          onSuggestion={handleSuggestion}
-        />
-      )}
+      <ChatView
+        userName={userName}
+        onBack={onClose}
+        messages={messages}
+        input={input}
+        setInput={setInput}
+        isLoading={isLoading}
+        send={send}
+        scrollRef={scrollRef}
+        onSuggestion={handleSuggestion}
+      />
     </div>
   );
 };
 
-/* ---------------- Home View (history) ---------------- */
-
-const Logo = ({ size = 36 }: { size?: number }) => (
+const Logo = ({ size = 32 }: { size?: number }) => (
   <div
-    className="rounded-full flex items-center justify-center"
-    style={{ width: size, height: size, backgroundColor: OLIVE }}
+    className="rounded-full flex items-center justify-center shrink-0"
+    style={{ width: size, height: size, backgroundColor: BROWN_BTN }}
   >
-    <Sparkles className="text-white" style={{ width: size * 0.5, height: size * 0.5 }} strokeWidth={2.25} />
+    <Sparkles
+      className="text-white"
+      style={{ width: size * 0.55, height: size * 0.55 }}
+      strokeWidth={2.25}
+      fill="white"
+    />
   </div>
 );
-
-const HomeView = ({
-  onBack,
-  onNewChat,
-  onOpenThread,
-}: {
-  onBack: () => void;
-  onNewChat: () => void;
-  onOpenThread: (t: Thread) => void;
-}) => {
-  return (
-    <div className="flex-1 overflow-y-auto pb-10">
-      {/* Back to Home */}
-      <div className="px-5 pt-5 pb-2 flex items-center gap-2">
-        <button onClick={onBack} className="flex items-center gap-2 text-[15px] font-semibold" style={{ color: BROWN }}>
-          <ArrowLeft className="h-5 w-5" strokeWidth={2} />
-          Back to Home
-        </button>
-      </div>
-
-      {/* Hero */}
-      <div className="px-5 pt-6 pb-6 flex flex-col items-center text-center">
-        <Logo size={44} />
-        <h1 className="mt-4 text-[28px] leading-tight font-bold" style={{ color: BROWN }}>
-          Start a New Chat
-        </h1>
-        <p className="mt-1 text-[22px] leading-tight">
-          <span style={{ color: BROWN }}>with </span>
-          <span style={{ color: OLIVE, fontWeight: 600 }}>Islamic AI</span>
-        </p>
-
-        <button
-          onClick={onNewChat}
-          className="mt-6 w-full rounded-full py-4 text-white font-semibold flex items-center justify-center gap-2 shadow-sm active:scale-[0.99] transition-transform"
-          style={{ backgroundColor: BROWN_BTN }}
-        >
-          <Plus className="h-5 w-5" strokeWidth={2.5} />
-          Start New Chat
-        </button>
-      </div>
-
-      {/* Divider */}
-      <div className="h-px mx-5" style={{ backgroundColor: BORDER }} />
-
-      {/* History */}
-      <div className="px-5 pt-5">
-        <h2 className="text-[20px] font-bold mb-3" style={{ color: BROWN }}>
-          History
-        </h2>
-        <div className="flex flex-col gap-3">
-          {SAMPLE_HISTORY.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => onOpenThread(t)}
-              className="text-left rounded-2xl p-4 border"
-              style={{ backgroundColor: CREAM_CARD, borderColor: BORDER }}
-            >
-              <div className="font-semibold text-[15px] mb-2" style={{ color: BROWN_TITLE }}>
-                {t.title}
-              </div>
-              <p className="text-[14px] leading-relaxed" style={{ color: '#5C4736' }}>
-                {t.preview}
-              </p>
-              <div className="mt-3 text-[12px]" style={{ color: MUTED }}>
-                {t.ago}
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 /* ---------------- Chat View ---------------- */
 
@@ -324,25 +206,31 @@ const ChatView = ({
 
   return (
     <>
-      {/* Header */}
-      <div className="px-4 pt-4 pb-3 flex items-center justify-between">
+      {/* Header — white bar */}
+      <div
+        className="px-4 pt-5 pb-4 flex items-center justify-between"
+        style={{ backgroundColor: '#FFFFFF' }}
+      >
         <button
           onClick={onBack}
-          className="h-9 w-9 rounded-full border flex items-center justify-center"
-          style={{ borderColor: BORDER, color: BROWN }}
+          className="h-10 w-10 rounded-full border flex items-center justify-center"
+          style={{ borderColor: '#D9D2C7', color: BROWN }}
           aria-label="Back"
         >
           <ArrowLeft className="h-4 w-4" strokeWidth={2} />
         </button>
-        <div className="flex items-center gap-2">
-          <Logo size={28} />
-          <span className="font-semibold text-[16px]" style={{ color: BROWN }}>
+        <div className="flex items-center gap-2.5">
+          <Logo size={32} />
+          <span
+            className="font-bold text-[17px] tracking-tight"
+            style={{ color: BROWN }}
+          >
             Islamic Ai Assistant
           </span>
         </div>
         <button
-          className="h-9 w-9 rounded-full border flex items-center justify-center"
-          style={{ borderColor: BORDER, color: BROWN }}
+          className="h-10 w-10 rounded-full border flex items-center justify-center"
+          style={{ borderColor: '#D9D2C7', color: BROWN }}
           aria-label="Help"
         >
           <HelpCircle className="h-4 w-4" strokeWidth={2} />
@@ -350,32 +238,51 @@ const ChatView = ({
       </div>
 
       {/* Body */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 pt-3 pb-3">
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto px-6 pt-10 pb-3"
+        style={{ backgroundColor: CREAM_BG }}
+      >
         {empty ? (
-          <div className="pt-6">
+          <div className="pt-16">
             <h2
-              className="text-center italic text-[28px] leading-tight mb-7"
-              style={{ fontFamily: SERIF, color: OLIVE }}
+              className="text-center italic text-[34px] leading-tight mb-12"
+              style={{
+                fontFamily: SERIF_ITALIC,
+                color: OLIVE,
+                fontWeight: 500,
+                letterSpacing: '-0.01em',
+              }}
             >
               As-salamu alaykum{userName ? `, ${userName}` : ''}!
             </h2>
-            <div className="flex flex-col gap-3">
-              {SUGGESTIONS.map((s) => (
+            <div className="flex flex-col gap-4">
+              {SUGGESTIONS.map((s, i) => (
                 <button
-                  key={s.title}
+                  key={i}
                   onClick={() => onSuggestion(s.title)}
-                  className="text-left rounded-2xl px-4 py-3 border flex items-center gap-3"
-                  style={{ backgroundColor: CREAM_CARD, borderColor: BORDER }}
+                  className="text-left rounded-full px-5 py-3 border flex items-center gap-3 transition-transform active:scale-[0.99]"
+                  style={{ backgroundColor: 'transparent', borderColor: BORDER }}
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-[14px] truncate" style={{ color: BROWN }}>
+                    <div
+                      className="font-bold text-[15px] truncate"
+                      style={{ color: BROWN }}
+                    >
                       {s.title}
                     </div>
-                    <div className="text-[12px] truncate" style={{ color: MUTED }}>
+                    <div
+                      className="text-[12px] truncate mt-0.5"
+                      style={{ color: MUTED }}
+                    >
                       {s.sub}
                     </div>
                   </div>
-                  <ArrowUpRight className="h-4 w-4 shrink-0" style={{ color: BROWN }} strokeWidth={2} />
+                  <ArrowUpRight
+                    className="h-5 w-5 shrink-0"
+                    style={{ color: '#8B6F5C' }}
+                    strokeWidth={2}
+                  />
                 </button>
               ))}
             </div>
@@ -389,7 +296,7 @@ const ChatView = ({
                   style={
                     msg.role === 'user'
                       ? { backgroundColor: BROWN_BTN, color: '#FFF' }
-                      : { backgroundColor: CREAM_CARD, color: BROWN, border: `1px solid ${BORDER}` }
+                      : { backgroundColor: '#FFFFFF', color: BROWN, border: `1px solid ${BORDER}` }
                   }
                 >
                   {msg.role === 'assistant' ? (
@@ -406,7 +313,7 @@ const ChatView = ({
               <div className="flex justify-start">
                 <div
                   className="rounded-2xl px-4 py-3 border"
-                  style={{ backgroundColor: CREAM_CARD, borderColor: BORDER }}
+                  style={{ backgroundColor: '#FFFFFF', borderColor: BORDER }}
                 >
                   <div className="flex gap-1">
                     <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: BROWN_BTN, animationDelay: '0ms' }} />
@@ -421,21 +328,24 @@ const ChatView = ({
       </div>
 
       {/* Composer */}
-      <div className="px-4 pb-6 pt-2 flex items-center gap-3">
+      <div
+        className="px-4 pb-6 pt-3 flex items-center gap-3"
+        style={{ backgroundColor: CREAM_BG }}
+      >
         <div
-          className="flex-1 flex items-center gap-2 rounded-full px-4 py-3 border"
-          style={{ backgroundColor: '#FFF7E5', borderColor: BORDER }}
+          className="flex-1 flex items-center gap-2 rounded-full px-5 py-3.5 border"
+          style={{ backgroundColor: INPUT_BG, borderColor: '#D9C9AE' }}
         >
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && send()}
             placeholder="Ask me Anything..."
-            className="flex-1 bg-transparent outline-none text-[14px]"
+            className="flex-1 bg-transparent outline-none text-[15px] placeholder:text-[#8B7355]"
             style={{ color: BROWN }}
           />
-          <button className="opacity-70" aria-label="Voice input">
-            <Mic className="h-5 w-5" style={{ color: BROWN }} strokeWidth={1.75} />
+          <button className="opacity-80" aria-label="Voice input">
+            <Mic className="h-5 w-5" style={{ color: '#5C4736' }} strokeWidth={1.75} />
           </button>
         </div>
         <button
@@ -445,7 +355,7 @@ const ChatView = ({
           style={{ backgroundColor: BROWN_BTN }}
           aria-label="Send"
         >
-          <Send className="h-5 w-5 text-white" strokeWidth={2} />
+          <Send className="h-5 w-5 text-white -ml-0.5" strokeWidth={2} />
         </button>
       </div>
     </>
