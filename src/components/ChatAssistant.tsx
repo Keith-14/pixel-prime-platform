@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { ArrowLeft, HelpCircle, Mic, Send, ArrowUpRight } from 'lucide-react';
+import { ArrowLeft, Mic, Send, ArrowUpRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ReactMarkdown from 'react-markdown';
 import aiAssistantLogo from '@/assets/ai-assistant-logo.png.asset.json';
+import aiHelpIcon from '@/assets/ai-help-icon.png.asset.json';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 
@@ -230,7 +231,11 @@ const ChatView = ({
           style={{ borderColor: '#D9D2C7', color: BROWN }}
           aria-label="Help"
         >
-          <HelpCircle className="h-4 w-4" strokeWidth={2} />
+          <img
+            src={aiHelpIcon.url}
+            alt="Help"
+            className="h-4 w-4 object-contain"
+          />
         </button>
       </div>
 
