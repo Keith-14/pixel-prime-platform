@@ -13,7 +13,8 @@ const OLIVE = '#8A8B2A';
 const MUTED = '#A89684';
 const BORDER = '#E6D4B8';
 const INPUT_BG = '#F6EFE2';
-const SERIF_ITALIC = "'Cormorant Garamond', 'Playfair Display', Georgia, serif";
+const SUGGESTION_COLOR = '#776F69';
+const SERIF_ITALIC = "'Newsreader', Georgia, serif";
 
 const SUGGESTIONS = [
   { title: '12 Divine Name of Allah S.W.T', sub: 'Learn the Divine Names of Allah S.W.T' },
@@ -262,25 +263,25 @@ const ChatView = ({
                   key={i}
                   onClick={() => onSuggestion(s.title)}
                   className="text-left rounded-full px-5 py-3 border flex items-center gap-3 transition-transform active:scale-[0.99]"
-                  style={{ backgroundColor: 'transparent', borderColor: BORDER }}
+                  style={{ backgroundColor: 'transparent', borderColor: SUGGESTION_COLOR }}
                 >
                   <div className="flex-1 min-w-0">
                     <div
                       className="font-bold text-[15px] truncate"
-                      style={{ color: BROWN }}
+                      style={{ color: SUGGESTION_COLOR }}
                     >
                       {s.title}
                     </div>
                     <div
                       className="text-[12px] truncate mt-0.5"
-                      style={{ color: MUTED }}
+                      style={{ color: SUGGESTION_COLOR }}
                     >
                       {s.sub}
                     </div>
                   </div>
                   <ArrowUpRight
                     className="h-5 w-5 shrink-0"
-                    style={{ color: '#8B6F5C' }}
+                    style={{ color: SUGGESTION_COLOR }}
                     strokeWidth={2}
                   />
                 </button>
