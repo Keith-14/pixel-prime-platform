@@ -38,7 +38,7 @@ const getStatusColor = (status: string) => {
     case 'pending': return 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30';
     case 'paid': return 'bg-blue-500/20 text-blue-700 border-blue-500/30';
     case 'shipped': return 'bg-purple-500/20 text-purple-700 border-purple-500/30';
-    case 'delivered': return 'bg-green-500/20 text-green-700 border-green-500/30';
+    case 'delivered': return 'bg-amber-500/20 text-amber-700 border-amber-500/30';
     case 'cancelled': return 'bg-red-500/20 text-red-700 border-red-500/30';
     default: return 'bg-muted text-muted-foreground';
   }

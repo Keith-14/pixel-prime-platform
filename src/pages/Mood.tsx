@@ -47,8 +47,8 @@ const moodOptions: MoodOption[] = [
     level: 4, 
     labelKey: 'mood.good', 
     icon: Smile, 
-    color: 'text-emerald-400',
-    bgGradient: 'from-emerald-500/20 to-emerald-500/5'
+    color: 'text-amber-400',
+    bgGradient: 'from-amber-500/20 to-amber-500/5'
   },
   { 
     level: 5, 
@@ -135,7 +135,7 @@ export const Mood = () => {
             <Heart className="h-8 w-8 text-primary relative z-10" strokeWidth={1.5} />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-emerald-gradient">{t('mood.title')}</h1>
+            <h1 className="text-2xl font-bold text-brown-gradient">{t('mood.title')}</h1>
             <p className="text-sm text-muted-foreground">{t('mood.subtitle')}</p>
           </div>
           <Sparkles className="h-5 w-5 text-primary/60 ml-auto animate-pulse" />
@@ -184,7 +184,7 @@ export const Mood = () => {
                     key={i} 
                     className={cn(
                       "h-1.5 w-6 rounded-full",
-                      i <= 2 ? "bg-red-500/30" : i === 3 ? "bg-yellow-500/30" : "bg-emerald-500/30"
+                      i <= 2 ? "bg-red-500/30" : i === 3 ? "bg-yellow-500/30" : "bg-amber-500/30"
                     )}
                   />
                 ))}
