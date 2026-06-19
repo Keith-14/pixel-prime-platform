@@ -8,7 +8,7 @@ import scannerProduct from '@/assets/scanner-product.jpg';
 import scannerAlt1 from '@/assets/scanner-alt-1.jpg';
 import scannerAlt2 from '@/assets/scanner-alt-2.jpg';
 
-const CREAM_BG = '#FFF0D9';
+const CREAM_BG = '#FFF5E5';
 const CARD_CREAM = '#FBE6C8';
 const BROWN = '#2C1309';
 const BROWN_BTN = '#6B3520';

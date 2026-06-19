@@ -19,8 +19,8 @@ interface Product {
   seller_id: string;
 }
 
-const CREAM = '#FBEBD0';
-const CREAM_SOFT = '#FFF1DD';
+const CREAM = '#FFF5E5';
+const CREAM_SOFT = '#FFF5E5';
 const BROWN = '#A35233';
 const BROWN_DARK = '#5C2A14';
 const GREEN = '#3F6B3A';

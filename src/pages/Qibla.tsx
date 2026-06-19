@@ -6,7 +6,7 @@ import { useGlobalLocation } from '@/contexts/LocationContext';
 import { toast } from 'sonner';
 
 // Theme tokens
-const CREAM = '#FFF1DD';
+const CREAM = '#FFF5E5';
 const DIAL = '#FBE7C7';
 const RING = '#E7CFA8';
 const BROWN_DEEP = '#5C2A12';

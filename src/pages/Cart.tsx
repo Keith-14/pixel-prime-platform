@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useState } from 'react';
 
-const CREAM = '#FBEBD0';
+const CREAM = '#FFF5E5';
 const BROWN = '#A35233';
 const BROWN_DARK = '#5C2A14';
 const STEP_BG = '#F5E6D0';
@@ -189,7 +189,7 @@ export const Cart = () => {
         </div>
 
         {/* Checkout Button */}
-        <div className="px-4 pb-6 pt-3 bg-gradient-to-t from-[#FBEBD0] via-[#FBEBD0]/95 to-transparent">
+        <div className="px-4 pb-6 pt-3 bg-gradient-to-t from-[#FFF5E5] via-[#FFF5E5]/95 to-transparent">
           <button
             onClick={handleProceedToPay}
             disabled={processing}

@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { useEffect, useState } from 'react';
 import { getSelectedAddress, ShippingAddress } from '@/lib/addresses';
 
-const CREAM = '#FBEBD0';
+const CREAM = '#FFF5E5';
 const BROWN = '#A35233';
 const BROWN_DARK = '#5C2A14';
 
@@ -224,7 +224,7 @@ export const Checkout = () => {
         </div>
 
         {/* Place Order */}
-        <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-4 pb-6 pt-3 bg-gradient-to-t from-[#FBEBD0] via-[#FBEBD0]/95 to-transparent">
+        <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-4 pb-6 pt-3 bg-gradient-to-t from-[#FFF5E5] via-[#FFF5E5]/95 to-transparent">
           <button
             onClick={handlePlaceOrder}
             disabled={processing}

@@ -44,7 +44,7 @@ export const NewsDetail = () => {
 
   const BROWN = '#A35233';
   const BROWN_DARK = '#7a3a22';
-  const CREAM = '#FFF1DD';
+  const CREAM = '#FFF5E5';
   const QUOTE_BG = '#FBEFA8';
   const QUOTE_BORDER = '#8a7a1f';
 

@@ -4,8 +4,8 @@ import { ArrowLeft, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
-const CREAM = '#FFF1DD';
-const CREAM_CARD = '#FFFBF1';
+const CREAM = '#FFF5E5';
+const CREAM_CARD = '#FFF5E5';
 const BROWN = '#2C1309';
 const BROWN_ACCENT = '#A35233';
 const MUTED = '#B8A18C';

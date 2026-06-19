@@ -7,8 +7,8 @@ import ReactMarkdown from 'react-markdown';
 type Msg = { role: 'user' | 'assistant'; content: string };
 type Thread = { id: string; title: string; preview: string; ago: string; messages: Msg[] };
 
-const CREAM_BG = '#FBEAD0';
-const CREAM_CARD = '#FFF1DD';
+const CREAM_BG = '#FFF5E5';
+const CREAM_CARD = '#FFF5E5';
 const BROWN = '#2C1309';
 const BROWN_TITLE = '#B0431E';
 const BROWN_BTN = '#A0431D';

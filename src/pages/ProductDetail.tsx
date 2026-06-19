@@ -6,7 +6,7 @@ import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, ShoppingCart, Star, ShieldCheck, ChevronDown, Loader2 } from 'lucide-react';
 
-const CREAM = '#FBEBD0';
+const CREAM = '#FFF5E5';
 const BROWN = '#A35233';
 const BROWN_DARK = '#5C2A14';
 const CERT_BG = '#F2E58A';
@@ -158,7 +158,7 @@ export const ProductDetail = () => {
         </div>
 
         {/* Sticky CTA */}
-        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md px-5 pb-6 pt-3 bg-gradient-to-t from-[#FBEBD0] via-[#FBEBD0]/95 to-transparent">
+        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md px-5 pb-6 pt-3 bg-gradient-to-t from-[#FFF5E5] via-[#FFF5E5]/95 to-transparent">
           <button
             onClick={handleAdd}
             className="w-full h-14 rounded-full text-white text-lg font-bold shadow-lg"

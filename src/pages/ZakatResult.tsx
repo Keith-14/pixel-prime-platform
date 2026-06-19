@@ -3,8 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
 import { ArrowLeft, CheckCircle2, XCircle, TrendingUp, Wallet, Gem, Briefcase, Landmark, BarChart3, ArrowRight, RotateCcw } from 'lucide-react';
 
-const CREAM = '#FFF1DD';
-const CARD_CREAM = '#FCE7C8';
+const CREAM = '#FFF5E5';
+const CARD_CREAM = '#FFF8F0';
 const BROWN_DARK = '#2C1309';
 const BROWN = '#A35233';
 const BROWN_DEEP = '#78351A';
@@ -165,7 +165,7 @@ export const ZakatResult = () => {
           </div>
 
           {/* Breakdown Card */}
-          <div className="mt-5 rounded-[24px] p-5" style={{ backgroundColor: '#FFFBF1' }}>
+          <div className="mt-5 rounded-[24px] p-5" style={{ backgroundColor: '#FFF5E5' }}>
             <h3 className="text-sm font-bold tracking-wider mb-3" style={{ color: BROWN_DARK }}>
               WEALTH BREAKDOWN
             </h3>
@@ -224,7 +224,7 @@ export const ZakatResult = () => {
         {/* Bottom CTA */}
         <div
           className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-5 pt-5 pb-7 rounded-t-[28px]"
-          style={{ backgroundColor: '#FFFBF1', boxShadow: '0 -8px 30px rgba(0,0,0,0.06)' }}
+          style={{ backgroundColor: '#FFF5E5', boxShadow: '0 -8px 30px rgba(0,0,0,0.06)' }}
         >
           <button
             onClick={() => navigate('/zakat')}

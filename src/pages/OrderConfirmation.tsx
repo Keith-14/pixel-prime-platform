@@ -2,7 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useCart } from '@/contexts/CartContext';
 import { ArrowRight, Check } from 'lucide-react';
 
-const CREAM = '#FBEBD0';
+const CREAM = '#FFF5E5';
 const BROWN = '#A35233';
 const BROWN_DARK = '#5C2A14';
 const OLIVE = '#6B7C3E';

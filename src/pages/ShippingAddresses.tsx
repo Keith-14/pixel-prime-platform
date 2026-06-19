@@ -9,7 +9,7 @@ import {
   ShippingAddress,
 } from '@/lib/addresses';
 
-const CREAM = '#FBEBD0';
+const CREAM = '#FFF5E5';
 const BROWN = '#A35233';
 const BROWN_DARK = '#5C2A14';
 const OLIVE = '#7A8B3E';

@@ -14,8 +14,8 @@ import moodTrackerIcon from '@/assets/mood-tracker-icon.png.asset.json';
 import qiblaIcon from '@/assets/qibla-icon.png.asset.json';
 import prayerMarkIcon from '@/assets/prayer-mark-icon.png.asset.json';
 
-const CREAM = '#FFF1DD';
-const CREAM_CARD = '#FFF7E8';
+const CREAM = '#FFF5E5';
+const CREAM_CARD = '#FFF5E5';
 const BROWN = '#2C1309';
 const BROWN_ACCENT = '#B0431E';
 const HERO_GRAD = 'linear-gradient(177deg, #78351A 2.14%, #CE5728 97.86%)';
@@ -178,7 +178,7 @@ export const PrayerTimes = () => {
               ) : (
                 <div
                   className="h-11 w-11 rounded-full flex items-center justify-center"
-                  style={{ background: 'linear-gradient(180deg, #C99063 0%, #8B4A22 100%)', color: '#FFF1DD' }}
+                  style={{ background: 'linear-gradient(180deg, #C99063 0%, #8B4A22 100%)', color: '#FFF5E5' }}
                 >
                   {e.icon && <e.icon className="h-5 w-5" strokeWidth={2} />}
                 </div>

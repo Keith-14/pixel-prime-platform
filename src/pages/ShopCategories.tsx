@@ -8,7 +8,7 @@ import mens from '@/assets/cat-mens.jpg';
 import ladies from '@/assets/cat-ladies.jpg';
 import accessories from '@/assets/cat-accessories.jpg';
 
-const CREAM = '#FBEBD0';
+const CREAM = '#FFF5E5';
 const BROWN_DARK = '#5C2A14';
 
 export const CATEGORIES = [

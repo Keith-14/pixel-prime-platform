@@ -7,8 +7,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 
-const CREAM = '#FFF1DD';
-const CREAM_CARD = '#FFF7E8';
+const CREAM = '#FFF5E5';
+const CREAM_CARD = '#FFF5E5';
 const BROWN = '#2C1309';
 const BROWN_DARK = '#3A1E12';
 const BROWN_ACCENT = '#B0431E';
