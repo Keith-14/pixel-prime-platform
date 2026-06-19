@@ -76,9 +76,9 @@ export const BottomNavigation = () => {
 
   return (
     <nav className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md z-30 px-3 pb-3 font-arabic">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 w-full">
         <div
-          className="flex-1 rounded-full flex items-center justify-between h-12 px-1"
+          className="flex-1 min-w-0 rounded-full flex items-center justify-between h-12 px-1 overflow-hidden"
           style={{
             backgroundColor: PILL_BG,
             boxShadow: '0 10px 28px rgba(60, 30, 15, 0.14), 0 2px 6px rgba(60, 30, 15, 0.06)',
@@ -91,12 +91,12 @@ export const BottomNavigation = () => {
               <button
                 key={key}
                 onClick={() => navigate(path)}
-                className="flex flex-col items-center justify-center gap-0.5 py-1 px-2 rounded-full transition-all duration-200"
-                style={{ backgroundColor: isActive ? ACTIVE_BG : 'transparent', minWidth: 0 }}
+                className="flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 rounded-full transition-all duration-200"
+                style={{ backgroundColor: isActive ? ACTIVE_BG : 'transparent' }}
               >
                 {render(isActive)}
                 <span
-                  className="text-[11px] leading-none whitespace-nowrap"
+                  className="text-[10px] leading-none whitespace-nowrap truncate max-w-full"
                   style={{ color, fontWeight: isActive ? 700 : 600 }}
                 >
                   {customLabel || t(labelKey)}
