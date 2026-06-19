@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { ArrowLeft, Mic, ArrowUpRight, HelpCircle, Send } from 'lucide-react';
+import { ArrowLeft, Mic, ArrowUpRight, HelpCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ReactMarkdown from 'react-markdown';
 import aiAssistantLogo from '@/assets/ai-assistant-logo.png.asset.json';
+import aiSendBtn from '@/assets/ai-send-btn.png.asset.json';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 
