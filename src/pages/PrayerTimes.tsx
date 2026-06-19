@@ -116,7 +116,7 @@ export const PrayerTimes = () => {
       {/* Hero arc card */}
       <div
         className="relative mx-0 px-5 pt-6 pb-10 overflow-hidden"
-        style={{ background: HERO_GRAD, borderBottomLeftRadius: 32, borderBottomRightRadius: 32 }}
+        style={{ background: HERO_GRAD }}
       >
         {/* Arc + Logo image */}
         <div className="absolute inset-x-0 top-3 flex justify-center">
@@ -140,6 +140,18 @@ export const PrayerTimes = () => {
           </p>
         </div>
       </div>
+
+      {/* Beige content with rounded top corners */}
+      <div
+        className="relative"
+        style={{
+          background: CREAM,
+          borderTopLeftRadius: 32,
+          borderTopRightRadius: 32,
+          marginTop: -20,
+          zIndex: 1,
+        }}
+      >
 
       {/* Essentials grid */}
       <div className="px-5 pt-6">
@@ -258,6 +270,7 @@ export const PrayerTimes = () => {
             ASH-SHARH 94:5
           </p>
         </div>
+      </div>
       </div>
 
       <BottomNavigation />
