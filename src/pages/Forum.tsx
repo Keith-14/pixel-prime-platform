@@ -428,6 +428,7 @@ const MyCommunitiesView = ({
   onToggle,
   onExplore,
   onCreate,
+  onOpen,
 }: {
   joined: Set<string>;
   communities: Community[];
@@ -435,6 +436,7 @@ const MyCommunitiesView = ({
   onToggle: (id: string) => void;
   onExplore: () => void;
   onCreate: () => void;
+  onOpen?: (c: Community) => void;
 }) => {
   const joinedList = communities.filter((c) => joined.has(c.id));
   const combined = [...userCreated, ...joinedList];
@@ -470,7 +472,7 @@ const MyCommunitiesView = ({
       ) : (
         <div className="space-y-3 pb-28">
           {combined.map((c) => (
-            <CommunityRow key={c.id} community={c} joined onToggle={onToggle} />
+            <CommunityRow key={c.id} community={c} joined onToggle={onToggle} onOpen={onOpen} />
           ))}
         </div>
       )}
