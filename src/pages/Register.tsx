@@ -184,11 +184,11 @@ export const Register = () => {
 
       {/* Bottom sheet card with login flows */}
       <div
-        className="px-6 pb-8 pt-8 relative z-10 rounded-t-[28px]"
+        className="px-6 pb-8 pt-8 relative z-10 rounded-[28px] flex-1 flex flex-col mb-4"
         style={{ backgroundColor: '#FFF1DD' }}
       >
         {view === 'welcome' && (
-          <div className="space-y-3">
+          <div className="space-y-3 flex-1 flex flex-col">
             {/* Apple */}
             <Button
               onClick={() => toast.message('Apple sign-in coming soon')}
