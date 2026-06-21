@@ -415,43 +415,297 @@ const ExploreView = ({
 const MyCommunitiesView = ({
   joined,
   communities,
+  userCreated,
   onToggle,
   onExplore,
+  onCreate,
 }: {
   joined: Set<string>;
   communities: Community[];
+  userCreated: Community[];
   onToggle: (id: string) => void;
   onExplore: () => void;
+  onCreate: () => void;
 }) => {
   const joinedList = communities.filter((c) => joined.has(c.id));
-
-  if (joinedList.length === 0) {
-    return (
-      <div className="text-center py-16 rounded-2xl" style={{ background: '#FFFFFF' }}>
-        <Users className="h-10 w-10 mx-auto mb-4" style={{ color: '#C4A98A' }} />
-        <p className="font-medium" style={{ color: BROWN_DARK }}>
-          No communities joined yet
-        </p>
-        <p className="text-sm mt-1 mb-5" style={{ color: '#9C8569' }}>
-          Discover groups that match your interests.
-        </p>
-        <button
-          onClick={onExplore}
-          className="rounded-full px-5 py-2 text-sm font-semibold text-white"
-          style={{ background: BROWN }}
-        >
-          Explore communities
-        </button>
-      </div>
-    );
-  }
+  const combined = [...userCreated, ...joinedList];
 
   return (
-    <div className="space-y-3 pb-6">
-      {joinedList.map((c) => (
-        <CommunityRow key={c.id} community={c} joined onToggle={onToggle} />
-      ))}
+    <div className="relative min-h-[60vh]">
+      {combined.length === 0 ? (
+        <div className="text-center py-16 rounded-2xl" style={{ background: '#FFFFFF' }}>
+          <Users className="h-10 w-10 mx-auto mb-4" style={{ color: '#C4A98A' }} />
+          <p className="font-medium" style={{ color: BROWN_DARK }}>
+            No communities yet
+          </p>
+          <p className="text-sm mt-1 mb-5" style={{ color: '#9C8569' }}>
+            Discover groups that match your interests or start your own.
+          </p>
+          <div className="flex items-center justify-center gap-3">
+            <button
+              onClick={onExplore}
+              className="rounded-full px-5 py-2 text-sm font-semibold text-white"
+              style={{ background: BROWN }}
+            >
+              Explore
+            </button>
+            <button
+              onClick={onCreate}
+              className="rounded-full px-5 py-2 text-sm font-semibold text-white"
+              style={{ background: OLIVE }}
+            >
+              Create Community
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-3 pb-28">
+          {combined.map((c) => (
+            <CommunityRow key={c.id} community={c} joined onToggle={onToggle} />
+          ))}
+        </div>
+      )}
+
+      <button
+        onClick={onCreate}
+        className="fixed bottom-24 right-4 z-30 flex items-center gap-2 pl-4 pr-5 py-3 rounded-full text-sm font-semibold text-white shadow-lg"
+        style={{ background: OLIVE, boxShadow: '0 8px 20px rgba(124, 126, 45, 0.35)' }}
+        aria-label="Create community"
+      >
+        <Plus className="h-5 w-5" strokeWidth={2.5} />
+        Create Community
+      </button>
     </div>
+  );
+};
+
+// ---------- Create Community Dialog ----------
+const CreateCommunityDialog = ({
+  open,
+  onOpenChange,
+  onCreate,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onCreate: (data: {
+    name: string;
+    description: string;
+    category: string;
+    privacy: 'public' | 'private';
+    cover: string | null;
+    icon: string | null;
+  }) => void;
+}) => {
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [category, setCategory] = useState('');
+  const [privacy, setPrivacy] = useState<'public' | 'private'>('public');
+  const [cover, setCover] = useState<string | null>(null);
+  const [icon, setIcon] = useState<string | null>(null);
+
+  const reset = () => {
+    setName(''); setDescription(''); setCategory(''); setPrivacy('public'); setCover(null); setIcon(null);
+  };
+
+  const handleFile = (file: File | undefined, setter: (v: string) => void) => {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be under 5MB');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setter(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleSubmit = () => {
+    const trimmed = name.trim();
+    if (!trimmed) { toast.error('Community name is required'); return; }
+    if (!category) { toast.error('Please select a category'); return; }
+    onCreate({
+      name: trimmed.slice(0, 50),
+      description: description.trim().slice(0, 200),
+      category,
+      privacy,
+      cover,
+      icon,
+    });
+    reset();
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v); }}>
+      <DialogContent
+        className="max-w-md p-0 overflow-hidden gap-0 max-h-[92vh] flex flex-col"
+        style={{ background: CREAM_BG, border: `1px solid ${SOFT_BORDER}` }}
+      >
+        {/* Header */}
+        <DialogHeader className="px-4 py-3 m-0 flex-row items-center gap-3 space-y-0" style={{ background: '#FFFFFF', borderBottom: `1px solid ${SOFT_BORDER}` }}>
+          <button onClick={() => onOpenChange(false)} aria-label="Back" className="shrink-0">
+            <ArrowLeft className="h-5 w-5" style={{ color: BROWN_DARK }} />
+          </button>
+          <DialogTitle className="text-lg font-bold" style={{ color: BROWN_DARK, fontFamily: "'Inter', sans-serif" }}>
+            Create Community
+          </DialogTitle>
+          <DialogDescription className="sr-only">Create a new community</DialogDescription>
+        </DialogHeader>
+
+        <div className="flex-1 overflow-y-auto px-4 pt-5 pb-4">
+          {/* Cover photo */}
+          <div className="relative mb-10">
+            <label className="block cursor-pointer">
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => handleFile(e.target.files?.[0], setCover)}
+              />
+              <div
+                className="rounded-2xl flex items-center justify-center overflow-hidden"
+                style={{
+                  height: 150,
+                  background: '#EFE2CB',
+                  border: '1.5px dashed #C4A98A',
+                }}
+              >
+                {cover ? (
+                  <img src={cover} alt="Cover" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <Camera className="h-7 w-7 mb-2" style={{ color: '#8E7150' }} />
+                    <p className="text-sm font-semibold" style={{ color: BROWN_DARK }}>Add cover photo</p>
+                    <p className="text-xs" style={{ color: '#9C8569' }}>Optional</p>
+                  </div>
+                )}
+              </div>
+            </label>
+
+            {/* Icon - overlapping bottom-left */}
+            <div className="absolute left-3 -bottom-8 flex items-end gap-3">
+              <label className="relative cursor-pointer">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleFile(e.target.files?.[0], setIcon)}
+                />
+                <div
+                  className="w-16 h-16 rounded-full flex items-center justify-center overflow-hidden"
+                  style={{ background: '#EFE2CB', border: `3px solid ${CREAM_BG}` }}
+                >
+                  {icon ? (
+                    <img src={icon} alt="Icon" className="w-full h-full object-cover" />
+                  ) : (
+                    <ImagePlus className="h-6 w-6" style={{ color: '#8E7150' }} />
+                  )}
+                </div>
+                <div
+                  className="absolute -right-1 bottom-0 w-5 h-5 rounded-full flex items-center justify-center"
+                  style={{ background: BROWN }}
+                >
+                  <Camera className="h-3 w-3 text-white" />
+                </div>
+              </label>
+              <span className="text-sm mb-1" style={{ color: BROWN_DARK }}>Add icon</span>
+            </div>
+          </div>
+
+          <p className="text-[11px] font-bold tracking-[0.15em] mb-3" style={{ color: BROWN }}>REQUIRED</p>
+
+          {/* Name */}
+          <div className="mb-5">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-semibold" style={{ color: BROWN_DARK }}>Community Name</label>
+              <span className="text-[11px]" style={{ color: '#9C8569' }}>{name.length}/50</span>
+            </div>
+            <input
+              type="text"
+              maxLength={50}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g., Al-Andalus Heritage Club"
+              className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
+              style={{ background: '#FBEFD8', borderBottom: '1px solid #E8D5C4', color: BROWN_DARK }}
+            />
+          </div>
+
+          {/* Description */}
+          <div className="mb-5">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-semibold" style={{ color: BROWN_DARK }}>Description</label>
+              <span className="text-[11px]" style={{ color: '#9C8569' }}>{description.length}/200</span>
+            </div>
+            <textarea
+              maxLength={200}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Tell the world about your circle..."
+              rows={3}
+              className="w-full px-3 py-2.5 rounded-lg text-sm outline-none resize-none"
+              style={{ background: '#FBEFD8', borderBottom: '1px solid #E8D5C4', color: BROWN_DARK }}
+            />
+          </div>
+
+          {/* Category */}
+          <div className="mb-6">
+            <label className="block text-sm font-semibold mb-2" style={{ color: BROWN_DARK }}>Category</label>
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger
+                className="w-full rounded-lg text-sm"
+                style={{ background: '#FBEFD8', border: 'none', borderBottom: '1px solid #E8D5C4', color: BROWN_DARK }}
+              >
+                <SelectValue placeholder="Select Category" />
+              </SelectTrigger>
+              <SelectContent>
+                {CREATE_CATEGORIES.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <p className="text-[11px] font-bold tracking-[0.15em] mb-3" style={{ color: BROWN }}>PRIVACY</p>
+
+          <div className="grid grid-cols-2 gap-3 mb-2">
+            {([
+              { id: 'public', label: 'Public', desc: 'Anyone can see and join', Icon: Globe },
+              { id: 'private', label: 'Private', desc: 'Admin approves members', Icon: Lock },
+            ] as const).map((opt) => {
+              const active = privacy === opt.id;
+              const Ic = opt.Icon;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setPrivacy(opt.id)}
+                  className="rounded-2xl py-4 px-3 flex flex-col items-center text-center transition-all"
+                  style={{
+                    background: active ? '#FBEFD8' : '#F5E6CE',
+                    border: active ? `1.5px solid ${BROWN}` : '1.5px solid transparent',
+                  }}
+                >
+                  <Ic className="h-5 w-5 mb-2" style={{ color: active ? BROWN : BROWN_DARK }} />
+                  <span className="text-sm font-bold" style={{ color: active ? BROWN : BROWN_DARK }}>{opt.label}</span>
+                  <span className="text-[11px] mt-1" style={{ color: '#9C8569' }}>{opt.desc}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="px-4 py-4" style={{ background: CREAM_BG, borderTop: `1px solid ${SOFT_BORDER}` }}>
+          <button
+            onClick={handleSubmit}
+            className="w-full py-3.5 rounded-full text-base font-semibold text-white flex items-center justify-center gap-2"
+            style={{ background: BROWN }}
+          >
+            Send For Approval
+            <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
