@@ -244,14 +244,17 @@ const CommunityHeroCard = ({
   community,
   joined,
   onToggle,
+  onOpen,
 }: {
   community: Community;
   joined: boolean;
   onToggle: (id: string) => void;
+  onOpen?: (c: Community) => void;
 }) => (
   <div
-    className="shrink-0 w-[78%] rounded-2xl overflow-hidden"
+    className="shrink-0 w-[78%] rounded-2xl overflow-hidden cursor-pointer"
     style={{ background: '#FFFFFF', boxShadow: '0 1px 3px rgba(123, 63, 30, 0.06)' }}
+    onClick={() => onOpen?.(community)}
   >
     <div className="w-full" style={{ aspectRatio: '16 / 10' }}>
       <img src={community.banner} alt={community.name} className="w-full h-full object-cover" />
@@ -267,7 +270,7 @@ const CommunityHeroCard = ({
         {community.description}
       </p>
       <button
-        onClick={() => onToggle(community.id)}
+        onClick={(e) => { e.stopPropagation(); onToggle(community.id); }}
         className="mt-4 w-full py-2.5 rounded-full text-sm font-semibold text-white transition-opacity"
         style={{ background: joined ? BROWN_DARK : BROWN, opacity: joined ? 0.85 : 1 }}
       >
@@ -281,14 +284,17 @@ const CommunityRow = ({
   community,
   joined,
   onToggle,
+  onOpen,
 }: {
   community: Community;
   joined: boolean;
   onToggle: (id: string) => void;
+  onOpen?: (c: Community) => void;
 }) => (
   <div
-    className="flex items-center gap-3 p-3 rounded-2xl"
+    className="flex items-center gap-3 p-3 rounded-2xl cursor-pointer"
     style={{ background: '#FFFFFF', boxShadow: '0 1px 3px rgba(123, 63, 30, 0.05)' }}
+    onClick={() => onOpen?.(community)}
   >
     {community.iconUrl ? (
       <img
@@ -322,7 +328,7 @@ const CommunityRow = ({
       </span>
     ) : (
       <button
-        onClick={() => onToggle(community.id)}
+        onClick={(e) => { e.stopPropagation(); onToggle(community.id); }}
         className="px-5 py-1.5 rounded-full text-xs font-semibold shrink-0"
         style={
           joined
@@ -342,12 +348,14 @@ const ExploreView = ({
   category,
   setCategory,
   onToggle,
+  onOpen,
 }: {
   joined: Set<string>;
   communities: Community[];
   category: string;
   setCategory: (id: string) => void;
   onToggle: (id: string) => void;
+  onOpen?: (c: Community) => void;
 }) => {
   const featured = communities.filter((c) => c.featured);
   const rest = communities.filter((c) => !c.featured && (category === 'all' || c.category === category));
@@ -382,6 +390,7 @@ const ExploreView = ({
             community={c}
             joined={joined.has(c.id)}
             onToggle={onToggle}
+            onOpen={onOpen}
           />
         ))}
       </div>
@@ -405,7 +414,7 @@ const ExploreView = ({
 
       <div className="space-y-3 pb-6">
         {rest.map((c) => (
-          <CommunityRow key={c.id} community={c} joined={joined.has(c.id)} onToggle={onToggle} />
+          <CommunityRow key={c.id} community={c} joined={joined.has(c.id)} onToggle={onToggle} onOpen={onOpen} />
         ))}
       </div>
     </div>
@@ -419,6 +428,7 @@ const MyCommunitiesView = ({
   onToggle,
   onExplore,
   onCreate,
+  onOpen,
 }: {
   joined: Set<string>;
   communities: Community[];
@@ -426,6 +436,7 @@ const MyCommunitiesView = ({
   onToggle: (id: string) => void;
   onExplore: () => void;
   onCreate: () => void;
+  onOpen?: (c: Community) => void;
 }) => {
   const joinedList = communities.filter((c) => joined.has(c.id));
   const combined = [...userCreated, ...joinedList];
@@ -461,7 +472,7 @@ const MyCommunitiesView = ({
       ) : (
         <div className="space-y-3 pb-28">
           {combined.map((c) => (
-            <CommunityRow key={c.id} community={c} joined onToggle={onToggle} />
+            <CommunityRow key={c.id} community={c} joined onToggle={onToggle} onOpen={onOpen} />
           ))}
         </div>
       )}
@@ -735,6 +746,7 @@ export const Forum = () => {
   const [exploreCategory, setExploreCategory] = useState<string>('all');
   const [userCommunities, setUserCommunities] = useState<Community[]>([]);
   const [createCommunityOpen, setCreateCommunityOpen] = useState(false);
+  const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(null);
 
   // Persist joined communities per user in localStorage
   const joinedStorageKey = `guftagu_joined_${user?.uid || 'guest'}`;
@@ -1574,6 +1586,128 @@ export const Forum = () => {
     </button>
   );
 
+  // Community detail view
+  if (selectedCommunity) {
+    const c = selectedCommunity;
+    const isJoined = joinedCommunities.has(c.id) || c.isAdmin;
+    return (
+      <Layout showHeader={false}>
+        <div className="min-h-screen pb-28" style={{ background: CREAM_BG, fontFamily: "'Inter', sans-serif" }}>
+          {/* Top bar */}
+          <div className="flex items-center justify-between px-4 pt-4 pb-3" style={{ background: CREAM_BG }}>
+            <button
+              onClick={() => setSelectedCommunity(null)}
+              className="flex items-center gap-2"
+              style={{ color: BROWN_DARK }}
+            >
+              <span className="w-8 h-8 rounded-full flex items-center justify-center" style={{ border: `1.5px solid ${BROWN_DARK}` }}>
+                <ArrowLeft className="h-4 w-4" />
+              </span>
+              <span className="text-base font-bold">Back to Guftagu</span>
+            </button>
+            <button
+              className="w-9 h-9 rounded-full flex items-center justify-center"
+              style={{ border: `1.5px solid ${BROWN_DARK}`, color: BROWN_DARK }}
+              aria-label="Help"
+            >
+              <span className="text-sm font-bold">?</span>
+            </button>
+          </div>
+
+          {/* Banner */}
+          <div className="w-full" style={{ aspectRatio: '16 / 9' }}>
+            <img src={c.banner} alt={c.name} className="w-full h-full object-cover" />
+          </div>
+
+          {/* Header block */}
+          <div className="px-4 relative">
+            <div className="flex items-end justify-between -mt-10 mb-3">
+              {c.iconUrl ? (
+                <img
+                  src={c.iconUrl}
+                  alt={c.name}
+                  className="w-20 h-20 rounded-full object-cover"
+                  style={{ border: `4px solid ${CREAM_BG}`, background: '#FFFFFF' }}
+                />
+              ) : (
+                <div
+                  className="w-20 h-20 rounded-full flex items-center justify-center"
+                  style={{ background: '#F4E7D2', border: `4px solid ${CREAM_BG}` }}
+                >
+                  <BookOpen className="h-7 w-7" style={{ color: '#A88B66' }} />
+                </div>
+              )}
+              {!c.isAdmin && (
+                <button
+                  onClick={() => toggleJoinCommunity(c.id)}
+                  className="px-8 py-2.5 rounded-full text-sm font-semibold text-white mb-1"
+                  style={{ background: isJoined ? BROWN_DARK : BROWN }}
+                >
+                  {isJoined ? 'Joined' : 'Join'}
+                </button>
+              )}
+            </div>
+
+            <h1 className="text-2xl font-bold" style={{ color: BROWN_DARK }}>
+              {c.name}
+            </h1>
+            <p className="text-sm mt-1" style={{ color: '#9C8569' }}>
+              {c.members} · {c.type}
+            </p>
+            <p className="text-[15px] mt-4 leading-relaxed" style={{ color: '#3D2A1E' }}>
+              {c.description}
+            </p>
+
+            {/* Tabs */}
+            <div className="mt-6 mb-4 border-b" style={{ borderColor: SOFT_BORDER }}>
+              <div className="inline-flex flex-col items-center pb-2">
+                <span className="text-base font-bold" style={{ color: BROWN }}>Posts</span>
+                <span className="block mt-2 h-[2px] w-12 rounded-full" style={{ background: BROWN }} />
+              </div>
+            </div>
+
+            {/* Composer card */}
+            <button
+              onClick={() => setIsCreateDialogOpen(true)}
+              className="w-full mb-5 rounded-2xl text-left"
+              style={{ background: '#FFFFFF', border: `1.5px solid ${BROWN}` }}
+            >
+              <div className="flex items-start gap-3 px-4 pt-4">
+                <div className="w-9 h-9 rounded-full overflow-hidden shrink-0" style={{ background: '#EAD9BE' }}>
+                  <img src={AYESHA_AVATAR} alt="" className="w-full h-full object-cover" />
+                </div>
+                <span className="text-sm pt-1" style={{ color: '#5C4632' }}>
+                  This The whole secret of existence lies in the pursuit of meaning, purpose, and connection...
+                </span>
+              </div>
+              <div
+                className="mt-3 mx-4 pt-3 pb-3 flex items-center justify-between"
+                style={{ borderTop: `1px solid ${SOFT_BORDER}` }}
+              >
+                <span style={{ color: BROWN_LIGHT }}>
+                  <ImagePlus className="h-5 w-5" />
+                </span>
+                <span
+                  className="px-6 py-1.5 rounded-full text-xs font-semibold text-white"
+                  style={{ background: BROWN }}
+                >
+                  Post
+                </span>
+              </div>
+            </button>
+
+            {/* Posts */}
+            <div className="space-y-3">
+              {MOCK_POSTS.map((post, index) => (
+                <PostCard key={post.id} post={post} index={index} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout 
       headerTitle="Guftagu" 
@@ -1666,6 +1800,7 @@ export const Forum = () => {
               onToggle={toggleJoinCommunity}
               onExplore={() => setActiveTab('explore')}
               onCreate={() => setCreateCommunityOpen(true)}
+              onOpen={(c) => setSelectedCommunity(c)}
             />
           ) : activeTab === 'explore' ? (
             <ExploreView
@@ -1674,6 +1809,7 @@ export const Forum = () => {
               category={exploreCategory}
               setCategory={setExploreCategory}
               onToggle={toggleJoinCommunity}
+              onOpen={(c) => setSelectedCommunity(c)}
             />
           ) : (
             <>
