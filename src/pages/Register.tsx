@@ -175,19 +175,24 @@ export const Register = () => {
         <LanguageSelector />
       </div>
 
-      {/* Hero spacer with brand */}
+      {/* Hero with brand - mosque fully visible */}
       <div
-        className="relative h-[42vh] min-h-[300px] w-full"
+        className="relative w-full"
         style={{
-          backgroundImage: `linear-gradient(180deg, rgba(255,241,221,0) 70%, #FFF5E5 100%), url(${loginBg.url})`,
-          backgroundSize: 'cover, cover',
-          backgroundPosition: 'center top, center top',
-          backgroundRepeat: 'no-repeat, no-repeat',
+          aspectRatio: '9 / 11',
+          maxHeight: '58vh',
+          backgroundImage: `url(${loginBg.url})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center top',
+          backgroundRepeat: 'no-repeat',
         }}
       />
 
-      {/* Bottom sheet */}
-      <div className="flex-1 px-6 pb-8 pt-2 relative z-10">
+      {/* Bottom sheet card */}
+      <div
+        className="flex-1 px-6 pb-8 pt-8 relative z-10 -mt-6 rounded-t-[28px]"
+        style={{ backgroundColor: '#FFF1DD' }}
+      >
         {view === 'welcome' && (
           <div className="space-y-3">
             {/* Apple */}
