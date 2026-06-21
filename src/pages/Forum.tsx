@@ -668,19 +668,46 @@ export const Forum = () => {
         }}
       >
         <CardContent className="p-4">
+          {post.community && (
+            <div
+              className="flex items-center justify-between pb-2.5 mb-3 text-xs"
+              style={{ borderBottom: `1px solid ${SOFT_BORDER}` }}
+            >
+              <span style={{ color: '#9C8569' }}>
+                Posted in{' '}
+                <span className="font-semibold" style={{ color: BROWN_LIGHT }}>
+                  {post.community}
+                </span>
+              </span>
+              <button className="hover:underline" style={{ color: '#9C8569' }}>
+                view community
+              </button>
+            </div>
+          )}
           {/* Header: Avatar + Name + Category + Time */}
           <div className="flex items-start gap-3 mb-3">
-            <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0"
-              style={{ background: '#EAD9BE' }}
-            >
-              <User className="h-5 w-5" style={{ color: '#A88B66' }} />
-            </div>
+            {post.avatar_url ? (
+              <img
+                src={post.avatar_url}
+                alt={post.user_name}
+                className="w-11 h-11 rounded-full object-cover shrink-0"
+              />
+            ) : (
+              <div
+                className="w-11 h-11 rounded-full flex items-center justify-center shrink-0"
+                style={{ background: '#EAD9BE' }}
+              >
+                <User className="h-5 w-5" style={{ color: '#A88B66' }} />
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-semibold text-sm" style={{ color: BROWN_DARK }}>{post.user_name}</span>
-                <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-medium uppercase tracking-wide", getCategoryBadgeColor(post.category))}>
-                  {getCategoryLabel(post.category)}
-                </span>
+                {!post.community && (
+                  <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-medium uppercase tracking-wide", getCategoryBadgeColor(post.category))}>
+                    {getCategoryLabel(post.category)}
+                  </span>
+                )}
               </div>
               <p className="text-xs mt-0.5" style={{ color: '#9C8569' }}>{formatTimeAgo(post.created_at)}</p>
             </div>
@@ -697,6 +724,13 @@ export const Forum = () => {
               </button>
             )}
           </div>
+
+          {/* Optional post image */}
+          {post.image_url && (
+            <div className="w-full rounded-xl overflow-hidden mb-3" style={{ aspectRatio: '16 / 10' }}>
+              <img src={post.image_url} alt="" className="w-full h-full object-cover" />
+            </div>
+          )}
 
           {/* Content */}
           <div className="mb-3">
