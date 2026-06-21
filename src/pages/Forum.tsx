@@ -227,6 +227,200 @@ const COMMUNITY_CATEGORIES = [
   { id: 'heritage', label: 'Heritage' },
 ];
 
+// ---------- Community sub-components ----------
+const CommunityHeroCard = ({
+  community,
+  joined,
+  onToggle,
+}: {
+  community: Community;
+  joined: boolean;
+  onToggle: (id: string) => void;
+}) => (
+  <div
+    className="shrink-0 w-[78%] rounded-2xl overflow-hidden"
+    style={{ background: '#FFFFFF', boxShadow: '0 1px 3px rgba(123, 63, 30, 0.06)' }}
+  >
+    <div className="w-full" style={{ aspectRatio: '16 / 10' }}>
+      <img src={community.banner} alt={community.name} className="w-full h-full object-cover" />
+    </div>
+    <div className="p-4">
+      <h3 className="text-lg font-bold leading-tight" style={{ color: BROWN_DARK }}>
+        {community.name}
+      </h3>
+      <p className="text-xs mt-1" style={{ color: '#9C8569' }}>
+        {community.members} · {community.type}
+      </p>
+      <p className="text-sm mt-3 leading-relaxed" style={{ color: '#5C4632' }}>
+        {community.description}
+      </p>
+      <button
+        onClick={() => onToggle(community.id)}
+        className="mt-4 w-full py-2.5 rounded-full text-sm font-semibold text-white transition-opacity"
+        style={{ background: joined ? BROWN_DARK : BROWN, opacity: joined ? 0.85 : 1 }}
+      >
+        {joined ? 'Joined' : 'Join'}
+      </button>
+    </div>
+  </div>
+);
+
+const CommunityRow = ({
+  community,
+  joined,
+  onToggle,
+}: {
+  community: Community;
+  joined: boolean;
+  onToggle: (id: string) => void;
+}) => (
+  <div
+    className="flex items-center gap-3 p-3 rounded-2xl"
+    style={{ background: '#FFFFFF', boxShadow: '0 1px 3px rgba(123, 63, 30, 0.05)' }}
+  >
+    <div
+      className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
+      style={{ background: '#F1E2C6', border: '1.5px dashed #C4A98A' }}
+    >
+      <BookOpen className="h-5 w-5" style={{ color: '#A88B66' }} />
+    </div>
+    <div className="flex-1 min-w-0">
+      <p className="text-sm font-bold truncate" style={{ color: BROWN_DARK }}>
+        {community.name}
+      </p>
+      <p className="text-xs mt-0.5" style={{ color: '#9C8569' }}>
+        {community.members} · {community.type}
+      </p>
+    </div>
+    <button
+      onClick={() => onToggle(community.id)}
+      className="px-5 py-1.5 rounded-full text-xs font-semibold text-white shrink-0"
+      style={{ background: joined ? BROWN_DARK : BROWN, opacity: joined ? 0.85 : 1 }}
+    >
+      {joined ? 'Joined' : 'Join'}
+    </button>
+  </div>
+);
+
+const ExploreView = ({
+  joined,
+  communities,
+  category,
+  setCategory,
+  onToggle,
+}: {
+  joined: Set<string>;
+  communities: Community[];
+  category: string;
+  setCategory: (id: string) => void;
+  onToggle: (id: string) => void;
+}) => {
+  const featured = communities.filter((c) => c.featured);
+  const rest = communities.filter((c) => !c.featured && (category === 'all' || c.category === category));
+
+  return (
+    <div className="-mx-4 px-4">
+      {joined.size === 0 && (
+        <div
+          className="flex items-center gap-3 rounded-2xl px-4 py-3 mb-5"
+          style={{ background: '#FBE6C8' }}
+        >
+          <Info className="h-4 w-4 shrink-0" style={{ color: BROWN }} />
+          <p className="text-sm" style={{ color: BROWN_DARK }}>
+            You haven't joined any communities yet.
+          </p>
+        </div>
+      )}
+
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-bold" style={{ color: BROWN_DARK }}>
+          Top Picks
+        </h2>
+        <button className="text-sm" style={{ color: '#9C8569' }}>
+          See all
+        </button>
+      </div>
+
+      <div className="flex gap-3 overflow-x-auto pb-3 -mx-4 px-4 scrollbar-hide mb-5">
+        {featured.map((c) => (
+          <CommunityHeroCard
+            key={c.id}
+            community={c}
+            joined={joined.has(c.id)}
+            onToggle={onToggle}
+          />
+        ))}
+      </div>
+
+      <div className="flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-hide">
+        {COMMUNITY_CATEGORIES.map(({ id, label }) => (
+          <button
+            key={id}
+            onClick={() => setCategory(id)}
+            className="px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all border"
+            style={
+              category === id
+                ? { background: BROWN, borderColor: 'transparent', color: '#FFFFFF' }
+                : { background: '#FFFFFF', borderColor: SOFT_BORDER, color: BROWN_DARK }
+            }
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div className="space-y-3 pb-6">
+        {rest.map((c) => (
+          <CommunityRow key={c.id} community={c} joined={joined.has(c.id)} onToggle={onToggle} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const MyCommunitiesView = ({
+  joined,
+  communities,
+  onToggle,
+  onExplore,
+}: {
+  joined: Set<string>;
+  communities: Community[];
+  onToggle: (id: string) => void;
+  onExplore: () => void;
+}) => {
+  const joinedList = communities.filter((c) => joined.has(c.id));
+
+  if (joinedList.length === 0) {
+    return (
+      <div className="text-center py-16 rounded-2xl" style={{ background: '#FFFFFF' }}>
+        <Users className="h-10 w-10 mx-auto mb-4" style={{ color: '#C4A98A' }} />
+        <p className="font-medium" style={{ color: BROWN_DARK }}>
+          No communities joined yet
+        </p>
+        <p className="text-sm mt-1 mb-5" style={{ color: '#9C8569' }}>
+          Discover groups that match your interests.
+        </p>
+        <button
+          onClick={onExplore}
+          className="rounded-full px-5 py-2 text-sm font-semibold text-white"
+          style={{ background: BROWN }}
+        >
+          Explore communities
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3 pb-6">
+      {joinedList.map((c) => (
+        <CommunityRow key={c.id} community={c} joined onToggle={onToggle} />
+      ))}
+    </div>
+  );
+};
+
 export const Forum = () => {
   const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
