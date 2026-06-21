@@ -1136,17 +1136,20 @@ export const Forum = () => {
           </div>
 
           {activeTab === 'communities' ? (
-            <div className="text-center py-20">
-              <Users className="h-10 w-10 mx-auto mb-4" style={{ color: '#C4A98A' }} />
-              <p className="font-medium" style={{ color: BROWN_DARK }}>My Communities</p>
-              <p className="text-sm mt-1" style={{ color: '#9C8569' }}>Coming soon</p>
-            </div>
+            <MyCommunitiesView
+              joined={joinedCommunities}
+              communities={COMMUNITIES}
+              onToggle={toggleJoinCommunity}
+              onExplore={() => setActiveTab('explore')}
+            />
           ) : activeTab === 'explore' ? (
-            <div className="text-center py-20">
-              <Compass className="h-10 w-10 mx-auto mb-4" style={{ color: '#C4A98A' }} />
-              <p className="font-medium" style={{ color: BROWN_DARK }}>Explore</p>
-              <p className="text-sm mt-1" style={{ color: '#9C8569' }}>Coming soon</p>
-            </div>
+            <ExploreView
+              joined={joinedCommunities}
+              communities={COMMUNITIES}
+              category={exploreCategory}
+              setCategory={setExploreCategory}
+              onToggle={toggleJoinCommunity}
+            />
           ) : (
             <>
               {/* Category Filter Pills - hidden on My feed per redesign */}
