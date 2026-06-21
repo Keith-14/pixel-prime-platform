@@ -8,8 +8,7 @@ import { User, Briefcase, Plane, ArrowLeft, Star, Chrome } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { BarakahLogo } from '@/components/BarakahLogo';
-import loginBg from '@/assets/login-bg.png.asset.json';
+import loginFullBg from '@/assets/login-full-bg.png.asset.json';
 import appleLogo from '@/assets/AppleLogo.png.asset.json';
 
 type UserRole = 'normal_user' | 'seller' | 'travel_partner';
@@ -164,33 +163,28 @@ export const Register = () => {
     return option ? t(option.titleKey) : '';
   };
 
-  // Shared frame
   return (
     <div
       className="min-h-screen max-w-md mx-auto relative overflow-hidden flex flex-col"
-      style={{ backgroundColor: '#FFF5E5' }}
+      style={{
+        backgroundImage: `url(${loginFullBg.url})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center top',
+        backgroundRepeat: 'no-repeat',
+        backgroundColor: '#FFF5E5',
+      }}
     >
       {/* Language selector */}
       <div className="absolute top-3 right-3 z-30">
         <LanguageSelector />
       </div>
 
-      {/* Hero with brand - mosque fully visible */}
-      <div
-        className="relative w-full"
-        style={{
-          aspectRatio: '9 / 11',
-          maxHeight: '58vh',
-          backgroundImage: `url(${loginBg.url})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center top',
-          backgroundRepeat: 'no-repeat',
-        }}
-      />
+      {/* Spacer to push card below the mosque graphic area */}
+      <div className="flex-1" />
 
-      {/* Bottom sheet card */}
+      {/* Bottom sheet card with login flows */}
       <div
-        className="flex-1 px-6 pb-8 pt-8 relative z-10 -mt-6 rounded-t-[28px]"
+        className="px-6 pb-8 pt-8 relative z-10 rounded-t-[28px]"
         style={{ backgroundColor: '#FFF1DD' }}
       >
         {view === 'welcome' && (
