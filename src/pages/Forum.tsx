@@ -1129,22 +1129,6 @@ export const Forum = () => {
                   <Loader2 className="h-6 w-6 animate-spin" style={{ color: BROWN }} />
                   <p className="text-sm mt-3" style={{ color: '#9C8569' }}>Loading conversations...</p>
                 </div>
-              ) : filteredPosts.length === 0 ? (
-                <div className="text-center py-16 rounded-2xl" style={{ background: '#FFFFFF' }}>
-                  <MessageCircle className="h-10 w-10 mx-auto mb-4" style={{ color: '#C4A98A' }} />
-                  <p className="font-medium mb-1" style={{ color: BROWN_DARK }}>
-                    {searchQuery ? 'No results found' : selectedCategory === 'all' ? 'No conversations yet' : `No ${CATEGORIES.find(c => c.id === selectedCategory)?.label} posts yet`}
-                  </p>
-                  <p className="text-sm mb-5" style={{ color: '#9C8569' }}>Start the first Guftagu!</p>
-                  <Button 
-                    onClick={() => setIsCreateDialogOpen(true)}
-                    className="rounded-full px-5 text-white"
-                    style={{ background: BROWN }}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Start a conversation
-                  </Button>
-                </div>
               ) : (
                 <div className="space-y-3">
                   {[...filteredPosts, ...MOCK_POSTS].map((post, index) => (
@@ -1156,17 +1140,8 @@ export const Forum = () => {
           )}
         </div>
 
-        {/* Floating Create Post Button */}
+        {/* Create Post Dialog - triggered from inline composer above */}
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button
-              className="fixed bottom-24 right-4 h-14 w-14 rounded-full shadow-xl transition-all duration-300 z-50 border-0 text-white"
-              size="icon"
-              style={{ background: BROWN }}
-            >
-              <Plus className="h-6 w-6" />
-            </Button>
-          </DialogTrigger>
           <DialogContent className="sm:max-w-md border-0"
             style={{ background: '#FFF8EA' }}
           >
