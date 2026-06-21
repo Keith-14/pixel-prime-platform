@@ -1611,6 +1611,23 @@ export const Forum = () => {
   if (selectedCommunity) {
     const c = selectedCommunity;
     const isJoined = joinedCommunities.has(c.id) || c.isAdmin;
+    const override = communityOverrides[c.id] || {};
+    const banner = override.banner || c.banner;
+    const iconUrl = override.iconUrl || c.iconUrl;
+    const isAdmin = !!c.isAdmin;
+    const TABS: Array<{ id: 'posts' | 'members' | 'settings'; label: string }> = [
+      { id: 'posts', label: 'Posts' },
+      { id: 'members', label: 'Members' },
+      ...(isAdmin ? [{ id: 'settings' as const, label: 'Settings' }] : []),
+    ];
+    const MOCK_MEMBERS = [
+      { name: 'Ayesha Khan', role: 'Admin', avatar: AYESHA_AVATAR },
+      { name: 'Fatima Noor', role: 'Moderator', avatar: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=200&h=200&fit=crop&crop=faces' },
+      { name: 'Zayd Rahman', role: 'Member', avatar: 'https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=200&h=200&fit=crop&crop=faces' },
+      { name: 'Hafsa Iqbal', role: 'Member', avatar: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=200&h=200&fit=crop&crop=faces' },
+      { name: 'Bilal Ahmed', role: 'Member', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=faces' },
+      { name: 'Mariam Yusuf', role: 'Member', avatar: 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39?w=200&h=200&fit=crop&crop=faces' },
+    ];
     return (
       <Layout showHeader={false}>
         <div className="min-h-screen pb-28" style={{ background: CREAM_BG, fontFamily: "'Inter', sans-serif" }}>
@@ -1637,15 +1654,15 @@ export const Forum = () => {
 
           {/* Banner */}
           <div className="w-full" style={{ aspectRatio: '16 / 9' }}>
-            <img src={c.banner} alt={c.name} className="w-full h-full object-cover" />
+            <img src={banner} alt={c.name} className="w-full h-full object-cover" />
           </div>
 
           {/* Header block */}
           <div className="px-4 relative">
             <div className="flex items-end justify-between -mt-10 mb-3">
-              {c.iconUrl ? (
+              {iconUrl ? (
                 <img
-                  src={c.iconUrl}
+                  src={iconUrl}
                   alt={c.name}
                   className="w-20 h-20 rounded-full object-cover"
                   style={{ border: `4px solid ${CREAM_BG}`, background: '#FFFFFF' }}
