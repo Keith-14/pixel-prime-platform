@@ -249,6 +249,37 @@ export const Forum = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<string>>(new Set());
+  const [joinedCommunities, setJoinedCommunities] = useState<Set<string>>(new Set());
+  const [exploreCategory, setExploreCategory] = useState<string>('all');
+
+  // Persist joined communities per user in localStorage
+  const joinedStorageKey = `guftagu_joined_${user?.uid || 'guest'}`;
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(joinedStorageKey);
+      if (raw) setJoinedCommunities(new Set(JSON.parse(raw)));
+      else setJoinedCommunities(new Set());
+    } catch {
+      setJoinedCommunities(new Set());
+    }
+  }, [joinedStorageKey]);
+
+  const toggleJoinCommunity = (id: string) => {
+    setJoinedCommunities((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+        toast.success('Left community');
+      } else {
+        next.add(id);
+        toast.success('Joined community');
+      }
+      try {
+        localStorage.setItem(joinedStorageKey, JSON.stringify(Array.from(next)));
+      } catch {}
+      return next;
+    });
+  };
   
   // Pull to refresh state
   const [pullDistance, setPullDistance] = useState(0);
