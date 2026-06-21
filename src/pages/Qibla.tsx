@@ -4,6 +4,7 @@ import { ArrowLeft, MapPin, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useGlobalLocation } from '@/contexts/LocationContext';
 import { toast } from 'sonner';
+import mosqueIcon from '@/assets/qibla-mosque-icon.png.asset.json';
 
 // Theme tokens
 const CREAM = '#FFF5E5';
@@ -210,24 +211,17 @@ export const Qibla = () => {
                   transform: 'translate(-50%, -50%)',
                 }}
               >
-                <div
-                  className="flex items-center justify-center"
+                <img
+                  src={mosqueIcon.url}
+                  alt="Mosque"
+                  className="block"
                   style={{
                     width: 44,
                     height: 44,
                     borderRadius: '50%',
-                    background: `linear-gradient(160deg, #78351A, ${ORANGE})`,
-                    boxShadow: '0 4px 10px rgba(120,53,26,0.35)',
-                    color: '#fff',
+                    objectFit: 'cover',
                   }}
-                >
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M12 2.5l1.6 2.2-1.6 1.4-1.6-1.4L12 2.5zM4 11c0-2.2 1.8-4 4-4h8c2.2 0 4 1.8 4 4v9H4v-9zm6 3v6h4v-6a2 2 0 0 0-4 0z"
-                      fill="currentColor"
-                    />
-                  </svg>
-                </div>
+                />
               </div>
             </div>
 
