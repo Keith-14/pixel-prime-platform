@@ -196,7 +196,7 @@ export const Forum = () => {
   const [mentionSearch, setMentionSearch] = useState('');
   const [mentionTarget, setMentionTarget] = useState<'post' | 'reply'>('post');
   const [profileName, setProfileName] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'announcements' | 'communities'>('announcements');
+  const [activeTab, setActiveTab] = useState<'feed' | 'explore' | 'communities'>('feed');
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<string>>(new Set());
