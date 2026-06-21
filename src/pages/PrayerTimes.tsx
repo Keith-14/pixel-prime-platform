@@ -10,7 +10,7 @@ import quranIcon from '@/assets/quran-icon.png.asset.json';
 import hajjIcon from '@/assets/hajj-icon.png.asset.json';
 import placesIcon from '@/assets/places-icon.png.asset.json';
 import zakatIcon from '@/assets/zakat-icon.png.asset.json';
-import moodTrackerIcon from '@/assets/mood-tracker-icon.png.asset.json';
+import duaIcon from '@/assets/dua-icon.png.asset.json';
 import qiblaIcon from '@/assets/qibla-icon.png.asset.json';
 import prayerMarkIcon from '@/assets/prayer-mark-icon.png.asset.json';
 
@@ -47,7 +47,7 @@ const essentials = [
   { label: 'Hajj Packages', img: hajjIcon.url, icon: null, path: '/hajj' },
   { label: 'Places', img: placesIcon.url, icon: null, path: '/places' },
   { label: 'Zakat Calc.', img: zakatIcon.url, icon: null, path: '/zakat' },
-  { label: 'Mood Tracker', img: moodTrackerIcon.url, icon: null, path: '/mood' },
+  { label: "Dua's", img: duaIcon.url, icon: null, path: '/mood' },
   { label: 'Qibla', img: qiblaIcon.url, icon: null, path: '/qibla' },
   { label: 'Prayer Mark', img: prayerMarkIcon.url, icon: null, path: '/progress' },
 ];
