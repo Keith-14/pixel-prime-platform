@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search } from 'lucide-react';
 import { BottomNavigation } from '@/components/BottomNavigation';
-import hajjIllustration from '@/assets/hajj-coming-soon-v2.png.asset.json';
+import hajjIllustration from '@/assets/hajj-illustration.png.asset.json';
 
 const CREAM = '#FFF8F0';
 const WHITE = '#FFFFFF';
