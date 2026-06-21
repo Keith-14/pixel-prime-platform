@@ -12,6 +12,7 @@ import qaAiAsset from '@/assets/qa-ai-new.png.asset.json';
 import qaPlacesAsset from '@/assets/qa-places-new.png.asset.json';
 import qaHajjAsset from '@/assets/qa-hajj-new.png.asset.json';
 import barakahArcLogo from '@/assets/barakah-arc-logo.png.asset.json';
+import barakahLogo from '@/assets/barakah-logo.png.asset.json';
 
 interface NewsItem {
   id: string;
