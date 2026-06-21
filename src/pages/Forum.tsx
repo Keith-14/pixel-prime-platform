@@ -1591,7 +1591,7 @@ export const Forum = () => {
     const c = selectedCommunity;
     const isJoined = joinedCommunities.has(c.id) || c.isAdmin;
     return (
-      <Layout hideHeader hideBottomNav={false}>
+      <Layout showHeader={false}>
         <div className="min-h-screen pb-28" style={{ background: CREAM_BG, fontFamily: "'Inter', sans-serif" }}>
           {/* Top bar */}
           <div className="flex items-center justify-between px-4 pt-4 pb-3" style={{ background: CREAM_BG }}>
