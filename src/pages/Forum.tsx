@@ -348,12 +348,14 @@ const ExploreView = ({
   category,
   setCategory,
   onToggle,
+  onOpen,
 }: {
   joined: Set<string>;
   communities: Community[];
   category: string;
   setCategory: (id: string) => void;
   onToggle: (id: string) => void;
+  onOpen?: (c: Community) => void;
 }) => {
   const featured = communities.filter((c) => c.featured);
   const rest = communities.filter((c) => !c.featured && (category === 'all' || c.category === category));
@@ -388,6 +390,7 @@ const ExploreView = ({
             community={c}
             joined={joined.has(c.id)}
             onToggle={onToggle}
+            onOpen={onOpen}
           />
         ))}
       </div>
@@ -411,7 +414,7 @@ const ExploreView = ({
 
       <div className="space-y-3 pb-6">
         {rest.map((c) => (
-          <CommunityRow key={c.id} community={c} joined={joined.has(c.id)} onToggle={onToggle} />
+          <CommunityRow key={c.id} community={c} joined={joined.has(c.id)} onToggle={onToggle} onOpen={onOpen} />
         ))}
       </div>
     </div>
