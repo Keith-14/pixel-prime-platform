@@ -68,7 +68,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Quick actions
     'action.qibla': 'Qibla',
     'action.quran': 'Quran',
-    'action.mood': 'Mood',
+    'action.mood': "Dua's",
     'action.makkah_live': 'Makkah Live',
     'action.prayer': 'Prayer',
     'action.zakat': 'Zakat',
@@ -191,7 +191,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Quick actions
     'action.qibla': 'قبلہ',
     'action.quran': 'قرآن',
-    'action.mood': 'موڈ',
+    'action.mood': 'دعا',
     'action.makkah_live': 'مکہ لائیو',
     'action.prayer': 'نماز',
     'action.zakat': 'زکوٰۃ',
@@ -314,7 +314,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Quick actions
     'action.qibla': 'القبلة',
     'action.quran': 'القرآن',
-    'action.mood': 'المزاج',
+    'action.mood': 'دعاء',
     'action.makkah_live': 'مكة مباشر',
     'action.prayer': 'الصلاة',
     'action.zakat': 'الزكاة',
@@ -437,7 +437,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Quick actions
     'action.qibla': 'Kıble',
     'action.quran': 'Kuran',
-    'action.mood': 'Ruh Hali',
+    'action.mood': 'Dua',
     'action.makkah_live': 'Mekke Canlı',
     'action.prayer': 'Namaz',
     'action.zakat': 'Zekat',
@@ -560,7 +560,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Quick actions
     'action.qibla': 'Kiblat',
     'action.quran': 'Quran',
-    'action.mood': 'Suasana',
+    'action.mood': 'Doa',
     'action.makkah_live': 'Mekah Live',
     'action.prayer': 'Shalat',
     'action.zakat': 'Zakat',
@@ -683,7 +683,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Quick actions
     'action.qibla': 'Kiblat',
     'action.quran': 'Quran',
-    'action.mood': 'Suasana',
+    'action.mood': 'Doa',
     'action.makkah_live': 'Mekah Live',
     'action.prayer': 'Solat',
     'action.zakat': 'Zakat',
@@ -806,7 +806,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Quick actions
     'action.qibla': 'கிப்லா',
     'action.quran': 'குர்ஆன்',
-    'action.mood': 'மனநிலை',
+    'action.mood': 'துஆ',
     'action.makkah_live': 'மக்கா நேரலை',
     'action.prayer': 'தொழுகை',
     'action.zakat': 'ஜகாத்',
@@ -929,7 +929,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Quick actions
     'action.qibla': 'কিবলা',
     'action.quran': 'কুরআন',
-    'action.mood': 'মেজাজ',
+    'action.mood': 'দোয়া',
     'action.makkah_live': 'মক্কা লাইভ',
     'action.prayer': 'নামাজ',
     'action.zakat': 'যাকাত',
