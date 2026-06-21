@@ -244,14 +244,17 @@ const CommunityHeroCard = ({
   community,
   joined,
   onToggle,
+  onOpen,
 }: {
   community: Community;
   joined: boolean;
   onToggle: (id: string) => void;
+  onOpen?: (c: Community) => void;
 }) => (
   <div
-    className="shrink-0 w-[78%] rounded-2xl overflow-hidden"
+    className="shrink-0 w-[78%] rounded-2xl overflow-hidden cursor-pointer"
     style={{ background: '#FFFFFF', boxShadow: '0 1px 3px rgba(123, 63, 30, 0.06)' }}
+    onClick={() => onOpen?.(community)}
   >
     <div className="w-full" style={{ aspectRatio: '16 / 10' }}>
       <img src={community.banner} alt={community.name} className="w-full h-full object-cover" />
@@ -267,7 +270,7 @@ const CommunityHeroCard = ({
         {community.description}
       </p>
       <button
-        onClick={() => onToggle(community.id)}
+        onClick={(e) => { e.stopPropagation(); onToggle(community.id); }}
         className="mt-4 w-full py-2.5 rounded-full text-sm font-semibold text-white transition-opacity"
         style={{ background: joined ? BROWN_DARK : BROWN, opacity: joined ? 0.85 : 1 }}
       >
@@ -281,14 +284,17 @@ const CommunityRow = ({
   community,
   joined,
   onToggle,
+  onOpen,
 }: {
   community: Community;
   joined: boolean;
   onToggle: (id: string) => void;
+  onOpen?: (c: Community) => void;
 }) => (
   <div
-    className="flex items-center gap-3 p-3 rounded-2xl"
+    className="flex items-center gap-3 p-3 rounded-2xl cursor-pointer"
     style={{ background: '#FFFFFF', boxShadow: '0 1px 3px rgba(123, 63, 30, 0.05)' }}
+    onClick={() => onOpen?.(community)}
   >
     {community.iconUrl ? (
       <img
@@ -322,7 +328,7 @@ const CommunityRow = ({
       </span>
     ) : (
       <button
-        onClick={() => onToggle(community.id)}
+        onClick={(e) => { e.stopPropagation(); onToggle(community.id); }}
         className="px-5 py-1.5 rounded-full text-xs font-semibold shrink-0"
         style={
           joined
