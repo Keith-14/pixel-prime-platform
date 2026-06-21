@@ -263,7 +263,7 @@ export const Register = () => {
             </button>
 
             {/* Terms */}
-            <p className="text-[11px] text-[#7c6a4f] text-center px-6 leading-relaxed pt-6">
+            <p className="text-[11px] text-[#7c6a4f] text-center px-6 leading-relaxed pt-6 mt-auto pb-2">
               By continuing, you agree to Barakah <span className="underline font-semibold text-[#3a2a18]">Terms of Service</span>
               <br />
               and <span className="underline font-semibold text-[#3a2a18]">Privacy Policy.</span>
