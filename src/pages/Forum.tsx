@@ -746,6 +746,7 @@ export const Forum = () => {
   const [exploreCategory, setExploreCategory] = useState<string>('all');
   const [userCommunities, setUserCommunities] = useState<Community[]>([]);
   const [createCommunityOpen, setCreateCommunityOpen] = useState(false);
+  const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(null);
 
   // Persist joined communities per user in localStorage
   const joinedStorageKey = `guftagu_joined_${user?.uid || 'guest'}`;
@@ -1677,6 +1678,7 @@ export const Forum = () => {
               onToggle={toggleJoinCommunity}
               onExplore={() => setActiveTab('explore')}
               onCreate={() => setCreateCommunityOpen(true)}
+              onOpen={(c) => setSelectedCommunity(c)}
             />
           ) : activeTab === 'explore' ? (
             <ExploreView
@@ -1685,6 +1687,7 @@ export const Forum = () => {
               category={exploreCategory}
               setCategory={setExploreCategory}
               onToggle={toggleJoinCommunity}
+              onOpen={(c) => setSelectedCommunity(c)}
             />
           ) : (
             <>
