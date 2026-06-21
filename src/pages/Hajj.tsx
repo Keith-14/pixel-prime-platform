@@ -1,14 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search } from 'lucide-react';
 import { BottomNavigation } from '@/components/BottomNavigation';
-import hajjIllustration from '@/assets/hajj-coming-soon-v2.png.asset.json';
+import hajjReferenceImage from '@/assets/hajj-coming-soon-ref.png.asset.json';
 
 const CREAM = '#FFF8F0';
 const WHITE = '#FFFFFF';
-const BROWN = '#2C1309';
 const BROWN_ACCENT = '#A35233';
-const OLIVE = '#7C7E2D';
-const BROWN_MUTED = '#8B6F5C';
 const BORDER = '#E8D5C4';
 
 export const Hajj = () => {
