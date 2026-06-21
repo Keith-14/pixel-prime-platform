@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   MessageCircle, Plus, Send, ArrowLeft, Loader2, Trash2, Heart, RefreshCw, 
-  Sparkles, Users, TrendingUp, Hash, AtSign, Search, X, Flag, Share2, User, ChevronRight, Pin
+  Sparkles, Users, TrendingUp, Hash, AtSign, Search, X, Flag, Share2, User, ChevronRight, Pin, ImagePlus, Compass
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -81,6 +81,9 @@ interface Post {
   content: string;
   created_at: string;
   category?: string;
+  community?: string;
+  image_url?: string;
+  avatar_url?: string;
   replies?: Reply[];
   likes?: Like[];
   likeCount?: number;
@@ -126,6 +129,54 @@ const CREAM_BG = '#FFF5E5';
 const CREAM_DEEP = '#F5E6D0';
 const WARM_CARD = '#FFFFFF';
 const SOFT_BORDER = 'rgba(123, 63, 30, 0.12)';
+
+// Mock posts from Ayesha Khan to populate the feed
+const AYESHA_AVATAR = 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop&crop=faces';
+const MOCK_POSTS: Post[] = [
+  {
+    id: 'mock-1',
+    user_id: 'mock-ayesha',
+    user_name: 'Ayesha Khan',
+    avatar_url: AYESHA_AVATAR,
+    community: 'Quran Meaning',
+    content:
+      'This The whole secret of existence lies in the pursuit of meaning, purpose, and connection. It is a delicate dance between self-discovery....vcbbfvvvvvv',
+    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    likeCount: 24,
+    isLiked: true,
+    replies: Array(8).fill(null).map((_, i) => ({ id: `mr-1-${i}`, post_id: 'mock-1', user_id: '', user_name: '', content: '', created_at: '' })),
+    likes: [],
+  },
+  {
+    id: 'mock-2',
+    user_id: 'mock-ayesha',
+    user_name: 'Ayesha Khan',
+    avatar_url: AYESHA_AVATAR,
+    community: 'Quran Meaning',
+    image_url: 'https://images.unsplash.com/photo-1564769625905-50e93615e769?w=800&h=500&fit=crop',
+    content:
+      'This The whole secret of existence lies in the pursuit of meaning, purpose, and connection. It is a delicate dance between self-discovery....vcbbfvvvvvv',
+    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    likeCount: 24,
+    isLiked: false,
+    replies: Array(8).fill(null).map((_, i) => ({ id: `mr-2-${i}`, post_id: 'mock-2', user_id: '', user_name: '', content: '', created_at: '' })),
+    likes: [],
+  },
+  {
+    id: 'mock-3',
+    user_id: 'mock-ayesha',
+    user_name: 'Ayesha Khan',
+    avatar_url: AYESHA_AVATAR,
+    community: 'Quran Meaning',
+    content:
+      'This The whole secret of existence lies in the pursuit of meaning, purpose, and connection. It is a delicate dance between self-discovery....vcbbfvvvvvv',
+    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    likeCount: 24,
+    isLiked: false,
+    replies: Array(8).fill(null).map((_, i) => ({ id: `mr-3-${i}`, post_id: 'mock-3', user_id: '', user_name: '', content: '', created_at: '' })),
+    likes: [],
+  },
+];
 
 export const Forum = () => {
   const { user } = useAuth();
