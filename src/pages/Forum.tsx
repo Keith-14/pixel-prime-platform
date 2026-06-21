@@ -747,6 +747,27 @@ export const Forum = () => {
   const [userCommunities, setUserCommunities] = useState<Community[]>([]);
   const [createCommunityOpen, setCreateCommunityOpen] = useState(false);
   const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(null);
+  const [communityTab, setCommunityTab] = useState<'posts' | 'members' | 'settings'>('posts');
+  const [communityOverrides, setCommunityOverrides] = useState<Record<string, { banner?: string; iconUrl?: string }>>(() => {
+    try {
+      const raw = localStorage.getItem('guftagu_community_overrides');
+      return raw ? JSON.parse(raw) : {};
+    } catch { return {}; }
+  });
+  const updateOverride = (id: string, patch: { banner?: string; iconUrl?: string }) => {
+    setCommunityOverrides((prev) => {
+      const next = { ...prev, [id]: { ...prev[id], ...patch } };
+      try { localStorage.setItem('guftagu_community_overrides', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+  const readFileAsDataUrl = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
 
   // Persist joined communities per user in localStorage
   const joinedStorageKey = `guftagu_joined_${user?.uid || 'guest'}`;
