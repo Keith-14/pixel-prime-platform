@@ -155,12 +155,11 @@ export const Home = () => {
           >
             <Menu className="h-6 w-6" strokeWidth={2} />
           </button>
-          <h1
-            className="text-[#FFE8CA] text-[22px] tracking-wide"
-            style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontWeight: 600 }}
-          >
-            Barakah
-          </h1>
+          <img
+            src={barakahLogo.url}
+            alt="Barakah"
+            className="h-7 w-auto object-contain"
+          />
           <button
             className="w-9 h-9 rounded-full flex items-center justify-center text-[#F9FAFB]"
             style={{ background: 'rgba(255,255,255,0.15)' }}
