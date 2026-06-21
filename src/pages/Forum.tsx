@@ -985,7 +985,7 @@ export const Forum = () => {
           ) : (
             <>
               {/* Category Filter Pills */}
-              <div className="flex gap-2 overflow-x-auto pb-3 mb-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              <div className="flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-hide">
                 {CATEGORIES.map(({ id, label }) => (
                   <button
                     key={id}
