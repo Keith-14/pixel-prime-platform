@@ -4,7 +4,9 @@ import { BottomNavigation } from '@/components/BottomNavigation';
 import hajjImage from '@/assets/hajj-coming-soon-user.png.asset.json';
 
 const CREAM = '#FFF8F0';
+const WHITE = '#FFFFFF';
 const BROWN_ACCENT = '#A35233';
+const BORDER = '#E8D5C4';
 
 export const Hajj = () => {
   const navigate = useNavigate();
