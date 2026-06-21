@@ -990,47 +990,46 @@ export const Forum = () => {
           )}
 
           {/* Tabs */}
-          <div className="flex items-center mb-4">
-            <button
-              onClick={() => setActiveTab('announcements')}
-              className="relative pb-2.5 px-1 mr-6"
-            >
-              <span 
-                className="text-base font-bold transition-colors"
-                style={{ color: activeTab === 'announcements' ? BROWN : '#9C8569' }}
+          <div className="flex items-center mb-4 gap-6">
+            {([
+              { id: 'feed', label: 'My feed' },
+              { id: 'explore', label: 'Explore' },
+              { id: 'communities', label: 'My Communities' },
+            ] as const).map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className="relative pb-2.5 px-1"
               >
-                Announcements
-              </span>
-              {activeTab === 'announcements' && (
-                <div 
-                  className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full"
-                  style={{ background: BROWN }}
-                />
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('communities')}
-              className="relative pb-2.5 px-1"
-            >
-              <span 
-                className="text-base font-medium transition-colors"
-                style={{ color: activeTab === 'communities' ? BROWN : '#9C8569' }}
-              >
-                My Communities
-              </span>
-              {activeTab === 'communities' && (
-                <div 
-                  className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full"
-                  style={{ background: BROWN }}
-                />
-              )}
-            </button>
+                <span
+                  className="text-base transition-colors"
+                  style={{
+                    color: activeTab === tab.id ? BROWN : '#9C8569',
+                    fontWeight: activeTab === tab.id ? 700 : 500,
+                  }}
+                >
+                  {tab.label}
+                </span>
+                {activeTab === tab.id && (
+                  <div
+                    className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full"
+                    style={{ background: BROWN }}
+                  />
+                )}
+              </button>
+            ))}
           </div>
 
           {activeTab === 'communities' ? (
             <div className="text-center py-20">
               <Users className="h-10 w-10 mx-auto mb-4" style={{ color: '#C4A98A' }} />
               <p className="font-medium" style={{ color: BROWN_DARK }}>My Communities</p>
+              <p className="text-sm mt-1" style={{ color: '#9C8569' }}>Coming soon</p>
+            </div>
+          ) : activeTab === 'explore' ? (
+            <div className="text-center py-20">
+              <Compass className="h-10 w-10 mx-auto mb-4" style={{ color: '#C4A98A' }} />
+              <p className="font-medium" style={{ color: BROWN_DARK }}>Explore</p>
               <p className="text-sm mt-1" style={{ color: '#9C8569' }}>Coming soon</p>
             </div>
           ) : (
