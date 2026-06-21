@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   MessageCircle, Plus, Send, ArrowLeft, Loader2, Trash2, Heart, RefreshCw, 
-  Sparkles, Users, TrendingUp, Hash, AtSign, Search, X, Flag, Share2, User, ChevronRight, Pin, ImagePlus, Compass
+  Sparkles, Users, TrendingUp, Hash, AtSign, Search, X, Flag, Share2, User, ChevronRight, Pin, ImagePlus, Compass, Info, BookOpen, Check
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -178,6 +178,249 @@ const MOCK_POSTS: Post[] = [
   },
 ];
 
+// Mock communities for the Explore tab
+interface Community {
+  id: string;
+  name: string;
+  members: string;
+  type: string;
+  description: string;
+  banner: string;
+  category: string;
+  featured?: boolean;
+}
+
+const QURAN_BANNER = 'https://images.unsplash.com/photo-1609599006353-e629aaabfeae?w=900&h=560&fit=crop';
+const KAABA_BANNER = 'https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=900&h=560&fit=crop';
+
+const COMMUNITIES: Community[] = [
+  {
+    id: 'quran-meanings',
+    name: 'Quran Meanings',
+    members: '12.4k members',
+    type: 'Private Group',
+    description: 'A curated space for discussions on contemporary faith, art, and reflection.',
+    banner: QURAN_BANNER,
+    category: 'ummah',
+    featured: true,
+  },
+  {
+    id: 'sacred-journeys',
+    name: 'Sacred Journeys',
+    members: '8.7k members',
+    type: 'Public Group',
+    description: 'Stories, tips, and reflections from pilgrims around the world.',
+    banner: KAABA_BANNER,
+    category: 'heritage',
+    featured: true,
+  },
+  { id: 'quranic-journaling-1', name: 'Quranic Journaling', members: '3.2k members', type: 'Private Group', description: 'Daily reflections on ayat.', banner: QURAN_BANNER, category: 'ummah' },
+  { id: 'halal-living', name: 'Halal Living', members: '5.1k members', type: 'Public Group', description: 'Tips for a halal lifestyle.', banner: QURAN_BANNER, category: 'lifestyle' },
+  { id: 'islamic-heritage', name: 'Islamic Heritage', members: '2.8k members', type: 'Public Group', description: 'Art, architecture, and history.', banner: QURAN_BANNER, category: 'heritage' },
+  { id: 'youth-ummah', name: 'Youth Ummah', members: '6.4k members', type: 'Public Group', description: 'A space for young Muslims.', banner: QURAN_BANNER, category: 'ummah' },
+];
+
+const COMMUNITY_CATEGORIES = [
+  { id: 'all', label: 'All' },
+  { id: 'ummah', label: 'Ummah' },
+  { id: 'lifestyle', label: 'Lifestyle' },
+  { id: 'heritage', label: 'Heritage' },
+];
+
+// ---------- Community sub-components ----------
+const CommunityHeroCard = ({
+  community,
+  joined,
+  onToggle,
+}: {
+  community: Community;
+  joined: boolean;
+  onToggle: (id: string) => void;
+}) => (
+  <div
+    className="shrink-0 w-[78%] rounded-2xl overflow-hidden"
+    style={{ background: '#FFFFFF', boxShadow: '0 1px 3px rgba(123, 63, 30, 0.06)' }}
+  >
+    <div className="w-full" style={{ aspectRatio: '16 / 10' }}>
+      <img src={community.banner} alt={community.name} className="w-full h-full object-cover" />
+    </div>
+    <div className="p-4">
+      <h3 className="text-lg font-bold leading-tight" style={{ color: BROWN_DARK }}>
+        {community.name}
+      </h3>
+      <p className="text-xs mt-1" style={{ color: '#9C8569' }}>
+        {community.members} · {community.type}
+      </p>
+      <p className="text-sm mt-3 leading-relaxed" style={{ color: '#5C4632' }}>
+        {community.description}
+      </p>
+      <button
+        onClick={() => onToggle(community.id)}
+        className="mt-4 w-full py-2.5 rounded-full text-sm font-semibold text-white transition-opacity"
+        style={{ background: joined ? BROWN_DARK : BROWN, opacity: joined ? 0.85 : 1 }}
+      >
+        {joined ? 'Joined' : 'Join'}
+      </button>
+    </div>
+  </div>
+);
+
+const CommunityRow = ({
+  community,
+  joined,
+  onToggle,
+}: {
+  community: Community;
+  joined: boolean;
+  onToggle: (id: string) => void;
+}) => (
+  <div
+    className="flex items-center gap-3 p-3 rounded-2xl"
+    style={{ background: '#FFFFFF', boxShadow: '0 1px 3px rgba(123, 63, 30, 0.05)' }}
+  >
+    <div
+      className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
+      style={{ background: '#F1E2C6', border: '1.5px dashed #C4A98A' }}
+    >
+      <BookOpen className="h-5 w-5" style={{ color: '#A88B66' }} />
+    </div>
+    <div className="flex-1 min-w-0">
+      <p className="text-sm font-bold truncate" style={{ color: BROWN_DARK }}>
+        {community.name}
+      </p>
+      <p className="text-xs mt-0.5" style={{ color: '#9C8569' }}>
+        {community.members} · {community.type}
+      </p>
+    </div>
+    <button
+      onClick={() => onToggle(community.id)}
+      className="px-5 py-1.5 rounded-full text-xs font-semibold text-white shrink-0"
+      style={{ background: joined ? BROWN_DARK : BROWN, opacity: joined ? 0.85 : 1 }}
+    >
+      {joined ? 'Joined' : 'Join'}
+    </button>
+  </div>
+);
+
+const ExploreView = ({
+  joined,
+  communities,
+  category,
+  setCategory,
+  onToggle,
+}: {
+  joined: Set<string>;
+  communities: Community[];
+  category: string;
+  setCategory: (id: string) => void;
+  onToggle: (id: string) => void;
+}) => {
+  const featured = communities.filter((c) => c.featured);
+  const rest = communities.filter((c) => !c.featured && (category === 'all' || c.category === category));
+
+  return (
+    <div className="-mx-4 px-4">
+      {joined.size === 0 && (
+        <div
+          className="flex items-center gap-3 rounded-2xl px-4 py-3 mb-5"
+          style={{ background: '#FBE6C8' }}
+        >
+          <Info className="h-4 w-4 shrink-0" style={{ color: BROWN }} />
+          <p className="text-sm" style={{ color: BROWN_DARK }}>
+            You haven't joined any communities yet.
+          </p>
+        </div>
+      )}
+
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-bold" style={{ color: BROWN_DARK }}>
+          Top Picks
+        </h2>
+        <button className="text-sm" style={{ color: '#9C8569' }}>
+          See all
+        </button>
+      </div>
+
+      <div className="flex gap-3 overflow-x-auto pb-3 -mx-4 px-4 scrollbar-hide mb-5">
+        {featured.map((c) => (
+          <CommunityHeroCard
+            key={c.id}
+            community={c}
+            joined={joined.has(c.id)}
+            onToggle={onToggle}
+          />
+        ))}
+      </div>
+
+      <div className="flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-hide">
+        {COMMUNITY_CATEGORIES.map(({ id, label }) => (
+          <button
+            key={id}
+            onClick={() => setCategory(id)}
+            className="px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all border"
+            style={
+              category === id
+                ? { background: BROWN, borderColor: 'transparent', color: '#FFFFFF' }
+                : { background: '#FFFFFF', borderColor: SOFT_BORDER, color: BROWN_DARK }
+            }
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div className="space-y-3 pb-6">
+        {rest.map((c) => (
+          <CommunityRow key={c.id} community={c} joined={joined.has(c.id)} onToggle={onToggle} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const MyCommunitiesView = ({
+  joined,
+  communities,
+  onToggle,
+  onExplore,
+}: {
+  joined: Set<string>;
+  communities: Community[];
+  onToggle: (id: string) => void;
+  onExplore: () => void;
+}) => {
+  const joinedList = communities.filter((c) => joined.has(c.id));
+
+  if (joinedList.length === 0) {
+    return (
+      <div className="text-center py-16 rounded-2xl" style={{ background: '#FFFFFF' }}>
+        <Users className="h-10 w-10 mx-auto mb-4" style={{ color: '#C4A98A' }} />
+        <p className="font-medium" style={{ color: BROWN_DARK }}>
+          No communities joined yet
+        </p>
+        <p className="text-sm mt-1 mb-5" style={{ color: '#9C8569' }}>
+          Discover groups that match your interests.
+        </p>
+        <button
+          onClick={onExplore}
+          className="rounded-full px-5 py-2 text-sm font-semibold text-white"
+          style={{ background: BROWN }}
+        >
+          Explore communities
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3 pb-6">
+      {joinedList.map((c) => (
+        <CommunityRow key={c.id} community={c} joined onToggle={onToggle} />
+      ))}
+    </div>
+  );
+};
+
 export const Forum = () => {
   const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
@@ -200,6 +443,37 @@ export const Forum = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<string>>(new Set());
+  const [joinedCommunities, setJoinedCommunities] = useState<Set<string>>(new Set());
+  const [exploreCategory, setExploreCategory] = useState<string>('all');
+
+  // Persist joined communities per user in localStorage
+  const joinedStorageKey = `guftagu_joined_${user?.uid || 'guest'}`;
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(joinedStorageKey);
+      if (raw) setJoinedCommunities(new Set(JSON.parse(raw)));
+      else setJoinedCommunities(new Set());
+    } catch {
+      setJoinedCommunities(new Set());
+    }
+  }, [joinedStorageKey]);
+
+  const toggleJoinCommunity = (id: string) => {
+    setJoinedCommunities((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+        toast.success('Left community');
+      } else {
+        next.add(id);
+        toast.success('Joined community');
+      }
+      try {
+        localStorage.setItem(joinedStorageKey, JSON.stringify(Array.from(next)));
+      } catch {}
+      return next;
+    });
+  };
   
   // Pull to refresh state
   const [pullDistance, setPullDistance] = useState(0);
@@ -1056,17 +1330,20 @@ export const Forum = () => {
           </div>
 
           {activeTab === 'communities' ? (
-            <div className="text-center py-20">
-              <Users className="h-10 w-10 mx-auto mb-4" style={{ color: '#C4A98A' }} />
-              <p className="font-medium" style={{ color: BROWN_DARK }}>My Communities</p>
-              <p className="text-sm mt-1" style={{ color: '#9C8569' }}>Coming soon</p>
-            </div>
+            <MyCommunitiesView
+              joined={joinedCommunities}
+              communities={COMMUNITIES}
+              onToggle={toggleJoinCommunity}
+              onExplore={() => setActiveTab('explore')}
+            />
           ) : activeTab === 'explore' ? (
-            <div className="text-center py-20">
-              <Compass className="h-10 w-10 mx-auto mb-4" style={{ color: '#C4A98A' }} />
-              <p className="font-medium" style={{ color: BROWN_DARK }}>Explore</p>
-              <p className="text-sm mt-1" style={{ color: '#9C8569' }}>Coming soon</p>
-            </div>
+            <ExploreView
+              joined={joinedCommunities}
+              communities={COMMUNITIES}
+              category={exploreCategory}
+              setCategory={setExploreCategory}
+              onToggle={toggleJoinCommunity}
+            />
           ) : (
             <>
               {/* Category Filter Pills - hidden on My feed per redesign */}
