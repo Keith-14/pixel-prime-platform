@@ -184,7 +184,7 @@ export const Register = () => {
 
       {/* Bottom sheet card with login flows */}
       <div
-        className="px-6 pb-8 pt-8 relative z-10 rounded-[28px] flex-1 flex flex-col mb-4"
+        className="px-6 pb-8 pt-8 relative z-10 rounded-[28px] flex-1 flex flex-col"
         style={{ backgroundColor: '#FFF1DD' }}
       >
         {view === 'welcome' && (
