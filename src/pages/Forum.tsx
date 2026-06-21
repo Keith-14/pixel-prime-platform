@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   MessageCircle, Plus, Send, ArrowLeft, Loader2, Trash2, Heart, RefreshCw, 
-  Sparkles, Users, TrendingUp, Hash, AtSign, Search, X, Flag, Share2, User, ChevronRight, Pin, ImagePlus, Compass
+  Sparkles, Users, TrendingUp, Hash, AtSign, Search, X, Flag, Share2, User, ChevronRight, Pin, ImagePlus, Compass, Info, BookOpen, Check
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -176,6 +176,55 @@ const MOCK_POSTS: Post[] = [
     replies: Array(8).fill(null).map((_, i) => ({ id: `mr-3-${i}`, post_id: 'mock-3', user_id: '', user_name: '', content: '', created_at: '' })),
     likes: [],
   },
+];
+
+// Mock communities for the Explore tab
+interface Community {
+  id: string;
+  name: string;
+  members: string;
+  type: string;
+  description: string;
+  banner: string;
+  category: string;
+  featured?: boolean;
+}
+
+const QURAN_BANNER = 'https://images.unsplash.com/photo-1609599006353-e629aaabfeae?w=900&h=560&fit=crop';
+const KAABA_BANNER = 'https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=900&h=560&fit=crop';
+
+const COMMUNITIES: Community[] = [
+  {
+    id: 'quran-meanings',
+    name: 'Quran Meanings',
+    members: '12.4k members',
+    type: 'Private Group',
+    description: 'A curated space for discussions on contemporary faith, art, and reflection.',
+    banner: QURAN_BANNER,
+    category: 'ummah',
+    featured: true,
+  },
+  {
+    id: 'sacred-journeys',
+    name: 'Sacred Journeys',
+    members: '8.7k members',
+    type: 'Public Group',
+    description: 'Stories, tips, and reflections from pilgrims around the world.',
+    banner: KAABA_BANNER,
+    category: 'heritage',
+    featured: true,
+  },
+  { id: 'quranic-journaling-1', name: 'Quranic Journaling', members: '3.2k members', type: 'Private Group', description: 'Daily reflections on ayat.', banner: QURAN_BANNER, category: 'ummah' },
+  { id: 'halal-living', name: 'Halal Living', members: '5.1k members', type: 'Public Group', description: 'Tips for a halal lifestyle.', banner: QURAN_BANNER, category: 'lifestyle' },
+  { id: 'islamic-heritage', name: 'Islamic Heritage', members: '2.8k members', type: 'Public Group', description: 'Art, architecture, and history.', banner: QURAN_BANNER, category: 'heritage' },
+  { id: 'youth-ummah', name: 'Youth Ummah', members: '6.4k members', type: 'Public Group', description: 'A space for young Muslims.', banner: QURAN_BANNER, category: 'ummah' },
+];
+
+const COMMUNITY_CATEGORIES = [
+  { id: 'all', label: 'All' },
+  { id: 'ummah', label: 'Ummah' },
+  { id: 'lifestyle', label: 'Lifestyle' },
+  { id: 'heritage', label: 'Heritage' },
 ];
 
 export const Forum = () => {
