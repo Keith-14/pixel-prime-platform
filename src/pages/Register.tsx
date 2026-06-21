@@ -272,7 +272,7 @@ export const Register = () => {
         )}
 
         {view === 'profile' && (
-          <div className="space-y-3">
+          <div className="space-y-3 flex-1 flex flex-col">
             <button onClick={handleBack} className="flex items-center gap-1 text-[#5a3a20] text-sm mb-2">
               <ArrowLeft className="h-4 w-4" /> Back
             </button>
