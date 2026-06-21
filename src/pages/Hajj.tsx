@@ -50,44 +50,13 @@ export const Hajj = () => {
         </button>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 pt-6 pb-8">
-        {/* Illustration */}
-        <div className="w-full max-w-[340px] mb-10">
-          <img
-            src={hajjIllustration.url}
-            alt="Hajj and Umrah illustration"
-            className="w-full h-auto object-contain"
-          />
-        </div>
-
-        {/* Heading */}
-        <h2
-          className="text-[32px] font-bold text-center leading-tight"
-          style={{
-            color: BROWN,
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-          }}
-        >
-          Your sacred journey,
-        </h2>
-        <h2
-          className="text-[32px] font-bold text-center leading-tight mt-1"
-          style={{
-            color: OLIVE,
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-          }}
-        >
-          Coming soon
-        </h2>
-
-        {/* Subtitle */}
-        <p
-          className="text-[15px] text-center mt-5 leading-relaxed max-w-[300px]"
-          style={{ color: BROWN_MUTED }}
-        >
-          We're building trusted Hajj and Umrah packages with verified operators, transparent pricing.
-        </p>
+      {/* Content — user's reference image */}
+      <div className="flex-1 flex flex-col items-center justify-center px-4 pt-4 pb-8">
+        <img
+          src={hajjReferenceImage.url}
+          alt="Hajj and Umrah Coming Soon"
+          className="w-full max-w-[360px] h-auto object-contain"
+        />
       </div>
 
       {/* Bottom Button */}
