@@ -184,11 +184,11 @@ export const Register = () => {
 
       {/* Bottom sheet card with login flows */}
       <div
-        className="px-6 pb-8 pt-8 relative z-10 rounded-t-[28px]"
+        className="px-6 pb-8 pt-8 relative z-10 rounded-[28px] flex-1 flex flex-col"
         style={{ backgroundColor: '#FFF1DD' }}
       >
         {view === 'welcome' && (
-          <div className="space-y-3">
+          <div className="space-y-3 flex-1 flex flex-col">
             {/* Apple */}
             <Button
               onClick={() => toast.message('Apple sign-in coming soon')}
@@ -263,7 +263,7 @@ export const Register = () => {
             </button>
 
             {/* Terms */}
-            <p className="text-[11px] text-[#7c6a4f] text-center px-6 leading-relaxed pt-6">
+            <p className="text-[11px] text-[#7c6a4f] text-center px-6 leading-relaxed pt-6 mt-auto pb-2">
               By continuing, you agree to Barakah <span className="underline font-semibold text-[#3a2a18]">Terms of Service</span>
               <br />
               and <span className="underline font-semibold text-[#3a2a18]">Privacy Policy.</span>
@@ -272,7 +272,7 @@ export const Register = () => {
         )}
 
         {view === 'profile' && (
-          <div className="space-y-3">
+          <div className="space-y-3 flex-1 flex flex-col">
             <button onClick={handleBack} className="flex items-center gap-1 text-[#5a3a20] text-sm mb-2">
               <ArrowLeft className="h-4 w-4" /> Back
             </button>
@@ -303,7 +303,7 @@ export const Register = () => {
         )}
 
         {view === 'details' && (
-          <div className="space-y-3">
+          <div className="space-y-3 flex-1 flex flex-col">
             <button onClick={handleBack} className="flex items-center gap-1 text-[#5a3a20] text-sm mb-1">
               <ArrowLeft className="h-4 w-4" /> Back
             </button>
