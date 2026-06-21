@@ -1008,7 +1008,7 @@ export const Forum = () => {
               {/* Today's Dua Card */}
               <Card
                 className="mb-5 border-0 overflow-hidden"
-                style={{ background: '#fff1df' }}
+                style={{ background: '#fff8ed' }}
               >
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-3">
