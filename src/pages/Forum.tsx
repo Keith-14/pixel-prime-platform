@@ -517,6 +517,7 @@ export const Forum = () => {
   };
 
   const handleToggleLike = async (postId: string, isCurrentlyLiked: boolean) => {
+    if (postId.startsWith('mock-')) return;
     if (!user) {
       toast.error('Please sign in to like posts');
       return;
