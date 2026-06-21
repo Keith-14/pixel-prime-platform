@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Search } from 'lucide-react';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import hajjImage from '@/assets/hajj-coming-soon-user.png.asset.json';
 
