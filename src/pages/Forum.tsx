@@ -1308,13 +1308,14 @@ export const Forum = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className="relative pb-2.5 px-1"
+                className="relative pb-2 px-1"
               >
                 <span
-                  className="text-base transition-colors"
+                  className="text-sm transition-colors"
                   style={{
+                    fontFamily: "'Inter', sans-serif",
                     color: activeTab === tab.id ? BROWN : '#9C8569',
-                    fontWeight: activeTab === tab.id ? 700 : 500,
+                    fontWeight: activeTab === tab.id ? 600 : 400,
                   }}
                 >
                   {tab.label}
