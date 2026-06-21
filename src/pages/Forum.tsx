@@ -1662,8 +1662,10 @@ export const Forum = () => {
             <MyCommunitiesView
               joined={joinedCommunities}
               communities={COMMUNITIES}
+              userCreated={userCommunities}
               onToggle={toggleJoinCommunity}
               onExplore={() => setActiveTab('explore')}
+              onCreate={() => setCreateCommunityOpen(true)}
             />
           ) : activeTab === 'explore' ? (
             <ExploreView
