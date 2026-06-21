@@ -190,6 +190,8 @@ interface Community {
   banner: string;
   category: string;
   featured?: boolean;
+  isAdmin?: boolean;
+  iconUrl?: string;
 }
 
 const QURAN_BANNER = 'https://images.unsplash.com/photo-1609599006353-e629aaabfeae?w=900&h=560&fit=crop';
@@ -227,6 +229,14 @@ const COMMUNITY_CATEGORIES = [
   { id: 'ummah', label: 'Ummah' },
   { id: 'lifestyle', label: 'Lifestyle' },
   { id: 'heritage', label: 'Heritage' },
+];
+
+const CREATE_CATEGORIES = [
+  { id: 'ummah', label: 'Ummah' },
+  { id: 'lifestyle', label: 'Lifestyle' },
+  { id: 'heritage', label: 'Heritage' },
+  { id: 'knowledge', label: 'Deen & Knowledge' },
+  { id: 'dua', label: 'Dua & Reflection' },
 ];
 
 // ---------- Community sub-components ----------
