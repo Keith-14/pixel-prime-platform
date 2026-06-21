@@ -733,9 +733,12 @@ export const Forum = () => {
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<string>>(new Set());
   const [joinedCommunities, setJoinedCommunities] = useState<Set<string>>(new Set());
   const [exploreCategory, setExploreCategory] = useState<string>('all');
+  const [userCommunities, setUserCommunities] = useState<Community[]>([]);
+  const [createCommunityOpen, setCreateCommunityOpen] = useState(false);
 
   // Persist joined communities per user in localStorage
   const joinedStorageKey = `guftagu_joined_${user?.uid || 'guest'}`;
+  const createdStorageKey = `guftagu_created_${user?.uid || 'guest'}`;
   useEffect(() => {
     try {
       const raw = localStorage.getItem(joinedStorageKey);
@@ -745,6 +748,43 @@ export const Forum = () => {
       setJoinedCommunities(new Set());
     }
   }, [joinedStorageKey]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(createdStorageKey);
+      setUserCommunities(raw ? JSON.parse(raw) : []);
+    } catch {
+      setUserCommunities([]);
+    }
+  }, [createdStorageKey]);
+
+  const handleCreateCommunity = (data: {
+    name: string;
+    description: string;
+    category: string;
+    privacy: 'public' | 'private';
+    cover: string | null;
+    icon: string | null;
+  }) => {
+    const newCommunity: Community = {
+      id: `user-${Date.now()}`,
+      name: data.name,
+      members: '1 member',
+      type: data.privacy === 'public' ? 'Public Group' : 'Private Group',
+      description: data.description,
+      banner: data.cover || QURAN_BANNER,
+      category: data.category,
+      isAdmin: true,
+      iconUrl: data.icon || undefined,
+    };
+    setUserCommunities((prev) => {
+      const next = [newCommunity, ...prev];
+      try { localStorage.setItem(createdStorageKey, JSON.stringify(next)); } catch {}
+      return next;
+    });
+    toast.success('Community sent for approval');
+    setActiveTab('communities');
+  };
 
   const toggleJoinCommunity = (id: string) => {
     setJoinedCommunities((prev) => {
