@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   MessageCircle, Plus, Send, ArrowLeft, Loader2, Trash2, Heart, RefreshCw, 
-  Sparkles, Users, TrendingUp, Hash, AtSign, Search, X, Flag, Share2, User, ChevronRight, Pin
+  Sparkles, Users, TrendingUp, Hash, AtSign, Search, X, Flag, Share2, User, ChevronRight, Pin, ImagePlus, Compass
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -81,6 +81,9 @@ interface Post {
   content: string;
   created_at: string;
   category?: string;
+  community?: string;
+  image_url?: string;
+  avatar_url?: string;
   replies?: Reply[];
   likes?: Like[];
   likeCount?: number;
@@ -127,6 +130,54 @@ const CREAM_DEEP = '#F5E6D0';
 const WARM_CARD = '#FFFFFF';
 const SOFT_BORDER = 'rgba(123, 63, 30, 0.12)';
 
+// Mock posts from Ayesha Khan to populate the feed
+const AYESHA_AVATAR = 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop&crop=faces';
+const MOCK_POSTS: Post[] = [
+  {
+    id: 'mock-1',
+    user_id: 'mock-ayesha',
+    user_name: 'Ayesha Khan',
+    avatar_url: AYESHA_AVATAR,
+    community: 'Quran Meaning',
+    content:
+      'This The whole secret of existence lies in the pursuit of meaning, purpose, and connection. It is a delicate dance between self-discovery....vcbbfvvvvvv',
+    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    likeCount: 24,
+    isLiked: true,
+    replies: Array(8).fill(null).map((_, i) => ({ id: `mr-1-${i}`, post_id: 'mock-1', user_id: '', user_name: '', content: '', created_at: '' })),
+    likes: [],
+  },
+  {
+    id: 'mock-2',
+    user_id: 'mock-ayesha',
+    user_name: 'Ayesha Khan',
+    avatar_url: AYESHA_AVATAR,
+    community: 'Quran Meaning',
+    image_url: 'https://images.unsplash.com/photo-1564769625905-50e93615e769?w=800&h=500&fit=crop',
+    content:
+      'This The whole secret of existence lies in the pursuit of meaning, purpose, and connection. It is a delicate dance between self-discovery....vcbbfvvvvvv',
+    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    likeCount: 24,
+    isLiked: false,
+    replies: Array(8).fill(null).map((_, i) => ({ id: `mr-2-${i}`, post_id: 'mock-2', user_id: '', user_name: '', content: '', created_at: '' })),
+    likes: [],
+  },
+  {
+    id: 'mock-3',
+    user_id: 'mock-ayesha',
+    user_name: 'Ayesha Khan',
+    avatar_url: AYESHA_AVATAR,
+    community: 'Quran Meaning',
+    content:
+      'This The whole secret of existence lies in the pursuit of meaning, purpose, and connection. It is a delicate dance between self-discovery....vcbbfvvvvvv',
+    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    likeCount: 24,
+    isLiked: false,
+    replies: Array(8).fill(null).map((_, i) => ({ id: `mr-3-${i}`, post_id: 'mock-3', user_id: '', user_name: '', content: '', created_at: '' })),
+    likes: [],
+  },
+];
+
 export const Forum = () => {
   const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
@@ -145,7 +196,7 @@ export const Forum = () => {
   const [mentionSearch, setMentionSearch] = useState('');
   const [mentionTarget, setMentionTarget] = useState<'post' | 'reply'>('post');
   const [profileName, setProfileName] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'announcements' | 'communities'>('announcements');
+  const [activeTab, setActiveTab] = useState<'feed' | 'explore' | 'communities'>('feed');
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<string>>(new Set());
@@ -466,6 +517,7 @@ export const Forum = () => {
   };
 
   const handleToggleLike = async (postId: string, isCurrentlyLiked: boolean) => {
+    if (postId.startsWith('mock-')) return;
     if (!user) {
       toast.error('Please sign in to like posts');
       return;
@@ -617,19 +669,46 @@ export const Forum = () => {
         }}
       >
         <CardContent className="p-4">
+          {post.community && (
+            <div
+              className="flex items-center justify-between pb-2.5 mb-3 text-xs"
+              style={{ borderBottom: `1px solid ${SOFT_BORDER}` }}
+            >
+              <span style={{ color: '#9C8569' }}>
+                Posted in{' '}
+                <span className="font-semibold" style={{ color: BROWN_LIGHT }}>
+                  {post.community}
+                </span>
+              </span>
+              <button className="hover:underline" style={{ color: '#9C8569' }}>
+                view community
+              </button>
+            </div>
+          )}
           {/* Header: Avatar + Name + Category + Time */}
           <div className="flex items-start gap-3 mb-3">
-            <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0"
-              style={{ background: '#EAD9BE' }}
-            >
-              <User className="h-5 w-5" style={{ color: '#A88B66' }} />
-            </div>
+            {post.avatar_url ? (
+              <img
+                src={post.avatar_url}
+                alt={post.user_name}
+                className="w-11 h-11 rounded-full object-cover shrink-0"
+              />
+            ) : (
+              <div
+                className="w-11 h-11 rounded-full flex items-center justify-center shrink-0"
+                style={{ background: '#EAD9BE' }}
+              >
+                <User className="h-5 w-5" style={{ color: '#A88B66' }} />
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-semibold text-sm" style={{ color: BROWN_DARK }}>{post.user_name}</span>
-                <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-medium uppercase tracking-wide", getCategoryBadgeColor(post.category))}>
-                  {getCategoryLabel(post.category)}
-                </span>
+                {!post.community && (
+                  <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-medium uppercase tracking-wide", getCategoryBadgeColor(post.category))}>
+                    {getCategoryLabel(post.category)}
+                  </span>
+                )}
               </div>
               <p className="text-xs mt-0.5" style={{ color: '#9C8569' }}>{formatTimeAgo(post.created_at)}</p>
             </div>
@@ -646,6 +725,13 @@ export const Forum = () => {
               </button>
             )}
           </div>
+
+          {/* Optional post image */}
+          {post.image_url && (
+            <div className="w-full rounded-xl overflow-hidden mb-3" style={{ aspectRatio: '16 / 10' }}>
+              <img src={post.image_url} alt="" className="w-full h-full object-cover" />
+            </div>
+          )}
 
           {/* Content */}
           <div className="mb-3">
@@ -939,41 +1025,34 @@ export const Forum = () => {
           )}
 
           {/* Tabs */}
-          <div className="flex items-center mb-4">
-            <button
-              onClick={() => setActiveTab('announcements')}
-              className="relative pb-2.5 px-1 mr-6"
-            >
-              <span 
-                className="text-base font-bold transition-colors"
-                style={{ color: activeTab === 'announcements' ? BROWN : '#9C8569' }}
+          <div className="flex items-center mb-4 gap-6">
+            {([
+              { id: 'feed', label: 'My feed' },
+              { id: 'explore', label: 'Explore' },
+              { id: 'communities', label: 'My Communities' },
+            ] as const).map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className="relative pb-2.5 px-1"
               >
-                Announcements
-              </span>
-              {activeTab === 'announcements' && (
-                <div 
-                  className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full"
-                  style={{ background: BROWN }}
-                />
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('communities')}
-              className="relative pb-2.5 px-1"
-            >
-              <span 
-                className="text-base font-medium transition-colors"
-                style={{ color: activeTab === 'communities' ? BROWN : '#9C8569' }}
-              >
-                My Communities
-              </span>
-              {activeTab === 'communities' && (
-                <div 
-                  className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full"
-                  style={{ background: BROWN }}
-                />
-              )}
-            </button>
+                <span
+                  className="text-base transition-colors"
+                  style={{
+                    color: activeTab === tab.id ? BROWN : '#9C8569',
+                    fontWeight: activeTab === tab.id ? 700 : 500,
+                  }}
+                >
+                  {tab.label}
+                </span>
+                {activeTab === tab.id && (
+                  <div
+                    className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full"
+                    style={{ background: BROWN }}
+                  />
+                )}
+              </button>
+            ))}
           </div>
 
           {activeTab === 'communities' ? (
@@ -982,10 +1061,16 @@ export const Forum = () => {
               <p className="font-medium" style={{ color: BROWN_DARK }}>My Communities</p>
               <p className="text-sm mt-1" style={{ color: '#9C8569' }}>Coming soon</p>
             </div>
+          ) : activeTab === 'explore' ? (
+            <div className="text-center py-20">
+              <Compass className="h-10 w-10 mx-auto mb-4" style={{ color: '#C4A98A' }} />
+              <p className="font-medium" style={{ color: BROWN_DARK }}>Explore</p>
+              <p className="text-sm mt-1" style={{ color: '#9C8569' }}>Coming soon</p>
+            </div>
           ) : (
             <>
-              {/* Category Filter Pills */}
-              <div className="flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-hide">
+              {/* Category Filter Pills - hidden on My feed per redesign */}
+              <div className="hidden gap-2 overflow-x-auto pb-3 mb-4 scrollbar-hide">
                 {CATEGORIES.map(({ id, label }) => (
                   <button
                     key={id}
@@ -1041,30 +1126,47 @@ export const Forum = () => {
                 </CardContent>
               </Card>
 
+              {/* Inline Composer - opens the create post dialog */}
+              <button
+                onClick={() => setIsCreateDialogOpen(true)}
+                className="w-full mb-5 rounded-2xl text-left transition-shadow"
+                style={{ background: '#FFFFFF', boxShadow: '0 1px 3px rgba(123, 63, 30, 0.06)' }}
+              >
+                <div className="flex items-center gap-3 px-4 pt-4">
+                  <div
+                    className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center shrink-0"
+                    style={{ background: '#EAD9BE' }}
+                  >
+                    <User className="h-4 w-4" style={{ color: '#A88B66' }} />
+                  </div>
+                  <span className="text-sm" style={{ color: '#9C8569' }}>
+                    write your post here
+                  </span>
+                </div>
+                <div
+                  className="mt-3 mx-4 pt-3 pb-3 flex items-center justify-between"
+                  style={{ borderTop: `1px solid ${SOFT_BORDER}` }}
+                >
+                  <span style={{ color: BROWN_LIGHT }}>
+                    <ImagePlus className="h-5 w-5" />
+                  </span>
+                  <span
+                    className="px-5 py-1.5 rounded-full text-xs font-semibold"
+                    style={{ background: '#EFE3CE', color: '#B59A78' }}
+                  >
+                    Post
+                  </span>
+                </div>
+              </button>
+
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-20">
                   <Loader2 className="h-6 w-6 animate-spin" style={{ color: BROWN }} />
                   <p className="text-sm mt-3" style={{ color: '#9C8569' }}>Loading conversations...</p>
                 </div>
-              ) : filteredPosts.length === 0 ? (
-                <div className="text-center py-16 rounded-2xl" style={{ background: '#FFFFFF' }}>
-                  <MessageCircle className="h-10 w-10 mx-auto mb-4" style={{ color: '#C4A98A' }} />
-                  <p className="font-medium mb-1" style={{ color: BROWN_DARK }}>
-                    {searchQuery ? 'No results found' : selectedCategory === 'all' ? 'No conversations yet' : `No ${CATEGORIES.find(c => c.id === selectedCategory)?.label} posts yet`}
-                  </p>
-                  <p className="text-sm mb-5" style={{ color: '#9C8569' }}>Start the first Guftagu!</p>
-                  <Button 
-                    onClick={() => setIsCreateDialogOpen(true)}
-                    className="rounded-full px-5 text-white"
-                    style={{ background: BROWN }}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Start a conversation
-                  </Button>
-                </div>
               ) : (
                 <div className="space-y-3">
-                  {filteredPosts.map((post, index) => (
+                  {[...filteredPosts, ...MOCK_POSTS].map((post, index) => (
                     <PostCard key={post.id} post={post} index={index} />
                   ))}
                 </div>
@@ -1073,17 +1175,8 @@ export const Forum = () => {
           )}
         </div>
 
-        {/* Floating Create Post Button */}
+        {/* Create Post Dialog - triggered from inline composer above */}
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button
-              className="fixed bottom-24 right-4 h-14 w-14 rounded-full shadow-xl transition-all duration-300 z-50 border-0 text-white"
-              size="icon"
-              style={{ background: BROWN }}
-            >
-              <Plus className="h-6 w-6" />
-            </Button>
-          </DialogTrigger>
           <DialogContent className="sm:max-w-md border-0"
             style={{ background: '#FFF8EA' }}
           >
