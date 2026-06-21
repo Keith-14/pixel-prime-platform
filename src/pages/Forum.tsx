@@ -1697,49 +1697,175 @@ export const Forum = () => {
             </p>
 
             {/* Tabs */}
-            <div className="mt-6 mb-4 border-b" style={{ borderColor: SOFT_BORDER }}>
-              <div className="inline-flex flex-col items-center pb-2">
-                <span className="text-base font-bold" style={{ color: BROWN }}>Posts</span>
-                <span className="block mt-2 h-[2px] w-12 rounded-full" style={{ background: BROWN }} />
-              </div>
-            </div>
-
-            {/* Composer card */}
-            <button
-              onClick={() => setIsCreateDialogOpen(true)}
-              className="w-full mb-5 rounded-2xl text-left"
-              style={{ background: '#FFFFFF', border: `1.5px solid ${BROWN}` }}
-            >
-              <div className="flex items-start gap-3 px-4 pt-4">
-                <div className="w-9 h-9 rounded-full overflow-hidden shrink-0" style={{ background: '#EAD9BE' }}>
-                  <img src={AYESHA_AVATAR} alt="" className="w-full h-full object-cover" />
-                </div>
-                <span className="text-sm pt-1" style={{ color: '#5C4632' }}>
-                  This The whole secret of existence lies in the pursuit of meaning, purpose, and connection...
-                </span>
-              </div>
-              <div
-                className="mt-3 mx-4 pt-3 pb-3 flex items-center justify-between"
-                style={{ borderTop: `1px solid ${SOFT_BORDER}` }}
-              >
-                <span style={{ color: BROWN_LIGHT }}>
-                  <ImagePlus className="h-5 w-5" />
-                </span>
-                <span
-                  className="px-6 py-1.5 rounded-full text-xs font-semibold text-white"
-                  style={{ background: BROWN }}
+            <div className="mt-6 mb-4 border-b flex items-center gap-6" style={{ borderColor: SOFT_BORDER }}>
+              {TABS.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setCommunityTab(t.id)}
+                  className="relative pb-2"
                 >
-                  Post
-                </span>
-              </div>
-            </button>
-
-            {/* Posts */}
-            <div className="space-y-3">
-              {MOCK_POSTS.map((post, index) => (
-                <PostCard key={post.id} post={post} index={index} />
+                  <span
+                    className="text-base"
+                    style={{
+                      color: communityTab === t.id ? BROWN : '#9C8569',
+                      fontWeight: communityTab === t.id ? 700 : 500,
+                    }}
+                  >
+                    {t.label}
+                  </span>
+                  {communityTab === t.id && (
+                    <span className="absolute -bottom-px left-0 right-0 h-[2px] rounded-full" style={{ background: BROWN }} />
+                  )}
+                </button>
               ))}
             </div>
+
+            {communityTab === 'posts' && (
+              <>
+                {/* Composer card */}
+                <button
+                  onClick={() => setIsCreateDialogOpen(true)}
+                  className="w-full mb-5 rounded-2xl text-left"
+                  style={{ background: '#FFFFFF', border: `1.5px solid ${BROWN}` }}
+                >
+                  <div className="flex items-start gap-3 px-4 pt-4">
+                    <div className="w-9 h-9 rounded-full overflow-hidden shrink-0" style={{ background: '#EAD9BE' }}>
+                      <img src={AYESHA_AVATAR} alt="" className="w-full h-full object-cover" />
+                    </div>
+                    <span className="text-sm pt-1" style={{ color: '#5C4632' }}>
+                      This The whole secret of existence lies in the pursuit of meaning, purpose, and connection...
+                    </span>
+                  </div>
+                  <div
+                    className="mt-3 mx-4 pt-3 pb-3 flex items-center justify-between"
+                    style={{ borderTop: `1px solid ${SOFT_BORDER}` }}
+                  >
+                    <span style={{ color: BROWN_LIGHT }}>
+                      <ImagePlus className="h-5 w-5" />
+                    </span>
+                    <span
+                      className="px-6 py-1.5 rounded-full text-xs font-semibold text-white"
+                      style={{ background: BROWN }}
+                    >
+                      Post
+                    </span>
+                  </div>
+                </button>
+
+                <div className="space-y-3">
+                  {MOCK_POSTS.map((post, index) => (
+                    <PostCard key={post.id} post={post} index={index} />
+                  ))}
+                </div>
+              </>
+            )}
+
+            {communityTab === 'members' && (
+              <div className="space-y-2 pb-6">
+                {MOCK_MEMBERS.map((m) => (
+                  <div
+                    key={m.name}
+                    className="flex items-center gap-3 p-3 rounded-2xl"
+                    style={{ background: '#FFFFFF', boxShadow: '0 1px 3px rgba(123, 63, 30, 0.05)' }}
+                  >
+                    <img src={m.avatar} alt={m.name} className="w-11 h-11 rounded-full object-cover shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold truncate" style={{ color: BROWN_DARK }}>{m.name}</p>
+                      <p className="text-xs mt-0.5" style={{ color: '#9C8569' }}>{m.role}</p>
+                    </div>
+                    {m.role === 'Admin' ? (
+                      <span
+                        className="px-4 py-1.5 rounded-full text-[11px] font-bold tracking-wide text-white shrink-0"
+                        style={{ background: OLIVE }}
+                      >
+                        ADMIN
+                      </span>
+                    ) : (
+                      <button
+                        className="px-4 py-1.5 rounded-full text-xs font-semibold shrink-0"
+                        style={{ background: '#FFFFFF', color: BROWN_DARK, border: `1px solid ${SOFT_BORDER}` }}
+                      >
+                        Message
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {communityTab === 'settings' && (
+              <div className="space-y-4 pb-6">
+                <p className="text-xs uppercase tracking-wider font-semibold" style={{ color: '#9C8569' }}>
+                  Community Media
+                </p>
+
+                {/* Cover photo */}
+                <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', boxShadow: '0 1px 3px rgba(123, 63, 30, 0.05)' }}>
+                  <div className="w-full" style={{ aspectRatio: '16 / 9' }}>
+                    <img src={banner} alt="Cover" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="p-4 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold" style={{ color: BROWN_DARK }}>Cover photo</p>
+                      <p className="text-xs mt-0.5" style={{ color: '#9C8569' }}>Shown at the top of the community page</p>
+                    </div>
+                    <label
+                      className="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold text-white cursor-pointer"
+                      style={{ background: BROWN }}
+                    >
+                      <Camera className="h-3.5 w-3.5" />
+                      Update
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const f = e.target.files?.[0];
+                          if (!f) return;
+                          const url = await readFileAsDataUrl(f);
+                          updateOverride(c.id, { banner: url });
+                          toast.success('Cover photo updated');
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {/* Profile photo */}
+                <div className="rounded-2xl p-4 flex items-center gap-4" style={{ background: '#FFFFFF', boxShadow: '0 1px 3px rgba(123, 63, 30, 0.05)' }}>
+                  {iconUrl ? (
+                    <img src={iconUrl} alt="Icon" className="w-16 h-16 rounded-full object-cover shrink-0" style={{ border: `1.5px solid #E8D5C4` }} />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full flex items-center justify-center shrink-0" style={{ background: '#F4E7D2' }}>
+                      <BookOpen className="h-6 w-6" style={{ color: '#A88B66' }} />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold" style={{ color: BROWN_DARK }}>Profile photo</p>
+                    <p className="text-xs mt-0.5" style={{ color: '#9C8569' }}>The icon for your community</p>
+                  </div>
+                  <label
+                    className="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold text-white cursor-pointer"
+                    style={{ background: BROWN }}
+                  >
+                    <Camera className="h-3.5 w-3.5" />
+                    Update
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const f = e.target.files?.[0];
+                        if (!f) return;
+                        const url = await readFileAsDataUrl(f);
+                        updateOverride(c.id, { iconUrl: url });
+                        toast.success('Profile photo updated');
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </Layout>
