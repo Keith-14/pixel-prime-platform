@@ -4,6 +4,7 @@ import { ArrowLeft, MapPin, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useGlobalLocation } from '@/contexts/LocationContext';
 import { toast } from 'sonner';
+import mosqueIcon from '@/assets/qibla-mosque-icon.png.asset.json';
 
 // Theme tokens
 const CREAM = '#FFF5E5';
