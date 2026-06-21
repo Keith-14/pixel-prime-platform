@@ -290,12 +290,21 @@ const CommunityRow = ({
     className="flex items-center gap-3 p-3 rounded-2xl"
     style={{ background: '#FFFFFF', boxShadow: '0 1px 3px rgba(123, 63, 30, 0.05)' }}
   >
-    <div
-      className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
-      style={{ background: '#F1E2C6', border: '1.5px dashed #C4A98A' }}
-    >
-      <BookOpen className="h-5 w-5" style={{ color: '#A88B66' }} />
-    </div>
+    {community.iconUrl ? (
+      <img
+        src={community.iconUrl}
+        alt={community.name}
+        className="w-12 h-12 rounded-full object-cover shrink-0"
+        style={{ border: '1.5px solid #E8D5C4' }}
+      />
+    ) : (
+      <div
+        className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
+        style={{ background: '#F1E2C6', border: '1.5px dashed #C4A98A' }}
+      >
+        <BookOpen className="h-5 w-5" style={{ color: '#A88B66' }} />
+      </div>
+    )}
     <div className="flex-1 min-w-0">
       <p className="text-sm font-bold truncate" style={{ color: BROWN_DARK }}>
         {community.name}
@@ -304,13 +313,26 @@ const CommunityRow = ({
         {community.members} · {community.type}
       </p>
     </div>
-    <button
-      onClick={() => onToggle(community.id)}
-      className="px-5 py-1.5 rounded-full text-xs font-semibold text-white shrink-0"
-      style={{ background: joined ? BROWN_DARK : BROWN, opacity: joined ? 0.85 : 1 }}
-    >
-      {joined ? 'Joined' : 'Join'}
-    </button>
+    {community.isAdmin ? (
+      <span
+        className="px-4 py-1.5 rounded-full text-[11px] font-bold tracking-wide text-white shrink-0"
+        style={{ background: OLIVE }}
+      >
+        ADMIN
+      </span>
+    ) : (
+      <button
+        onClick={() => onToggle(community.id)}
+        className="px-5 py-1.5 rounded-full text-xs font-semibold shrink-0"
+        style={
+          joined
+            ? { background: BROWN_DARK, color: '#FFFFFF', opacity: 0.85 }
+            : { background: '#FFFFFF', color: BROWN_DARK, border: `1px solid ${SOFT_BORDER}` }
+        }
+      >
+        {joined ? 'Joined' : 'Join'}
+      </button>
+    )}
   </div>
 );
 
