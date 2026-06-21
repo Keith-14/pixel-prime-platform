@@ -180,7 +180,7 @@ export const Register = () => {
       </div>
 
       {/* Spacer to push card below the mosque graphic area */}
-      <div className="flex-1" style={{ maxHeight: '44vh' }} />
+      <div className="flex-1" style={{ maxHeight: '36vh' }} />
 
       {/* Bottom sheet card with login flows */}
       <div
