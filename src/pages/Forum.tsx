@@ -1863,6 +1863,11 @@ export const Forum = () => {
             </div>
           </DialogContent>
         </Dialog>
+        <CreateCommunityDialog
+          open={createCommunityOpen}
+          onOpenChange={setCreateCommunityOpen}
+          onCreate={handleCreateCommunity}
+        />
       </div>
     </Layout>
   );
