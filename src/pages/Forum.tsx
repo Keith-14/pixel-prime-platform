@@ -1091,6 +1091,39 @@ export const Forum = () => {
                 </CardContent>
               </Card>
 
+              {/* Inline Composer - opens the create post dialog */}
+              <button
+                onClick={() => setIsCreateDialogOpen(true)}
+                className="w-full mb-5 rounded-2xl text-left transition-shadow"
+                style={{ background: '#FFFFFF', boxShadow: '0 1px 3px rgba(123, 63, 30, 0.06)' }}
+              >
+                <div className="flex items-center gap-3 px-4 pt-4">
+                  <div
+                    className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center shrink-0"
+                    style={{ background: '#EAD9BE' }}
+                  >
+                    <User className="h-4 w-4" style={{ color: '#A88B66' }} />
+                  </div>
+                  <span className="text-sm" style={{ color: '#9C8569' }}>
+                    write your post here
+                  </span>
+                </div>
+                <div
+                  className="mt-3 mx-4 pt-3 pb-3 flex items-center justify-between"
+                  style={{ borderTop: `1px solid ${SOFT_BORDER}` }}
+                >
+                  <span style={{ color: BROWN_LIGHT }}>
+                    <ImagePlus className="h-5 w-5" />
+                  </span>
+                  <span
+                    className="px-5 py-1.5 rounded-full text-xs font-semibold"
+                    style={{ background: '#EFE3CE', color: '#B59A78' }}
+                  >
+                    Post
+                  </span>
+                </div>
+              </button>
+
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-20">
                   <Loader2 className="h-6 w-6 animate-spin" style={{ color: BROWN }} />
@@ -1114,7 +1147,7 @@ export const Forum = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {filteredPosts.map((post, index) => (
+                  {[...filteredPosts, ...MOCK_POSTS].map((post, index) => (
                     <PostCard key={post.id} post={post} index={index} />
                   ))}
                 </div>
