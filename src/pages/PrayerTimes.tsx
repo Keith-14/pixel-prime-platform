@@ -52,6 +52,32 @@ const essentials = [
   { label: 'Prayer Mark', img: prayerMarkIcon.url, icon: null, path: '/progress' },
 ];
 
+const hadithBooks = [
+  {
+    category: "Core Authentic Collections (Kutub al-Sittah)",
+    books: [
+      "Sahih al-Bukhari",
+      "Sahih Muslim",
+      "Sunan Abu Dawud",
+      "Jami' at-Tirmidhi",
+      "Sunan an-Nasa'i",
+      "Sunan Ibn Majah",
+    ],
+  },
+  {
+    category: "Daily Life & Character",
+    books: ["Riyad as-Salihin", "Al-Adab Al-Mufrad"],
+  },
+  {
+    category: "Essential Short Collections",
+    books: ["Al-Arba'in An-Nawawiyyah"],
+  },
+  {
+    category: "Seerah & Character of the Prophet",
+    books: ["Shama'il Muhammadiyah"],
+  },
+];
+
 
 export const PrayerTimes = () => {
   const navigate = useNavigate();
