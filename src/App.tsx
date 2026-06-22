@@ -43,6 +43,8 @@ const News = lazy(() => import("./pages/News").then(m => ({ default: m.News })))
 const NewsDetail = lazy(() => import("./pages/NewsDetail").then(m => ({ default: m.NewsDetail })));
 const Mood = lazy(() => import("./pages/Mood").then(m => ({ default: m.Mood })));
 const HalalScanner = lazy(() => import("./pages/HalalScanner").then(m => ({ default: m.HalalScanner })));
+const Hadith = lazy(() => import("./pages/Hadith").then(m => ({ default: m.Hadith })));
+const HadithBook = lazy(() => import("./pages/HadithBook").then(m => ({ default: m.HadithBook })));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -113,6 +115,8 @@ const App = () => (
                   <Route path="/news/:id" element={<ProtectedRoute><NewsDetail /></ProtectedRoute>} />
                   <Route path="/mood" element={<ProtectedRoute><Mood /></ProtectedRoute>} />
                   <Route path="/halal-scanner" element={<ProtectedRoute><HalalScanner /></ProtectedRoute>} />
+                  <Route path="/hadith" element={<ProtectedRoute><Hadith /></ProtectedRoute>} />
+                  <Route path="/hadith/:slug" element={<ProtectedRoute><HadithBook /></ProtectedRoute>} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
