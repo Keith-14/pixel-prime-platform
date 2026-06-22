@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,40 +8,52 @@ import { CartProvider } from "./contexts/CartContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { LocationProvider } from "./contexts/LocationContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
+
+// Eager — needed for first paint / auth flow
 import { Home } from "./pages/Home";
 import { LoadingScreen } from "./pages/LoadingScreen";
 import { Register } from "./pages/Register";
 import { Onboarding } from "./pages/Onboarding";
-import { Quran } from "./pages/Quran";
-import { Qibla } from "./pages/Qibla";
-import { Shop } from "./pages/Shop";
-import { ShopCategories } from "./pages/ShopCategories";
-import { ProductDetail } from "./pages/ProductDetail";
-import { Places } from "./pages/Places";
-import { Account } from "./pages/Account";
-import { PrayerTimes } from "./pages/PrayerTimes";
-import { Progress } from "./pages/Progress";
-import { MonthlyStreak } from "./pages/MonthlyStreak";
-import { FAQ } from "./pages/FAQ";
-import { Zakat } from "./pages/Zakat";
-import { ZakatResult } from "./pages/ZakatResult";
-import { Hajj } from "./pages/Hajj";
-import { BusinessAccount } from "./pages/BusinessAccount";
-import { Cart } from "./pages/Cart";
-import { Checkout } from "./pages/Checkout";
-import { ShippingAddresses } from "./pages/ShippingAddresses";
-import { AddShippingAddress } from "./pages/AddShippingAddress";
-import { OrderConfirmation } from "./pages/OrderConfirmation";
-import { SellerDashboard } from "./pages/SellerDashboard";
-import { MakkahLive } from "./pages/MakkahLive";
-import { Forum } from "./pages/Forum";
-import { News } from "./pages/News";
-import { NewsDetail } from "./pages/NewsDetail";
-import { Mood } from "./pages/Mood";
-import { HalalScanner } from "./pages/HalalScanner";
-import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+// Lazy — split per route to shrink the initial bundle
+const Quran = lazy(() => import("./pages/Quran").then(m => ({ default: m.Quran })));
+const Qibla = lazy(() => import("./pages/Qibla").then(m => ({ default: m.Qibla })));
+const Shop = lazy(() => import("./pages/Shop").then(m => ({ default: m.Shop })));
+const ShopCategories = lazy(() => import("./pages/ShopCategories").then(m => ({ default: m.ShopCategories })));
+const ProductDetail = lazy(() => import("./pages/ProductDetail").then(m => ({ default: m.ProductDetail })));
+const Places = lazy(() => import("./pages/Places").then(m => ({ default: m.Places })));
+const Account = lazy(() => import("./pages/Account").then(m => ({ default: m.Account })));
+const PrayerTimes = lazy(() => import("./pages/PrayerTimes").then(m => ({ default: m.PrayerTimes })));
+const Progress = lazy(() => import("./pages/Progress").then(m => ({ default: m.Progress })));
+const MonthlyStreak = lazy(() => import("./pages/MonthlyStreak").then(m => ({ default: m.MonthlyStreak })));
+const FAQ = lazy(() => import("./pages/FAQ").then(m => ({ default: m.FAQ })));
+const Zakat = lazy(() => import("./pages/Zakat").then(m => ({ default: m.Zakat })));
+const ZakatResult = lazy(() => import("./pages/ZakatResult").then(m => ({ default: m.ZakatResult })));
+const Hajj = lazy(() => import("./pages/Hajj").then(m => ({ default: m.Hajj })));
+const BusinessAccount = lazy(() => import("./pages/BusinessAccount").then(m => ({ default: m.BusinessAccount })));
+const Cart = lazy(() => import("./pages/Cart").then(m => ({ default: m.Cart })));
+const Checkout = lazy(() => import("./pages/Checkout").then(m => ({ default: m.Checkout })));
+const ShippingAddresses = lazy(() => import("./pages/ShippingAddresses").then(m => ({ default: m.ShippingAddresses })));
+const AddShippingAddress = lazy(() => import("./pages/AddShippingAddress").then(m => ({ default: m.AddShippingAddress })));
+const OrderConfirmation = lazy(() => import("./pages/OrderConfirmation").then(m => ({ default: m.OrderConfirmation })));
+const SellerDashboard = lazy(() => import("./pages/SellerDashboard").then(m => ({ default: m.SellerDashboard })));
+const MakkahLive = lazy(() => import("./pages/MakkahLive").then(m => ({ default: m.MakkahLive })));
+const Forum = lazy(() => import("./pages/Forum").then(m => ({ default: m.Forum })));
+const News = lazy(() => import("./pages/News").then(m => ({ default: m.News })));
+const NewsDetail = lazy(() => import("./pages/NewsDetail").then(m => ({ default: m.NewsDetail })));
+const Mood = lazy(() => import("./pages/Mood").then(m => ({ default: m.Mood })));
+const HalalScanner = lazy(() => import("./pages/HalalScanner").then(m => ({ default: m.HalalScanner })));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -60,12 +73,13 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <LanguageProvider>
-        <BrowserRouter>
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <AuthProvider>
             <LocationProvider>
               <CartProvider>
                 <Toaster />
                 <Sonner />
+                <Suspense fallback={<LoadingScreen />}>
                 <Routes>
                   <Route path="/loading" element={<LoadingScreen />} />
                   <Route path="/login" element={<Register />} />
@@ -102,6 +116,7 @@ const App = () => (
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
+                </Suspense>
               </CartProvider>
             </LocationProvider>
           </AuthProvider>
