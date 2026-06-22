@@ -53,7 +53,16 @@ export const HadithBook = () => {
       })
       .then((j: Edition) => {
         if (cancel) return;
-        setData(j);
+        // Many editions (e.g. eng-muslim) include placeholder entries with
+        // empty text. Filter them out so the list only shows real hadiths
+        // while preserving original hadith numbers.
+        const cleaned: Edition = {
+          ...j,
+          hadiths: (j.hadiths || []).filter(
+            (h) => typeof h.text === 'string' && h.text.trim().length > 0,
+          ),
+        };
+        setData(cleaned);
       })
       .catch((e) => {
         if (cancel) return;
