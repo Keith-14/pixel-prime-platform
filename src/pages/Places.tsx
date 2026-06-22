@@ -176,7 +176,7 @@ export const Places = () => {
         lastError = new Error(`Server ${server} returned ${response.status}`);
       } catch (err) {
         lastError = err as Error;
-        console.log(`Server ${server} failed, trying next...`);
+        // Silent fallback to next Overpass mirror — noise-free.
       }
     }
     

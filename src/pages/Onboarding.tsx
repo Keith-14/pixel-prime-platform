@@ -69,7 +69,7 @@ export const Onboarding = () => {
               key={i}
               src={s.fullImage}
               alt=""
-              fetchPriority={i === 0 ? 'high' : 'low'}
+              {...({ fetchpriority: i === 0 ? 'high' : 'low' } as any)}
               decoding="async"
               className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ease-out"
               style={{ opacity: i === current ? 1 : 0 }}
