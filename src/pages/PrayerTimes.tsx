@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, Bell, MapPin, ChevronDown, Sun, Sunrise, Sunset, Moon, Cloud, CloudSun, Sparkles, BookOpen } from 'lucide-react';
+import { Menu, Bell, MapPin, ChevronDown, Sun, Sunrise, Sunset, Moon, Cloud, CloudSun, Sparkles } from 'lucide-react';
 import { SideMenu } from '@/components/SideMenu';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import { useGlobalLocation } from '@/contexts/LocationContext';
@@ -42,7 +42,7 @@ const fmt12 = (h: number, m: number) => {
 };
 
 const essentials = [
-  { label: 'Hadith', img: hadithIcon.url, icon: null, path: '/quran' },
+  { label: 'Hadith', img: hadithIcon.url, icon: null, path: '/hadith' },
   { label: 'Quran', img: quranIcon.url, icon: null, path: '/quran' },
   { label: 'Hajj Packages', img: hajjIcon.url, icon: null, path: '/hajj' },
   { label: 'Places', img: placesIcon.url, icon: null, path: '/places' },
