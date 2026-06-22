@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, Search, Loader2 } from 'lucide-react';
+import { ChevronLeft, Search, Loader2, ExternalLink } from 'lucide-react';
 import { HADITH_BOOKS } from './Hadith';
 
 const CREAM = '#FFF5E5';
@@ -53,16 +53,10 @@ export const HadithBook = () => {
       })
       .then((j: Edition) => {
         if (cancel) return;
-        // Many editions (e.g. eng-muslim) include placeholder entries with
-        // empty text. Filter them out so the list only shows real hadiths
-        // while preserving original hadith numbers.
-        const cleaned: Edition = {
-          ...j,
-          hadiths: (j.hadiths || []).filter(
-            (h) => typeof h.text === 'string' && h.text.trim().length > 0,
-          ),
-        };
-        setData(cleaned);
+        // Keep every entry — including ones the source dataset left blank —
+        // so hadith numbering stays continuous. Blank entries render with a
+        // "view on Sunnah.com" fallback (see render below).
+        setData({ ...j, hadiths: j.hadiths || [] });
       })
       .catch((e) => {
         if (cancel) return;
@@ -79,7 +73,7 @@ export const HadithBook = () => {
     if (!query.trim()) return data.hadiths;
     const q = query.trim().toLowerCase();
     return data.hadiths.filter(
-      (h) => String(h.hadithnumber).includes(q) || h.text.toLowerCase().includes(q),
+      (h) => String(h.hadithnumber).includes(q) || (h.text || '').toLowerCase().includes(q),
     );
   }, [data, query]);
 
@@ -156,25 +150,48 @@ export const HadithBook = () => {
         {!loading && !error && data && (
           <>
             <div className="space-y-3">
-              {slice.map((h) => (
-                <div
-                  key={String(h.hadithnumber)}
-                  className="rounded-2xl border p-4"
-                  style={{ background: '#FFF5E5', borderColor: 'rgba(232,213,196,0.86)' }}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span
-                      className="text-[11px] px-2 py-0.5 rounded-full"
-                      style={{ background: 'rgba(120,53,26,0.08)', color: BROWN_ACCENT, fontWeight: 700 }}
-                    >
-                      #{h.hadithnumber}
-                    </span>
+              {slice.map((h) => {
+                const hasText = typeof h.text === 'string' && h.text.trim().length > 0;
+                const sunnahUrl = `https://sunnah.com/${slug}:${h.hadithnumber}`;
+                return (
+                  <div
+                    key={String(h.hadithnumber)}
+                    className="rounded-2xl border p-4"
+                    style={{ background: '#FFF5E5', borderColor: 'rgba(232,213,196,0.86)' }}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span
+                        className="text-[11px] px-2 py-0.5 rounded-full"
+                        style={{ background: 'rgba(120,53,26,0.08)', color: BROWN_ACCENT, fontWeight: 700 }}
+                      >
+                        #{h.hadithnumber}
+                      </span>
+                    </div>
+                    {hasText ? (
+                      <p className="text-[14px] leading-[1.65]" style={{ color: BROWN, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                        {h.text}
+                      </p>
+                    ) : (
+                      <div className="text-[13px] leading-[1.6]" style={{ color: BROWN, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                        <p className="opacity-80 mb-3">
+                          English translation for this hadith number isn't included in our open
+                          dataset. You can read the full text on Sunnah.com.
+                        </p>
+                        <a
+                          href={sunnahUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px]"
+                          style={{ background: HERO_GRAD, color: '#FFF5E5', fontWeight: 600 }}
+                        >
+                          Read on Sunnah.com
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
+                      </div>
+                    )}
                   </div>
-                  <p className="text-[14px] leading-[1.65]" style={{ color: BROWN, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                    {h.text}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
               {slice.length === 0 && (
                 <div className="text-center py-10 text-[13px]" style={{ color: BROWN }}>
                   No hadith match your search.
