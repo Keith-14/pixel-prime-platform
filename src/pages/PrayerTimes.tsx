@@ -217,50 +217,6 @@ export const PrayerTimes = () => {
         </div>
       </div>
 
-      {/* Hadith Books */}
-      <div className="px-5 pt-6">
-        <h2
-          className="text-[20px] mb-3"
-          style={{ color: BROWN, fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700 }}
-        >
-          Hadith Books
-        </h2>
-        <div className="space-y-3">
-          {hadithBooks.map((group) => (
-            <div
-              key={group.category}
-              className="rounded-2xl border overflow-hidden"
-              style={{ background: CREAM_CARD, borderColor: 'rgba(232,213,196,0.86)' }}
-            >
-              <div className="px-4 py-2.5" style={{ background: 'rgba(120,53,26,0.06)' }}>
-                <span
-                  className="text-[12px] tracking-wide uppercase"
-                  style={{ color: BROWN_ACCENT, fontWeight: 700 }}
-                >
-                  {group.category}
-                </span>
-              </div>
-              <div className="divide-y" style={{ borderColor: 'rgba(232,213,196,0.5)' }}>
-                {group.books.map((book) => (
-                  <div
-                    key={book}
-                    className="flex items-center gap-3 px-4 py-3"
-                  >
-                    <BookOpen className="h-4 w-4 shrink-0" style={{ color: BROWN_ACCENT }} strokeWidth={2} />
-                    <span
-                      className="text-[14px]"
-                      style={{ color: BROWN, fontWeight: 500, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                    >
-                      {book}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Daily Prayer Times */}
       <div className="px-5 pt-6">
         <div className="flex items-center justify-between mb-3">
