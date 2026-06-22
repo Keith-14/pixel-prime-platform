@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ChevronLeft, Search, Loader2, ExternalLink } from 'lucide-react';
 import { HADITH_BOOKS } from './Hadith';
+import { supabase } from '@/integrations/supabase/client';
 
 const CREAM = '#FFF5E5';
 const BROWN = '#2C1309';
@@ -39,6 +40,8 @@ export const HadithBook = () => {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [query, setQuery] = useState('');
+  const [filled, setFilled] = useState<Record<string, { text: string; arabic?: string }>>({});
+  const [filling, setFilling] = useState(false);
 
   useEffect(() => {
     if (!book?.edition) return;
@@ -84,6 +87,28 @@ export const HadithBook = () => {
   useEffect(() => {
     setPage(1);
   }, [query]);
+
+  // Backfill blank entries on the current page from hadithapi.com via edge function.
+  useEffect(() => {
+    if (!slug || !data || slice.length === 0) return;
+    const missing = slice
+      .filter((h) => !(typeof h.text === 'string' && h.text.trim().length > 0))
+      .map((h) => Number(h.hadithnumber))
+      .filter((n) => Number.isFinite(n) && !filled[String(n)]);
+    if (missing.length === 0) return;
+    let cancel = false;
+    setFilling(true);
+    supabase.functions
+      .invoke('fill-hadith', { body: { slug, numbers: missing } })
+      .then(({ data: res, error: err }) => {
+        if (cancel || err || !res?.results) return;
+        setFilled((prev) => ({ ...prev, ...res.results }));
+      })
+      .finally(() => !cancel && setFilling(false));
+    return () => {
+      cancel = true;
+    };
+  }, [slug, data, safePage, query]);
 
   if (!book) {
     return (
@@ -151,7 +176,12 @@ export const HadithBook = () => {
           <>
             <div className="space-y-3">
               {slice.map((h) => {
-                const hasText = typeof h.text === 'string' && h.text.trim().length > 0;
+                const filledEntry = filled[String(h.hadithnumber)];
+                const displayText =
+                  typeof h.text === 'string' && h.text.trim().length > 0
+                    ? h.text
+                    : filledEntry?.text || '';
+                const hasText = displayText.trim().length > 0;
                 const sunnahUrl = `https://sunnah.com/${slug}:${h.hadithnumber}`;
                 return (
                   <div
@@ -169,13 +199,14 @@ export const HadithBook = () => {
                     </div>
                     {hasText ? (
                       <p className="text-[14px] leading-[1.65]" style={{ color: BROWN, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                        {h.text}
+                        {displayText}
                       </p>
                     ) : (
                       <div className="text-[13px] leading-[1.6]" style={{ color: BROWN, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                         <p className="opacity-80 mb-3">
-                          English translation for this hadith number isn't included in our open
-                          dataset. You can read the full text on Sunnah.com.
+                          {filling
+                            ? 'Loading translation…'
+                            : "Translation unavailable. You can read the full text on Sunnah.com."}
                         </p>
                         <a
                           href={sunnahUrl}
