@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, Search, Loader2 } from 'lucide-react';
+import { ChevronLeft, Search, Loader2, ExternalLink } from 'lucide-react';
 import { HADITH_BOOKS } from './Hadith';
 
 const CREAM = '#FFF5E5';
@@ -53,16 +53,10 @@ export const HadithBook = () => {
       })
       .then((j: Edition) => {
         if (cancel) return;
-        // Many editions (e.g. eng-muslim) include placeholder entries with
-        // empty text. Filter them out so the list only shows real hadiths
-        // while preserving original hadith numbers.
-        const cleaned: Edition = {
-          ...j,
-          hadiths: (j.hadiths || []).filter(
-            (h) => typeof h.text === 'string' && h.text.trim().length > 0,
-          ),
-        };
-        setData(cleaned);
+        // Keep every entry — including ones the source dataset left blank —
+        // so hadith numbering stays continuous. Blank entries render with a
+        // "view on Sunnah.com" fallback (see render below).
+        setData({ ...j, hadiths: j.hadiths || [] });
       })
       .catch((e) => {
         if (cancel) return;
@@ -79,7 +73,7 @@ export const HadithBook = () => {
     if (!query.trim()) return data.hadiths;
     const q = query.trim().toLowerCase();
     return data.hadiths.filter(
-      (h) => String(h.hadithnumber).includes(q) || h.text.toLowerCase().includes(q),
+      (h) => String(h.hadithnumber).includes(q) || (h.text || '').toLowerCase().includes(q),
     );
   }, [data, query]);
 
