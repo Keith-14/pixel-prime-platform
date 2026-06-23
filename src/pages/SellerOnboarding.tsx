@@ -86,7 +86,7 @@ export const SellerOnboarding = () => {
       user_id: user.uid,
       ...form,
       ...extra,
-      onboarding_completed: completed || form.business_name ? completed : false,
+      onboarding_completed: completed,
     };
     const { error } = await supabase
       .from('seller_profiles')
