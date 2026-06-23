@@ -1,37 +1,16 @@
-import { Layout } from '@/components/Layout';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Package, ShoppingBag } from 'lucide-react';
-import { ProductForm } from '@/components/seller/ProductForm';
-import { ProductList } from '@/components/seller/ProductList';
-import { SellerOrders } from '@/components/seller/SellerOrders';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
-
-export interface Product {
-  id: string;
-  seller_id: string;
-  name: string;
-  description: string | null;
-  price: number;
-  inventory_quantity: number;
-  category: string | null;
-  image_url: string | null;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
+import { ArrowLeft, AlertTriangle, Plus, ClipboardList, Wallet, MessageSquare } from 'lucide-react';
 
 export const SellerDashboard = () => {
   const { user, userRole } = useAuth();
   const navigate = useNavigate();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [stats, setStats] = useState({ sales: 0, orders: 0, pendingPayout: 0, productsLive: 0, needShipping: 0 });
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     if (userRole && userRole !== 'seller') {
@@ -39,130 +18,139 @@ export const SellerDashboard = () => {
       navigate('/');
       return;
     }
+    if (!user) return;
+    (async () => {
+      const { data: prof } = await supabase
+        .from('seller_profiles')
+        .select('*')
+        .eq('user_id', user.uid)
+        .maybeSingle();
+      if (!prof || !prof.onboarding_completed) {
+        navigate('/seller-onboarding', { replace: true });
+        return;
+      }
+      setProfile(prof);
 
-    if (user) {
-      (async () => {
-        const { data } = await supabase
-          .from('seller_profiles')
-          .select('onboarding_completed')
-          .eq('user_id', user.uid)
-          .maybeSingle();
-        if (!data || !data.onboarding_completed) {
-          navigate('/seller-onboarding', { replace: true });
-          return;
-        }
-        fetchProducts();
-      })();
-    }
+      // Compute setup progress (out of 6 key fields)
+      const fields = [prof.banner_url, prof.logo_url, prof.about_us, prof.bank_account_number, prof.stripe_connected, prof.agreed_to_terms];
+      const filled = fields.filter(Boolean).length;
+      setProgress(Math.round((filled / fields.length) * 100));
+
+      const { data: products } = await supabase
+        .from('products')
+        .select('id, status')
+        .eq('seller_id', user.uid);
+      const productsLive = (products || []).filter((p: any) => p.status === 'active').length;
+
+      const { data: orders } = await supabase
+        .from('orders')
+        .select('id, total_amount, status, commission')
+        .eq('seller_id', user.uid);
+      const sales = (orders || []).reduce((s: number, o: any) => s + Number(o.total_amount || 0), 0);
+      const pendingPayout = (orders || [])
+        .filter((o: any) => ['shipped', 'processing'].includes(o.status))
+        .reduce((s: number, o: any) => s + (Number(o.total_amount) - Number(o.commission || 0)), 0);
+      const needShipping = (orders || []).filter((o: any) => o.status === 'processing').length;
+
+      setStats({ sales, orders: (orders || []).length, pendingPayout, productsLive, needShipping });
+    })();
   }, [user, userRole, navigate]);
 
-  const fetchProducts = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('seller_id', user?.uid)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setProducts(data || []);
-    } catch (error: any) {
-      toast.error('Failed to load products');
-      console.error('Error fetching products:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddProduct = () => {
-    setEditingProduct(null);
-    setShowForm(true);
-  };
-
-  const handleEditProduct = (product: Product) => {
-    setEditingProduct(product);
-    setShowForm(true);
-  };
-
-  const handleFormClose = () => {
-    setShowForm(false);
-    setEditingProduct(null);
-    fetchProducts();
-  };
-
-  const handleDeleteProduct = async (productId: string) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
-
-    try {
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', productId);
-
-      if (error) throw error;
-      
-      toast.success('Product deleted successfully');
-      fetchProducts();
-    } catch (error: any) {
-      toast.error('Failed to delete product');
-      console.error('Error deleting product:', error);
-    }
-  };
-
-  if (userRole !== 'seller') {
-    return null;
-  }
+  if (userRole !== 'seller') return null;
 
   return (
-    <Layout>
-      <div className="px-4 py-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-primary">Seller Dashboard</h1>
+    <div className="min-h-screen w-full max-w-md mx-auto" style={{ background: '#FFF1DD' }}>
+      {/* Header */}
+      <div className="bg-white px-4 pt-12 pb-4">
+        <button onClick={() => navigate('/marketplace')} className="flex items-center gap-2 text-[#1a1a1a] font-semibold">
+          <ArrowLeft className="h-5 w-5" />
+          Back to Marketplace
+        </button>
+      </div>
+
+      <div className="px-4 py-5 space-y-4">
+        {/* Setup Progress */}
+        {progress < 100 && (
+          <div className="rounded-2xl p-5" style={{ background: '#FFE3BD' }}>
+            <div className="flex items-start justify-between mb-1">
+              <div>
+                <h3 className="text-lg font-bold text-[#1a1a1a]">Setup Progress</h3>
+                <p className="text-sm text-[#1a1a1a]/70">Complete your profile to start selling</p>
+              </div>
+              <div className="text-2xl font-bold" style={{ color: '#5B7A1F' }}>{progress}%</div>
+            </div>
+            <div className="h-2 rounded-full bg-[#E8DCC0] my-3 overflow-hidden">
+              <div className="h-full rounded-full" style={{ width: `${progress}%`, background: '#5B7A1F' }} />
+            </div>
+            <button
+              onClick={() => navigate('/seller-onboarding')}
+              className="w-full py-3 rounded-full text-white font-semibold"
+              style={{ background: '#A35233' }}
+            >
+              Complete profile
+            </button>
+          </div>
+        )}
+
+        {/* Shipping alert */}
+        {stats.needShipping > 0 && (
+          <div className="rounded-2xl border-2 px-4 py-3 flex items-center justify-between" style={{ borderColor: '#D4A017' }}>
+            <div className="flex items-center gap-2 text-[#1a1a1a]">
+              <AlertTriangle className="h-5 w-5" style={{ color: '#D4A017' }} />
+              <span className="text-sm font-medium">Orders needing shipping update</span>
+            </div>
+            <button onClick={() => navigate('/seller/orders')} className="text-sm font-semibold underline" style={{ color: '#A35233' }}>
+              Update
+            </button>
+          </div>
+        )}
+
+        {/* Store row */}
+        <div className="bg-white rounded-2xl px-3 py-3 flex items-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-[#F0E4CC] overflow-hidden flex-shrink-0">
+            {profile?.logo_url && <img src={profile.logo_url} alt="" className="w-full h-full object-cover" />}
+          </div>
+          <div className="flex-1 font-bold text-[#1a1a1a]">{profile?.seller_display_name || profile?.business_name || 'Store Name'}</div>
+          <button onClick={() => navigate('/seller-onboarding')} className="text-sm font-semibold underline" style={{ color: '#A35233' }}>
+            Edit Store
+          </button>
         </div>
 
-        <Tabs defaultValue="products" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="products" className="flex items-center gap-2">
-              <Package className="h-4 w-4" />
-              Products
-            </TabsTrigger>
-            <TabsTrigger value="orders" className="flex items-center gap-2">
-              <ShoppingBag className="h-4 w-4" />
-              Orders
-            </TabsTrigger>
-          </TabsList>
+        {/* Stats grid */}
+        <div className="grid grid-cols-2 gap-3">
+          <StatCard label="TOTAL SALES" value={`$${stats.sales.toFixed(0)}`} />
+          <StatCard label="ORDERS" value={String(stats.orders)} />
+          <StatCard label="PENDING PAYOUT" value={`$${stats.pendingPayout.toFixed(0)}`} />
+          <StatCard label="PRODUCTS LIVE" value={String(stats.productsLive)} />
+        </div>
 
-          <TabsContent value="products" className="mt-4 space-y-4">
-            <div className="flex justify-end">
-              <Button
-                onClick={handleAddProduct}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Product
-              </Button>
-            </div>
-
-            {showForm && (
-              <ProductForm
-                product={editingProduct}
-                onClose={handleFormClose}
-              />
-            )}
-
-            <ProductList
-              products={products}
-              loading={loading}
-              onEdit={handleEditProduct}
-              onDelete={handleDeleteProduct}
-            />
-          </TabsContent>
-
-          <TabsContent value="orders" className="mt-4">
-            <SellerOrders />
-          </TabsContent>
-        </Tabs>
+        {/* Actions grid */}
+        <div className="grid grid-cols-2 gap-3">
+          <ActionCard icon={<Plus className="h-7 w-7" />} label="Add/View Products" onClick={() => navigate('/seller/products')} />
+          <ActionCard icon={<ClipboardList className="h-7 w-7" />} label="View Orders" onClick={() => navigate('/seller/orders')} />
+          <ActionCard icon={<Wallet className="h-7 w-7" />} label="Earnings" onClick={() => navigate('/seller/earnings')} />
+          <ActionCard icon={<MessageSquare className="h-7 w-7" />} label="Barakah Seller Support" badge={3} onClick={() => navigate('/seller/support')} />
+        </div>
       </div>
-    </Layout>
+    </div>
   );
 };
+
+const StatCard = ({ label, value }: { label: string; value: string }) => (
+  <div className="rounded-2xl px-4 py-5 text-center" style={{ background: '#FFE3BD' }}>
+    <div className="text-[11px] tracking-wider text-[#1a1a1a]/60 mb-2">{label}</div>
+    <div className="text-2xl font-bold" style={{ color: '#78351A' }}>{value}</div>
+  </div>
+);
+
+const ActionCard = ({ icon, label, onClick, badge }: { icon: React.ReactNode; label: string; onClick: () => void; badge?: number }) => (
+  <button onClick={onClick} className="relative bg-white rounded-2xl py-8 px-3 flex flex-col items-center gap-3" style={{ color: '#A35233' }}>
+    {badge !== undefined && (
+      <span className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+        {badge}
+      </span>
+    )}
+    {icon}
+    <span className="text-sm font-bold text-[#1a1a1a] text-center leading-tight">{label}</span>
+  </button>
+);
