@@ -328,26 +328,62 @@ export type Database = {
       }
       orders: {
         Row: {
+          commission: number | null
           created_at: string
+          currency: string | null
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
           id: string
+          seller_id: string | null
+          shipping_address: string | null
+          shipping_city: string | null
+          shipping_fee: number | null
           status: Database["public"]["Enums"]["order_status"]
+          subtotal: number | null
+          tax: number | null
           total_amount: number
+          tracking_id: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          commission?: number | null
           created_at?: string
+          currency?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
           id?: string
+          seller_id?: string | null
+          shipping_address?: string | null
+          shipping_city?: string | null
+          shipping_fee?: number | null
           status?: Database["public"]["Enums"]["order_status"]
+          subtotal?: number | null
+          tax?: number | null
           total_amount: number
+          tracking_id?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          commission?: number | null
           created_at?: string
+          currency?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
           id?: string
+          seller_id?: string | null
+          shipping_address?: string | null
+          shipping_city?: string | null
+          shipping_fee?: number | null
           status?: Database["public"]["Enums"]["order_status"]
+          subtotal?: number | null
+          tax?: number | null
           total_amount?: number
+          tracking_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -390,40 +426,64 @@ export type Database = {
           category: string | null
           created_at: string
           description: string | null
+          free_shipping: boolean | null
           id: string
           image_url: string | null
           inventory_quantity: number
           is_active: boolean | null
+          islamic_compliance: boolean | null
           name: string
           price: number
           seller_id: string
+          shipping_price: number | null
+          sku: string | null
+          status: string
+          tags: string[] | null
           updated_at: string
+          weight: number | null
+          weight_unit: string | null
         }
         Insert: {
           category?: string | null
           created_at?: string
           description?: string | null
+          free_shipping?: boolean | null
           id?: string
           image_url?: string | null
           inventory_quantity?: number
           is_active?: boolean | null
+          islamic_compliance?: boolean | null
           name: string
           price: number
           seller_id: string
+          shipping_price?: number | null
+          sku?: string | null
+          status?: string
+          tags?: string[] | null
           updated_at?: string
+          weight?: number | null
+          weight_unit?: string | null
         }
         Update: {
           category?: string | null
           created_at?: string
           description?: string | null
+          free_shipping?: boolean | null
           id?: string
           image_url?: string | null
           inventory_quantity?: number
           is_active?: boolean | null
+          islamic_compliance?: boolean | null
           name?: string
           price?: number
           seller_id?: string
+          shipping_price?: number | null
+          sku?: string | null
+          status?: string
+          tags?: string[] | null
           updated_at?: string
+          weight?: number | null
+          weight_unit?: string | null
         }
         Relationships: []
       }
@@ -633,7 +693,16 @@ export type Database = {
     Enums: {
       app_role: "normal_user" | "seller" | "travel_partner" | "admin"
       booking_status: "pending" | "confirmed" | "cancelled"
-      order_status: "pending" | "paid" | "shipped" | "delivered" | "cancelled"
+      order_status:
+        | "pending"
+        | "paid"
+        | "shipped"
+        | "delivered"
+        | "cancelled"
+        | "new"
+        | "processing"
+        | "completed"
+        | "declined"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -763,7 +832,17 @@ export const Constants = {
     Enums: {
       app_role: ["normal_user", "seller", "travel_partner", "admin"],
       booking_status: ["pending", "confirmed", "cancelled"],
-      order_status: ["pending", "paid", "shipped", "delivered", "cancelled"],
+      order_status: [
+        "pending",
+        "paid",
+        "shipped",
+        "delivered",
+        "cancelled",
+        "new",
+        "processing",
+        "completed",
+        "declined",
+      ],
     },
   },
 } as const

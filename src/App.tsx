@@ -38,6 +38,11 @@ const AddShippingAddress = lazy(() => import("./pages/AddShippingAddress").then(
 const OrderConfirmation = lazy(() => import("./pages/OrderConfirmation").then(m => ({ default: m.OrderConfirmation })));
 const SellerDashboard = lazy(() => import("./pages/SellerDashboard").then(m => ({ default: m.SellerDashboard })));
 const SellerOnboarding = lazy(() => import("./pages/SellerOnboarding").then(m => ({ default: m.SellerOnboarding })));
+const SellerProducts = lazy(() => import("./pages/seller/SellerProducts").then(m => ({ default: m.SellerProducts })));
+const SellerAddProduct = lazy(() => import("./pages/seller/SellerAddProduct").then(m => ({ default: m.SellerAddProduct })));
+const SellerOrdersPage = lazy(() => import("./pages/seller/SellerOrdersPage").then(m => ({ default: m.SellerOrdersPage })));
+const SellerOrderDetail = lazy(() => import("./pages/seller/SellerOrderDetail").then(m => ({ default: m.SellerOrderDetail })));
+const SellerEarnings = lazy(() => import("./pages/seller/SellerEarnings").then(m => ({ default: m.SellerEarnings })));
 const MakkahLive = lazy(() => import("./pages/MakkahLive").then(m => ({ default: m.MakkahLive })));
 const Forum = lazy(() => import("./pages/Forum").then(m => ({ default: m.Forum })));
 const News = lazy(() => import("./pages/News").then(m => ({ default: m.News })));
@@ -98,6 +103,11 @@ const App = () => (
                   <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
                   <Route path="/seller-dashboard" element={<ProtectedRoute><SellerDashboard /></ProtectedRoute>} />
                   <Route path="/seller-onboarding" element={<ProtectedRoute><SellerOnboarding /></ProtectedRoute>} />
+                  <Route path="/seller/products" element={<ProtectedRoute><SellerProducts /></ProtectedRoute>} />
+                  <Route path="/seller/products/new" element={<ProtectedRoute><SellerAddProduct /></ProtectedRoute>} />
+                  <Route path="/seller/orders" element={<ProtectedRoute><SellerOrdersPage /></ProtectedRoute>} />
+                  <Route path="/seller/orders/:id" element={<ProtectedRoute><SellerOrderDetail /></ProtectedRoute>} />
+                  <Route path="/seller/earnings" element={<ProtectedRoute><SellerEarnings /></ProtectedRoute>} />
                   <Route path="/prayer-times" element={<ProtectedRoute><PrayerTimes /></ProtectedRoute>} />
                   <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
                   <Route path="/monthly-streak" element={<ProtectedRoute><MonthlyStreak /></ProtectedRoute>} />
