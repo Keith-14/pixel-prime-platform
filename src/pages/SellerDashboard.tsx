@@ -31,9 +31,25 @@ export const SellerDashboard = () => {
       }
       setProfile(prof);
 
-      // Compute setup progress (out of 6 key fields)
-      const fields = [prof.banner_url, prof.logo_url, prof.about_us, prof.bank_account_number, prof.stripe_connected, prof.agreed_to_terms];
-      const filled = fields.filter(Boolean).length;
+      // Compute setup progress in real-time from onboarding fields submitted at signup
+      const fields = [
+        prof.business_name,
+        prof.seller_display_name,
+        prof.contact_person,
+        prof.email,
+        prof.phone_number,
+        prof.country_of_operations,
+        prof.halal_compliant,
+        prof.no_prohibited_categories,
+        prof.understands_review,
+        prof.agreed_to_terms,
+        prof.banner_url,
+        prof.logo_url,
+        prof.about_us,
+        prof.bank_account_name,
+        prof.bank_account_number,
+      ];
+      const filled = fields.filter((v) => (typeof v === 'string' ? v.trim().length > 0 : Boolean(v))).length;
       setProgress(Math.round((filled / fields.length) * 100));
 
       const { data: products } = await supabase
@@ -71,7 +87,7 @@ export const SellerDashboard = () => {
       <div className="px-4 py-5 space-y-4">
         {/* Setup Progress */}
         {progress < 100 && (
-          <div className="rounded-2xl p-5" style={{ background: '#FFE3BD' }}>
+          <div className="rounded-2xl p-5 border" style={{ background: '#FFE3BD', borderColor: '#E8D5C4' }}>
             <div className="flex items-start justify-between mb-1">
               <div>
                 <h3 className="text-lg font-bold text-[#1a1a1a]">Setup Progress</h3>
