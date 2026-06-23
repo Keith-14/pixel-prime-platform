@@ -144,7 +144,7 @@ const StatCard = ({ label, value }: { label: string; value: string }) => (
 );
 
 const ActionCard = ({ icon, label, onClick, badge }: { icon: React.ReactNode; label: string; onClick: () => void; badge?: number }) => (
-  <button onClick={onClick} className="relative bg-white rounded-2xl py-8 px-3 flex flex-col items-center gap-3" style={{ color: '#A35233' }}>
+  <button onClick={onClick} className="relative bg-white rounded-2xl py-8 px-3 flex flex-col items-center gap-3 border" style={{ color: '#A35233', borderColor: '#E8D5C4' }}>
     {badge !== undefined && (
       <span className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
         {badge}
