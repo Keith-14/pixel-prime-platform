@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { X, Upload, Image as ImageIcon } from 'lucide-react';
-import { Product } from '@/pages/SellerDashboard';
+import { Product } from '@/types/product';
 
 interface ProductFormProps {
   product: Product | null;

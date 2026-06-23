@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Edit, Trash2, Package } from 'lucide-react';
-import { Product } from '@/pages/SellerDashboard';
+import { Product } from '@/types/product';
 
 interface ProductListProps {
   products: Product[];
