@@ -137,7 +137,7 @@ export const SellerDashboard = () => {
 };
 
 const StatCard = ({ label, value }: { label: string; value: string }) => (
-  <div className="rounded-2xl px-4 py-5 text-center border" style={{ background: '#fff5e5', borderColor: '#fff5e5' }}>
+  <div className="rounded-2xl px-4 py-5 text-center border" style={{ background: '#fff5e5', borderColor: '#E8D5C4' }}>
     <div className="text-[11px] tracking-wider text-[#1a1a1a]/60 mb-2">{label}</div>
     <div className="text-2xl font-bold" style={{ color: '#78351A' }}>{value}</div>
   </div>
