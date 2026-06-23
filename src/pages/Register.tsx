@@ -255,7 +255,8 @@ export const Register = () => {
             <button
               onClick={() => {
                 setIsSignIn(false);
-                setView('profile');
+                setSelectedRole('seller');
+                setView('details');
               }}
               className="w-full text-center text-[15px] font-semibold text-[#1a1a1a]"
             >
