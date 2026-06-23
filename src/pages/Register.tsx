@@ -30,7 +30,7 @@ export const Register = () => {
   const { t } = useLanguage();
 
   const routeByRole = (role: UserRole | null | undefined) => {
-    if (role === 'seller') navigate('/seller-dashboard');
+    if (role === 'seller') navigate('/seller-onboarding');
     else if (role === 'travel_partner') navigate('/business-account');
     else navigate('/');
   };
@@ -137,7 +137,7 @@ export const Register = () => {
         } else {
           toast.success('Account created successfully!');
           let destination = '/';
-          if (role === 'seller') destination = '/seller-dashboard';
+          if (role === 'seller') destination = '/seller-onboarding';
           else if (role === 'travel_partner') destination = '/business-account';
           localStorage.setItem('barakah_onboarding_destination', destination);
           navigate('/onboarding');

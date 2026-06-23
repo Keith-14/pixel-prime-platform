@@ -37,6 +37,7 @@ const ShippingAddresses = lazy(() => import("./pages/ShippingAddresses").then(m 
 const AddShippingAddress = lazy(() => import("./pages/AddShippingAddress").then(m => ({ default: m.AddShippingAddress })));
 const OrderConfirmation = lazy(() => import("./pages/OrderConfirmation").then(m => ({ default: m.OrderConfirmation })));
 const SellerDashboard = lazy(() => import("./pages/SellerDashboard").then(m => ({ default: m.SellerDashboard })));
+const SellerOnboarding = lazy(() => import("./pages/SellerOnboarding").then(m => ({ default: m.SellerOnboarding })));
 const MakkahLive = lazy(() => import("./pages/MakkahLive").then(m => ({ default: m.MakkahLive })));
 const Forum = lazy(() => import("./pages/Forum").then(m => ({ default: m.Forum })));
 const News = lazy(() => import("./pages/News").then(m => ({ default: m.News })));
@@ -96,6 +97,7 @@ const App = () => (
                   <Route path="/places" element={<ProtectedRoute><Places /></ProtectedRoute>} />
                   <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
                   <Route path="/seller-dashboard" element={<ProtectedRoute><SellerDashboard /></ProtectedRoute>} />
+                  <Route path="/seller-onboarding" element={<ProtectedRoute><SellerOnboarding /></ProtectedRoute>} />
                   <Route path="/prayer-times" element={<ProtectedRoute><PrayerTimes /></ProtectedRoute>} />
                   <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
                   <Route path="/monthly-streak" element={<ProtectedRoute><MonthlyStreak /></ProtectedRoute>} />
