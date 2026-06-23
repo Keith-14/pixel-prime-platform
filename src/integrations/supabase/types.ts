@@ -517,6 +517,81 @@ export type Database = {
         }
         Relationships: []
       }
+      seller_profiles: {
+        Row: {
+          about_us: string | null
+          agreed_to_terms: boolean | null
+          bank_account_name: string | null
+          bank_account_number: string | null
+          banner_url: string | null
+          business_name: string
+          contact_person: string | null
+          country_of_operations: string | null
+          created_at: string
+          email: string | null
+          halal_compliant: boolean | null
+          id: string
+          logo_url: string | null
+          no_prohibited_categories: boolean | null
+          onboarding_completed: boolean | null
+          phone_country_code: string | null
+          phone_number: string | null
+          seller_display_name: string | null
+          stripe_connected: boolean | null
+          understands_review: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          about_us?: string | null
+          agreed_to_terms?: boolean | null
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          banner_url?: string | null
+          business_name: string
+          contact_person?: string | null
+          country_of_operations?: string | null
+          created_at?: string
+          email?: string | null
+          halal_compliant?: boolean | null
+          id?: string
+          logo_url?: string | null
+          no_prohibited_categories?: boolean | null
+          onboarding_completed?: boolean | null
+          phone_country_code?: string | null
+          phone_number?: string | null
+          seller_display_name?: string | null
+          stripe_connected?: boolean | null
+          understands_review?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          about_us?: string | null
+          agreed_to_terms?: boolean | null
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          banner_url?: string | null
+          business_name?: string
+          contact_person?: string | null
+          country_of_operations?: string | null
+          created_at?: string
+          email?: string | null
+          halal_compliant?: boolean | null
+          id?: string
+          logo_url?: string | null
+          no_prohibited_categories?: boolean | null
+          onboarding_completed?: boolean | null
+          phone_country_code?: string | null
+          phone_number?: string | null
+          seller_display_name?: string | null
+          stripe_connected?: boolean | null
+          understands_review?: boolean | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
