@@ -39,9 +39,20 @@ export const SellerDashboard = () => {
       navigate('/');
       return;
     }
-    
+
     if (user) {
-      fetchProducts();
+      (async () => {
+        const { data } = await supabase
+          .from('seller_profiles')
+          .select('onboarding_completed')
+          .eq('user_id', user.uid)
+          .maybeSingle();
+        if (!data || !data.onboarding_completed) {
+          navigate('/seller-onboarding', { replace: true });
+          return;
+        }
+        fetchProducts();
+      })();
     }
   }, [user, userRole, navigate]);
 
