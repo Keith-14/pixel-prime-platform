@@ -198,7 +198,7 @@ export const Home = () => {
         {/* Feedback bar */}
         <button
           onClick={() => navigate('/feedback')}
-          className="relative z-10 mx-5 mb-3 w-[calc(100%-2.5rem)] flex items-center justify-between rounded-full px-4 py-3 border transition-transform active:scale-[0.99]"
+          className="relative z-10 mx-5 mb-3 w-[calc(100%-2.5rem)] flex items-center justify-between rounded-xl px-4 py-3 border transition-transform active:scale-[0.99]"
           style={{ background: '#FFF5E5', borderColor: '#E8D5C4' }}
         >
           <span className="text-[13px] font-semibold" style={{ color: '#2C1309' }}>
