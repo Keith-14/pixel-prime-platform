@@ -195,8 +195,22 @@ export const Home = () => {
           prayerTimes={prayerTimes}
         />
 
+        {/* Feedback bar */}
+        <button
+          onClick={() => navigate('/feedback')}
+          className="relative z-10 mx-5 mb-3 w-[calc(100%-2.5rem)] flex items-center justify-between rounded-full px-4 py-3 border transition-transform active:scale-[0.99]"
+          style={{ background: '#FFF5E5', borderColor: '#E8D5C4' }}
+        >
+          <span className="text-[13px] font-semibold" style={{ color: '#2C1309' }}>
+            Help Us Improve With Your Feedback!
+          </span>
+          <span className="text-[13px] font-semibold flex items-center gap-0.5" style={{ color: '#CE5728' }}>
+            Start <span aria-hidden>›</span>
+          </span>
+        </button>
+
         {/* Quick action cards */}
-        <div className="relative z-10 px-5 mt-2 grid grid-cols-4 gap-2">
+        <div className="relative z-10 px-5 mt-0 grid grid-cols-4 gap-2">
           {quickActions.map((a) => (
             <button
               key={a.label}
