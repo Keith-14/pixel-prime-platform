@@ -35,6 +35,45 @@ export type Database = {
         }
         Relationships: []
       }
+      app_feedback: {
+        Row: {
+          additional_comments: string | null
+          bugs_encountered: string | null
+          created_at: string
+          ease_of_use: number | null
+          id: string
+          missing_features: string | null
+          most_used_feature: string | null
+          overall_rating: number
+          user_id: string | null
+          would_recommend: string | null
+        }
+        Insert: {
+          additional_comments?: string | null
+          bugs_encountered?: string | null
+          created_at?: string
+          ease_of_use?: number | null
+          id?: string
+          missing_features?: string | null
+          most_used_feature?: string | null
+          overall_rating: number
+          user_id?: string | null
+          would_recommend?: string | null
+        }
+        Update: {
+          additional_comments?: string | null
+          bugs_encountered?: string | null
+          created_at?: string
+          ease_of_use?: number | null
+          id?: string
+          missing_features?: string | null
+          most_used_feature?: string | null
+          overall_rating?: number
+          user_id?: string | null
+          would_recommend?: string | null
+        }
+        Relationships: []
+      }
       guftagu_likes: {
         Row: {
           created_at: string
