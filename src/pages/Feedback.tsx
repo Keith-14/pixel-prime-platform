@@ -51,7 +51,6 @@ export const Feedback = () => {
       first_open_confusion: firstOpenConfusion || null,
       notifications_timing: notificationsTiming || null,
       state_country: stateCountry || null,
-      submitted_at: new Date().toISOString(),
     };
     const { error } = await supabase.from('app_feedback').insert(payload);
 
