@@ -23,6 +23,11 @@ export const Feedback = () => {
   const [bugs, setBugs] = useState('');
   const [recommend, setRecommend] = useState('');
   const [comments, setComments] = useState('');
+  const [mainUse, setMainUse] = useState('');
+  const [oneImprovement, setOneImprovement] = useState('');
+  const [firstOpenConfusion, setFirstOpenConfusion] = useState('');
+  const [notificationsTiming, setNotificationsTiming] = useState('');
+  const [stateCountry, setStateCountry] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +45,11 @@ export const Feedback = () => {
       bugs_encountered: bugs || null,
       would_recommend: recommend || null,
       additional_comments: comments || null,
+      main_use: mainUse || null,
+      one_improvement: oneImprovement || null,
+      first_open_confusion: firstOpenConfusion || null,
+      notifications_timing: notificationsTiming || null,
+      state_country: stateCountry || null,
     });
     setSubmitting(false);
     if (error) {
@@ -107,6 +117,70 @@ export const Feedback = () => {
             value={mostUsed}
             onChange={(e) => setMostUsed(e.target.value)}
             placeholder="e.g. Prayer Times, Quran, Qibla…"
+            className="bg-white border-[#E8D5C4]"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-[15px] font-semibold" style={{ color: '#2C1309' }}>
+            What do you mainly use Barakah for?
+          </Label>
+          <Input
+            value={mainUse}
+            onChange={(e) => setMainUse(e.target.value)}
+            placeholder="Short answer…"
+            className="bg-white border-[#E8D5C4]"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-[15px] font-semibold" style={{ color: '#2C1309' }}>
+            What is the one thing you would improve about Barakah?
+          </Label>
+          <Textarea
+            value={oneImprovement}
+            onChange={(e) => setOneImprovement(e.target.value)}
+            placeholder="Share your thoughts…"
+            rows={4}
+            className="bg-white border-[#E8D5C4]"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-[15px] font-semibold" style={{ color: '#2C1309' }}>
+            Was anything confusing when you first opened the app?
+          </Label>
+          <Textarea
+            value={firstOpenConfusion}
+            onChange={(e) => setFirstOpenConfusion(e.target.value)}
+            placeholder="Tell us what felt unclear…"
+            rows={4}
+            className="bg-white border-[#E8D5C4]"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-[15px] font-semibold" style={{ color: '#2C1309' }}>
+            Are notifications arriving at the correct time?
+          </Label>
+          <RadioGroup value={notificationsTiming} onValueChange={setNotificationsTiming} className="flex flex-col gap-2">
+            {['Yes', 'Sometimes late', 'Incorrect', 'Not tested'].map((opt) => (
+              <div key={opt} className="flex items-center gap-2">
+                <RadioGroupItem value={opt} id={`notif-${opt}`} />
+                <Label htmlFor={`notif-${opt}`} className="text-sm" style={{ color: '#2C1309' }}>{opt}</Label>
+              </div>
+            ))}
+          </RadioGroup>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-[15px] font-semibold" style={{ color: '#2C1309' }}>
+            Which state and country are you from?
+          </Label>
+          <Input
+            value={stateCountry}
+            onChange={(e) => setStateCountry(e.target.value)}
+            placeholder="e.g. Maharashtra, India"
             className="bg-white border-[#E8D5C4]"
           />
         </div>
