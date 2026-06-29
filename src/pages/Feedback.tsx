@@ -36,8 +36,9 @@ export const Feedback = () => {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.from('app_feedback').insert({
+    const payload = {
       user_id: user?.uid ?? null,
+      user_email: user?.email ?? null,
       overall_rating: overall,
       ease_of_use: ease || null,
       most_used_feature: mostUsed || null,
@@ -50,7 +51,24 @@ export const Feedback = () => {
       first_open_confusion: firstOpenConfusion || null,
       notifications_timing: notificationsTiming || null,
       state_country: stateCountry || null,
-    });
+      submitted_at: new Date().toISOString(),
+    };
+    const { error } = await supabase.from('app_feedback').insert(payload);
+
+    // Mirror to Google Sheets via Apps Script webhook (fire-and-forget, no-cors).
+    try {
+      await fetch(
+        'https://script.google.com/macros/s/AKfycbzMLlcY62HxdFf6brSiY5V3753L38OhB3kHitcfZVAM3bkz4qrXUXOjPXp4Kt_RYMFh/exec',
+        {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload),
+        }
+      );
+    } catch (e) {
+      console.warn('Sheets webhook failed', e);
+    }
     setSubmitting(false);
     if (error) {
       toast({ title: 'Could not submit feedback', description: error.message, variant: 'destructive' });
