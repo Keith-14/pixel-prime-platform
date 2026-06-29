@@ -41,10 +41,15 @@ export type Database = {
           bugs_encountered: string | null
           created_at: string
           ease_of_use: number | null
+          first_open_confusion: string | null
           id: string
+          main_use: string | null
           missing_features: string | null
           most_used_feature: string | null
+          notifications_timing: string | null
+          one_improvement: string | null
           overall_rating: number
+          state_country: string | null
           user_id: string | null
           would_recommend: string | null
         }
@@ -53,10 +58,15 @@ export type Database = {
           bugs_encountered?: string | null
           created_at?: string
           ease_of_use?: number | null
+          first_open_confusion?: string | null
           id?: string
+          main_use?: string | null
           missing_features?: string | null
           most_used_feature?: string | null
+          notifications_timing?: string | null
+          one_improvement?: string | null
           overall_rating: number
+          state_country?: string | null
           user_id?: string | null
           would_recommend?: string | null
         }
@@ -65,10 +75,15 @@ export type Database = {
           bugs_encountered?: string | null
           created_at?: string
           ease_of_use?: number | null
+          first_open_confusion?: string | null
           id?: string
+          main_use?: string | null
           missing_features?: string | null
           most_used_feature?: string | null
+          notifications_timing?: string | null
+          one_improvement?: string | null
           overall_rating?: number
+          state_country?: string | null
           user_id?: string | null
           would_recommend?: string | null
         }
