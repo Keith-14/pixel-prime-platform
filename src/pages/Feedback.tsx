@@ -29,6 +29,35 @@ export const Feedback = () => {
   const [notificationsTiming, setNotificationsTiming] = useState('');
   const [stateCountry, setStateCountry] = useState('');
 
+  const sendToGoogleSheets = async (payload: Record<string, string | number | null>) => {
+    const sheetPayload: Record<string, string> = {
+      timestamp: String(payload.submitted_at ?? ''),
+      'User ID': String(payload.user_id ?? ''),
+      'User Email': String(payload.user_email ?? ''),
+      'Overall, how would you rate Barakah?': String(payload.overall_rating ?? ''),
+      'How easy is the app to use?': String(payload.ease_of_use ?? ''),
+      'Which feature do you use the most?': String(payload.most_used_feature ?? ''),
+      'What do you mainly use Barakah for?': String(payload.main_use ?? ''),
+      'What is the one thing you would improve about Barakah?': String(payload.one_improvement ?? ''),
+      'Was anything confusing when you first opened the app?': String(payload.first_open_confusion ?? ''),
+      'Are notifications arriving at the correct time?': String(payload.notifications_timing ?? ''),
+      'Which state and country are you from?': String(payload.state_country ?? ''),
+      'What features would you like us to add?': String(payload.missing_features ?? ''),
+      'Have you encountered any bugs or issues?': String(payload.bugs_encountered ?? ''),
+      'Would you recommend Barakah to friends or family?': String(payload.would_recommend ?? ''),
+      "Anything else you'd like to share?": String(payload.additional_comments ?? ''),
+    };
+
+    await fetch(
+      'https://script.google.com/macros/s/AKfycbzMLlcY62HxdFf6brSiY5V3753L38OhB3kHitcfZVAM3bkz4qrXUXOjPXp4Kt_RYMFh/exec',
+      {
+        method: 'POST',
+        mode: 'no-cors',
+        body: new URLSearchParams(sheetPayload),
+      }
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!overall) {
@@ -58,25 +87,20 @@ export const Feedback = () => {
     const { submitted_at: _ts, ...dbPayload } = payload;
     const { error } = await supabase.from('app_feedback').insert(dbPayload as any);
 
-    // Mirror to Google Sheets via Apps Script webhook (fire-and-forget, no-cors).
-    try {
-      await fetch(
-        'https://script.google.com/macros/s/AKfycbzMLlcY62HxdFf6brSiY5V3753L38OhB3kHitcfZVAM3bkz4qrXUXOjPXp4Kt_RYMFh/exec',
-        {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(payload),
-        }
-      );
-    } catch (e) {
-      console.warn('Sheets webhook failed', e);
-    }
     setSubmitting(false);
     if (error) {
       toast({ title: 'Could not submit feedback', description: error.message, variant: 'destructive' });
       return;
     }
+
+    // Mirror to Google Sheets via Apps Script webhook using form fields so
+    // Apps Script can read every answer from e.parameter, not just timestamp.
+    try {
+      await sendToGoogleSheets(payload);
+    } catch (e) {
+      console.warn('Sheets webhook failed', e);
+    }
+
     toast({ title: 'Thank you for your feedback!', description: 'Your input helps us improve Barakah.' });
     navigate('/');
   };
