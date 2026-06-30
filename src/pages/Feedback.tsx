@@ -30,29 +30,28 @@ export const Feedback = () => {
   const [stateCountry, setStateCountry] = useState('');
 
   const sendToGoogleSheets = async (payload: Record<string, string | number | null>) => {
-    const sheetPayload = {
-      ...payload,
-      timestamp: payload.submitted_at,
-      user_id: payload.user_id ?? '',
-      user_email: payload.user_email ?? '',
-      questions: {
-        'Overall, how would you rate Barakah?': payload.overall_rating ?? '',
-        'How easy is the app to use?': payload.ease_of_use ?? '',
-        'Which feature do you use the most?': payload.most_used_feature ?? '',
-        'What do you mainly use Barakah for?': payload.main_use ?? '',
-        'What is the one thing you would improve about Barakah?': payload.one_improvement ?? '',
-        'Was anything confusing when you first opened the app?': payload.first_open_confusion ?? '',
-        'Are notifications arriving at the correct time?': payload.notifications_timing ?? '',
-        'Which state and country are you from?': payload.state_country ?? '',
-        'What features would you like us to add?': payload.missing_features ?? '',
-        'Have you encountered any bugs or issues?': payload.bugs_encountered ?? '',
-        'Would you recommend Barakah to friends or family?': payload.would_recommend ?? '',
-        "Anything else you'd like to share?": payload.additional_comments ?? '',
-      },
+    const sheetPayload: Record<string, string> = {
+      Timestamp: String(payload.submitted_at ?? ''),
+      'User ID': String(payload.user_id ?? ''),
+      'User Email': String(payload.user_email ?? ''),
+      'Overall, how would you rate Barakah?': String(payload.overall_rating ?? ''),
+      'How easy is the app to use?': String(payload.ease_of_use ?? ''),
+      'Which feature do you use the most?': String(payload.most_used_feature ?? ''),
+      'What do you mainly use Barakah for?': String(payload.main_use ?? ''),
+      'What is the one thing you would improve about Barakah?': String(payload.one_improvement ?? ''),
+      'Was anything confusing when you first opened the app?': String(payload.first_open_confusion ?? ''),
+      'Are notifications arriving at the correct time?': String(payload.notifications_timing ?? ''),
+      'Which state and country are you from?': String(payload.state_country ?? ''),
+      'What features would you like us to add?': String(payload.missing_features ?? ''),
+      'Have you encountered any bugs or issues?': String(payload.bugs_encountered ?? ''),
+      'Would you recommend Barakah to friends or family?': String(payload.would_recommend ?? ''),
+      "Anything else you'd like to share?": String(payload.additional_comments ?? ''),
     };
 
+    const query = new URLSearchParams(sheetPayload).toString();
+
     await fetch(
-      'https://script.google.com/macros/s/AKfycbzMLlcY62HxdFf6brSiY5V3753L38OhB3kHitcfZVAM3bkz4qrXUXOjPXp4Kt_RYMFh/exec',
+      `https://script.google.com/macros/s/AKfycbzMLlcY62HxdFf6brSiY5V3753L38OhB3kHitcfZVAM3bkz4qrXUXOjPXp4Kt_RYMFh/exec?${query}`,
       {
         method: 'POST',
         mode: 'no-cors',
