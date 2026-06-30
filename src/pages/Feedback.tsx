@@ -36,23 +36,27 @@ export const Feedback = () => {
       return;
     }
     setSubmitting(true);
-    const payload = {
+    // Field order here is the source of truth for the Google Sheet columns.
+    const payload: Record<string, string | number | null> = {
+      submitted_at: new Date().toISOString(),
       user_id: user?.uid ?? null,
       user_email: user?.email ?? null,
       overall_rating: overall,
       ease_of_use: ease || null,
       most_used_feature: mostUsed || null,
-      missing_features: missing || null,
-      bugs_encountered: bugs || null,
-      would_recommend: recommend || null,
-      additional_comments: comments || null,
       main_use: mainUse || null,
       one_improvement: oneImprovement || null,
       first_open_confusion: firstOpenConfusion || null,
       notifications_timing: notificationsTiming || null,
       state_country: stateCountry || null,
+      missing_features: missing || null,
+      bugs_encountered: bugs || null,
+      would_recommend: recommend || null,
+      additional_comments: comments || null,
     };
-    const { error } = await supabase.from('app_feedback').insert(payload);
+    // Supabase insert excludes submitted_at (no such column there).
+    const { submitted_at: _ts, ...dbPayload } = payload;
+    const { error } = await supabase.from('app_feedback').insert(dbPayload);
 
     // Mirror to Google Sheets via Apps Script webhook (fire-and-forget, no-cors).
     try {
