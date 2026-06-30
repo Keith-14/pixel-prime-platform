@@ -50,6 +50,7 @@ export type Database = {
           one_improvement: string | null
           overall_rating: number
           state_country: string | null
+          user_email: string | null
           user_id: string | null
           would_recommend: string | null
         }
@@ -67,6 +68,7 @@ export type Database = {
           one_improvement?: string | null
           overall_rating: number
           state_country?: string | null
+          user_email?: string | null
           user_id?: string | null
           would_recommend?: string | null
         }
@@ -84,6 +86,7 @@ export type Database = {
           one_improvement?: string | null
           overall_rating?: number
           state_country?: string | null
+          user_email?: string | null
           user_id?: string | null
           would_recommend?: string | null
         }
