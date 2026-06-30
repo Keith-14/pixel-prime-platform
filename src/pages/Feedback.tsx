@@ -56,7 +56,7 @@ export const Feedback = () => {
     };
     // Supabase insert excludes submitted_at (no such column there).
     const { submitted_at: _ts, ...dbPayload } = payload;
-    const { error } = await supabase.from('app_feedback').insert(dbPayload);
+    const { error } = await supabase.from('app_feedback').insert(dbPayload as any);
 
     // Mirror to Google Sheets via Apps Script webhook (fire-and-forget, no-cors).
     try {
