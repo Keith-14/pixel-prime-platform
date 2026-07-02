@@ -197,7 +197,7 @@ export const Home = () => {
 
         {/* Feedback bar */}
         <button
-          onClick={() => navigate('/feedback')}
+          onClick={() => window.open('https://form.typeform.com/to/ZErNoDQc', '_blank', 'noopener,noreferrer')}
           className="relative z-10 mx-5 mb-3 w-[calc(100%-2.5rem)] flex items-center justify-between rounded-xl px-4 py-3 border transition-transform active:scale-[0.99]"
           style={{ background: '#FFF5E5', borderColor: '#E8D5C4' }}
         >
