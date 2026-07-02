@@ -44,22 +44,36 @@ export const HadithBook = () => {
   const [filling, setFilling] = useState(false);
 
   useEffect(() => {
-    if (!book?.edition) return;
+    if (!book?.edition && !book?.altUrl) return;
     let cancel = false;
     setLoading(true);
     setError(null);
-    const url = `https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions/${book.edition}.min.json`;
+    const url = book.edition
+      ? `https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions/${book.edition}.min.json`
+      : (book.altUrl as string);
     fetch(url)
       .then((r) => {
         if (!r.ok) throw new Error(`Failed (${r.status})`);
         return r.json();
       })
-      .then((j: Edition) => {
+      .then((j: any) => {
         if (cancel) return;
-        // Keep every entry — including ones the source dataset left blank —
-        // so hadith numbering stays continuous. Blank entries render with a
-        // "view on Sunnah.com" fallback (see render below).
-        setData({ ...j, hadiths: j.hadiths || [] });
+        if (book.altUrl && !book.edition) {
+          // A7med3bdulBaset/hadith-json shape: { hadiths: [{ idInBook, arabic, english: { text } }] }
+          const hadiths: Hadith[] = (j.hadiths || []).map((h: any) => ({
+            hadithnumber: h.idInBook ?? h.id,
+            text:
+              typeof h?.english === 'string'
+                ? h.english
+                : [h?.english?.narrator, h?.english?.text].filter(Boolean).join(' — '),
+          }));
+          setData({
+            metadata: { name: j?.metadata?.english?.title || book.name },
+            hadiths,
+          });
+        } else {
+          setData({ ...j, hadiths: j.hadiths || [] });
+        }
       })
       .catch((e) => {
         if (cancel) return;
@@ -69,7 +83,7 @@ export const HadithBook = () => {
     return () => {
       cancel = true;
     };
-  }, [book?.edition]);
+  }, [book?.edition, book?.altUrl]);
 
   const filtered = useMemo(() => {
     if (!data) return [] as Hadith[];
