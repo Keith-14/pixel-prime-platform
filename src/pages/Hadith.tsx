@@ -14,7 +14,7 @@ export type HadithBook = {
   name: string;
   slug: string;
   edition?: string; // fawazahmed0 hadith-api edition (without "eng-" prefix kept simple)
-  external?: string; // fallback URL when no edition is available
+  altUrl?: string; // A7med3bdulBaset/hadith-json fallback for books not in fawazahmed0
 };
 
 export const HADITH_BOOKS: { category: string; books: HadithBook[] }[] = [
@@ -32,8 +32,18 @@ export const HADITH_BOOKS: { category: string; books: HadithBook[] }[] = [
   {
     category: 'Daily Life & Character',
     books: [
-      { name: 'Riyad as-Salihin', slug: 'riyadussalihin', external: 'https://sunnah.com/riyadussalihin' },
-      { name: 'Al-Adab Al-Mufrad', slug: 'adab', external: 'https://sunnah.com/adab' },
+      {
+        name: 'Riyad as-Salihin',
+        slug: 'riyadussalihin',
+        altUrl:
+          'https://raw.githubusercontent.com/A7med3bdulBaset/hadith-json/main/db/by_book/other_books/riyad_assalihin.json',
+      },
+      {
+        name: 'Al-Adab Al-Mufrad',
+        slug: 'adab',
+        altUrl:
+          'https://raw.githubusercontent.com/A7med3bdulBaset/hadith-json/main/db/by_book/other_books/aladab_almufrad.json',
+      },
     ],
   },
   {
@@ -45,7 +55,12 @@ export const HADITH_BOOKS: { category: string; books: HadithBook[] }[] = [
   {
     category: 'Seerah & Character of the Prophet',
     books: [
-      { name: "Shama'il Muhammadiyah", slug: 'shamail', external: 'https://sunnah.com/shamail' },
+      {
+        name: "Shama'il Muhammadiyah",
+        slug: 'shamail',
+        altUrl:
+          'https://raw.githubusercontent.com/A7med3bdulBaset/hadith-json/main/db/by_book/other_books/shamail_muhammadiyah.json',
+      },
     ],
   },
 ];
@@ -55,8 +70,7 @@ export const Hadith = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const open = (b: HadithBook) => {
-    if (b.edition) navigate(`/hadith/${b.slug}`);
-    else if (b.external) navigate(`/hadith/external/${b.slug}`);
+    if (b.edition || b.altUrl) navigate(`/hadith/${b.slug}`);
   };
 
   return (
