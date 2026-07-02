@@ -56,7 +56,7 @@ export const Hadith = () => {
 
   const open = (b: HadithBook) => {
     if (b.edition) navigate(`/hadith/${b.slug}`);
-    else if (b.external) window.open(b.external, '_blank', 'noopener,noreferrer');
+    else if (b.external) navigate(`/hadith/external/${b.slug}`);
   };
 
   return (
@@ -130,7 +130,7 @@ export const Hadith = () => {
                       {book.name}
                     </span>
                     <span className="text-[11px]" style={{ color: BROWN_ACCENT, fontWeight: 600 }}>
-                      {book.edition ? 'Open' : 'View'}
+                      Open
                     </span>
                   </button>
                 ))}
