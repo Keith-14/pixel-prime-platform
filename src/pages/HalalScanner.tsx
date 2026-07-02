@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
 import { ArrowLeft, Flashlight, ScanLine, Check, Shield, Sparkles, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import scannerHero from '@/assets/scanner-hero.jpg';
 import scannerProduct from '@/assets/scanner-product.jpg';
 import scannerAlt1 from '@/assets/scanner-alt-1.jpg';
 import scannerAlt2 from '@/assets/scanner-alt-2.jpg';
