@@ -50,8 +50,7 @@ const NewsDetail = lazy(() => import("./pages/NewsDetail").then(m => ({ default:
 const Mood = lazy(() => import("./pages/Mood").then(m => ({ default: m.Mood })));
 const HalalScanner = lazy(() => import("./pages/HalalScanner").then(m => ({ default: m.HalalScanner })));
 const Hadith = lazy(() => import("./pages/Hadith").then(m => ({ default: m.Hadith })));
-const HadithBook = lazy(() => import("./pages/HadithBook").then(m => ({ default: m.HadithBook })));
-const Feedback = lazy(() => import("./pages/Feedback").then(m => ({ default: m.Feedback })));
+const HadithBook = lazy(() => import("./pages/HadithBook").then(m => ({ default: m.HadithBook }));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
