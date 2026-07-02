@@ -175,6 +175,10 @@ const ScanView = ({
   stopScanning: () => void;
   onManual: () => void;
 }) => {
+  useEffect(() => {
+    startScanning();
+  }, []);
+
   return (
     <div className="px-5 pt-4 pb-10">
       {/* Header */}
@@ -190,7 +194,7 @@ const ScanView = ({
         </button>
       </div>
 
-      {/* Camera / Hero card */}
+      {/* Camera feed container */}
       <div
         className="relative w-full rounded-[28px] overflow-hidden mb-6"
         style={{ aspectRatio: '4 / 5', backgroundColor: '#E9D6B5' }}
@@ -203,15 +207,6 @@ const ScanView = ({
 
         {/* Camera feed */}
         <div ref={scannerDivRef} className="absolute inset-0" />
-
-        {/* Hero image when not scanning */}
-        {!scanning && (
-          <img
-            src={scannerHero}
-            alt="Scan a product"
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-        )}
 
         {/* Scanning line */}
         {scanning && (
