@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
 import { ArrowLeft, Flashlight, ScanLine, Check, Shield, Sparkles, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import scannerHero from '@/assets/scanner-hero.jpg';
 import scannerProduct from '@/assets/scanner-product.jpg';
 import scannerAlt1 from '@/assets/scanner-alt-1.jpg';
 import scannerAlt2 from '@/assets/scanner-alt-2.jpg';
@@ -175,6 +174,10 @@ const ScanView = ({
   stopScanning: () => void;
   onManual: () => void;
 }) => {
+  useEffect(() => {
+    startScanning();
+  }, []);
+
   return (
     <div className="px-5 pt-4 pb-10">
       {/* Header */}
@@ -190,7 +193,7 @@ const ScanView = ({
         </button>
       </div>
 
-      {/* Camera / Hero card */}
+      {/* Camera feed container */}
       <div
         className="relative w-full rounded-[28px] overflow-hidden mb-6"
         style={{ aspectRatio: '4 / 5', backgroundColor: '#E9D6B5' }}
@@ -203,15 +206,6 @@ const ScanView = ({
 
         {/* Camera feed */}
         <div ref={scannerDivRef} className="absolute inset-0" />
-
-        {/* Hero image when not scanning */}
-        {!scanning && (
-          <img
-            src={scannerHero}
-            alt="Scan a product"
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-        )}
 
         {/* Scanning line */}
         {scanning && (
