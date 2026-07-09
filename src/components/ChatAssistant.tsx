@@ -291,6 +291,86 @@ const Logo = ({ size = 32 }: { size?: number }) => (
   />
 );
 
+/* ---------------- Threads Panel ---------------- */
+
+const ThreadsPanel = ({
+  threads,
+  activeThreadId,
+  onClose,
+  onSelect,
+  onNew,
+  onDelete,
+}: {
+  threads: Thread[];
+  activeThreadId: string | null;
+  onClose: () => void;
+  onSelect: (id: string) => void;
+  onNew: () => void;
+  onDelete: (id: string) => void;
+}) => {
+  return (
+    <div className="absolute inset-0 z-50 flex" onClick={onClose}>
+      <div
+        className="w-[82%] max-w-sm h-full flex flex-col shadow-xl"
+        style={{ backgroundColor: '#FFFFFF' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div
+          className="px-5 pt-5 pb-4 flex items-center justify-between border-b"
+          style={{ borderColor: BORDER }}
+        >
+          <span className="font-bold text-[16px]" style={{ color: BROWN }}>Your chats</span>
+          <button
+            onClick={onNew}
+            className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold"
+            style={{ backgroundColor: BROWN_BTN, color: '#FFF' }}
+          >
+            <Plus className="h-4 w-4" strokeWidth={2} /> New
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto px-3 py-3">
+          {threads.length === 0 ? (
+            <div className="px-3 py-6 text-center text-[13px]" style={{ color: MUTED }}>
+              No chats yet. Start a new conversation.
+            </div>
+          ) : (
+            <ul className="flex flex-col gap-1">
+              {threads.map((t) => (
+                <li
+                  key={t.id}
+                  className="flex items-center gap-2 rounded-lg px-3 py-2.5 cursor-pointer"
+                  style={{
+                    backgroundColor: t.id === activeThreadId ? INPUT_BG : 'transparent',
+                  }}
+                  onClick={() => onSelect(t.id)}
+                >
+                  <MessageSquare className="h-4 w-4 shrink-0" style={{ color: BROWN }} strokeWidth={1.75} />
+                  <span
+                    className="flex-1 truncate text-[14px]"
+                    style={{ color: BROWN }}
+                  >
+                    {t.title}
+                  </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(t.id);
+                    }}
+                    aria-label="Delete chat"
+                    className="p-1"
+                  >
+                    <Trash2 className="h-4 w-4" style={{ color: MUTED }} strokeWidth={1.75} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 /* ---------------- Chat View ---------------- */
 
 const ChatView = ({
