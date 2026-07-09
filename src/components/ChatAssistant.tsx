@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { ArrowLeft, Mic, ArrowUpRight, HelpCircle, Menu, Plus, Trash2, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Mic, ArrowUpRight, Menu, Plus, Trash2, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ReactMarkdown from 'react-markdown';
