@@ -21,9 +21,9 @@ const SUGGESTION_COLOR = '#776F69';
 const SERIF_ITALIC = "'Newsreader', Georgia, serif";
 
 const SUGGESTIONS = [
-  { title: '12 Divine Name of Allah S.W.T', sub: 'Learn the Divine Names of Allah S.W.T' },
-  { title: '12 Divine Name of Allah S.W.T', sub: 'Learn the Divine Names of Allah S.W.T' },
-  { title: '12 Divine Name of Allah S.W.T', sub: 'Learn the Divine Names of Allah S.W.T' },
+  { title: '99 Names of Allah', sub: 'Explore the beautiful names of Allah S.W.T' },
+  { title: 'How to perform Wudu', sub: 'Step-by-step guide to ablution' },
+  { title: 'Dua for anxiety', sub: 'Find peace with authentic supplications' },
 ];
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
