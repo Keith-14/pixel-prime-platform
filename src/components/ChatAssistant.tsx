@@ -1,12 +1,14 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { ArrowLeft, Mic, ArrowUpRight, HelpCircle } from 'lucide-react';
+import { ArrowLeft, Mic, ArrowUpRight, HelpCircle, Menu, Plus, Trash2, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ReactMarkdown from 'react-markdown';
+import { supabase } from '@/integrations/supabase/client';
 import aiAssistantLogo from '@/assets/ai-assistant-logo.png.asset.json';
 import aiSendBtn from '@/assets/ai-send-btn.png.asset.json';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
+type Thread = { id: string; title: string; updated_at: string };
 
 const CREAM_BG = '#FFF1DD';
 const BROWN = '#2C1309';
@@ -95,6 +97,9 @@ export const ChatAssistant = ({ open, onClose }: ChatAssistantProps) => {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [threads, setThreads] = useState<Thread[]>([]);
+  const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
+  const [showThreads, setShowThreads] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const userName = user?.displayName?.split(' ')[0] || '';
@@ -105,15 +110,92 @@ export const ChatAssistant = ({ open, onClose }: ChatAssistantProps) => {
     }
   }, [messages]);
 
+  // Load thread list when the assistant opens
+  useEffect(() => {
+    if (!open || !user?.uid) return;
+    (async () => {
+      const { data } = await supabase
+        .from('chat_threads')
+        .select('id, title, updated_at')
+        .eq('user_id', user.uid)
+        .order('updated_at', { ascending: false });
+      setThreads((data as Thread[]) || []);
+    })();
+  }, [open, user?.uid]);
+
+  // Load messages when the active thread changes
+  useEffect(() => {
+    if (!activeThreadId) {
+      setMessages([]);
+      return;
+    }
+    (async () => {
+      const { data } = await supabase
+        .from('chat_messages')
+        .select('role, content')
+        .eq('thread_id', activeThreadId)
+        .order('created_at', { ascending: true });
+      setMessages(((data as Msg[]) || []));
+    })();
+  }, [activeThreadId]);
+
+  const startNewChat = useCallback(() => {
+    setActiveThreadId(null);
+    setMessages([]);
+    setShowThreads(false);
+  }, []);
+
+  const openThread = useCallback((id: string) => {
+    setActiveThreadId(id);
+    setShowThreads(false);
+  }, []);
+
+  const deleteThread = useCallback(async (id: string) => {
+    await supabase.from('chat_threads').delete().eq('id', id);
+    setThreads((prev) => prev.filter((t) => t.id !== id));
+    if (activeThreadId === id) {
+      setActiveThreadId(null);
+      setMessages([]);
+    }
+  }, [activeThreadId]);
+
   const send = useCallback(async () => {
     const text = input.trim();
     if (!text || isLoading) return;
+    if (!user?.uid) return;
     setInput('');
 
     const userMsg: Msg = { role: 'user', content: text };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     setIsLoading(true);
+
+    // Ensure a thread exists
+    let threadId = activeThreadId;
+    if (!threadId) {
+      const title = text.length > 60 ? text.slice(0, 60) + '…' : text;
+      const { data: created, error } = await supabase
+        .from('chat_threads')
+        .insert({ user_id: user.uid, title })
+        .select('id, title, updated_at')
+        .single();
+      if (error || !created) {
+        setIsLoading(false);
+        setMessages(prev => [...prev, { role: 'assistant', content: 'Failed to start chat.' }]);
+        return;
+      }
+      threadId = created.id;
+      setActiveThreadId(threadId);
+      setThreads(prev => [created as Thread, ...prev]);
+    }
+
+    // Persist user message
+    await supabase.from('chat_messages').insert({
+      thread_id: threadId,
+      user_id: user.uid,
+      role: 'user',
+      content: text,
+    });
 
     let assistantSoFar = '';
     const upsert = (chunk: string) => {
@@ -131,7 +213,27 @@ export const ChatAssistant = ({ open, onClose }: ChatAssistantProps) => {
       await streamChat({
         messages: newMessages,
         onDelta: upsert,
-        onDone: () => setIsLoading(false),
+        onDone: async () => {
+          setIsLoading(false);
+          if (assistantSoFar && threadId) {
+            await supabase.from('chat_messages').insert({
+              thread_id: threadId,
+              user_id: user.uid,
+              role: 'assistant',
+              content: assistantSoFar,
+            });
+            await supabase
+              .from('chat_threads')
+              .update({ updated_at: new Date().toISOString() })
+              .eq('id', threadId);
+            setThreads(prev => {
+              const found = prev.find(t => t.id === threadId);
+              if (!found) return prev;
+              const rest = prev.filter(t => t.id !== threadId);
+              return [{ ...found, updated_at: new Date().toISOString() }, ...rest];
+            });
+          }
+        },
         onError: (err) => {
           setMessages(prev => [...prev, { role: 'assistant', content: err }]);
           setIsLoading(false);
@@ -140,7 +242,7 @@ export const ChatAssistant = ({ open, onClose }: ChatAssistantProps) => {
     } catch {
       setIsLoading(false);
     }
-  }, [input, isLoading, messages]);
+  }, [input, isLoading, messages, user?.uid, activeThreadId]);
 
   if (!open) return null;
 
@@ -163,7 +265,19 @@ export const ChatAssistant = ({ open, onClose }: ChatAssistantProps) => {
         send={send}
         scrollRef={scrollRef}
         onSuggestion={handleSuggestion}
+        onOpenThreads={() => setShowThreads(true)}
+        onNewChat={startNewChat}
       />
+      {showThreads && (
+        <ThreadsPanel
+          threads={threads}
+          activeThreadId={activeThreadId}
+          onClose={() => setShowThreads(false)}
+          onSelect={openThread}
+          onNew={startNewChat}
+          onDelete={deleteThread}
+        />
+      )}
     </div>
   );
 };
@@ -189,6 +303,8 @@ const ChatView = ({
   send,
   scrollRef,
   onSuggestion,
+  onOpenThreads,
+  onNewChat,
 }: {
   userName: string;
   onBack: () => void;
@@ -199,6 +315,8 @@ const ChatView = ({
   send: () => void;
   scrollRef: React.RefObject<HTMLDivElement>;
   onSuggestion: (s: string) => void;
+  onOpenThreads: () => void;
+  onNewChat: () => void;
 }) => {
   const empty = messages.length === 0;
 
@@ -209,14 +327,24 @@ const ChatView = ({
         className="px-4 pt-5 pb-4 flex items-center justify-between"
         style={{ backgroundColor: '#FFFFFF' }}
       >
-        <button
-          onClick={onBack}
-          className="h-10 w-10 rounded-full border flex items-center justify-center"
-          style={{ borderColor: '#D9D2C7', color: BROWN }}
-          aria-label="Back"
-        >
-          <ArrowLeft className="h-4 w-4" strokeWidth={2} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onBack}
+            className="h-10 w-10 rounded-full border flex items-center justify-center"
+            style={{ borderColor: '#D9D2C7', color: BROWN }}
+            aria-label="Back"
+          >
+            <ArrowLeft className="h-4 w-4" strokeWidth={2} />
+          </button>
+          <button
+            onClick={onOpenThreads}
+            className="h-10 w-10 rounded-full border flex items-center justify-center"
+            style={{ borderColor: '#D9D2C7', color: BROWN }}
+            aria-label="Chat history"
+          >
+            <Menu className="h-4 w-4" strokeWidth={2} />
+          </button>
+        </div>
         <div className="flex items-center gap-2.5">
           <Logo size={32} />
           <span
@@ -227,11 +355,12 @@ const ChatView = ({
           </span>
         </div>
         <button
-          className="h-10 w-10 flex items-center justify-center"
-          style={{ color: '#2C1309' }}
-          aria-label="Help"
+          onClick={onNewChat}
+          className="h-10 w-10 rounded-full border flex items-center justify-center"
+          style={{ borderColor: '#D9D2C7', color: BROWN }}
+          aria-label="New chat"
         >
-          <HelpCircle className="h-7 w-7" strokeWidth={1.75} />
+          <Plus className="h-5 w-5" strokeWidth={2} />
         </button>
       </div>
 
