@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User } from 'firebase/auth';
-import { auth, onAuthStateChanged, signUpWithEmail, signInWithEmail, signInWithGoogle, firebaseSignOut } from '@/lib/firebase';
+import { auth, onAuthStateChanged, signUpWithEmail, signInWithEmail, signInWithGoogle, signInWithApple, firebaseSignOut } from '@/lib/firebase';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 
@@ -13,6 +13,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, role: UserRole, fullName: string) => Promise<{ error: any; role?: UserRole }>;
   signIn: (email: string, password: string) => Promise<{ error: any; role?: UserRole }>;
   signInWithGoogle: () => Promise<{ error: any; role?: UserRole }>;
+  signInWithApple: () => Promise<{ error: any; role?: UserRole }>;
   completeAccountSetup: (role: Exclude<UserRole, null>, fullName: string) => Promise<{ error: any; role?: UserRole }>;
   signOut: () => Promise<void>;
 }
@@ -156,6 +157,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const handleAppleSignIn = async () => {
+    try {
+      const result = await signInWithApple();
+      const firebaseUser = result.user;
+
+      if (!firebaseUser) return { error: { message: 'Apple sign in failed' }, role: undefined };
+
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', firebaseUser.uid)
+        .limit(1)
+        .maybeSingle();
+
+      if (roleError && roleError.code !== 'PGRST116') {
+        return { error: roleError, role: undefined };
+      }
+
+      if (roleData) {
+        const role = roleData.role as UserRole;
+        setUserRole(role);
+        return { error: null, role };
+      }
+
+      return { error: null, role: null };
+    } catch (error: any) {
+      return { error: { message: error.message || 'Apple sign in failed' }, role: undefined };
+    }
+  };
+
   const completeAccountSetup = async (role: Exclude<UserRole, null>, fullName: string) => {
     try {
       if (!user) return { error: { message: 'You must be signed in to complete setup.' }, role: undefined };
@@ -204,6 +235,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       signUp, 
       signIn, 
       signInWithGoogle: handleGoogleSignIn,
+      signInWithApple: handleAppleSignIn,
       completeAccountSetup,
       signOut: handleSignOut 
     }}>
