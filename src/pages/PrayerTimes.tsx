@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Menu, Bell, MapPin, ChevronDown, Sun, Sunrise, Sunset, Moon, Cloud, CloudSun, Sparkles } from 'lucide-react';
 import { SideMenu } from '@/components/SideMenu';
 import { BottomNavigation } from '@/components/BottomNavigation';
+import { LocationPicker } from '@/components/LocationPicker';
 import { useGlobalLocation } from '@/contexts/LocationContext';
 import prayerArcLogo from '@/assets/prayer-arc-logo.png.asset.json';
 import hadithIcon from '@/assets/hadith-icon-v2.png.asset.json';
@@ -83,6 +84,7 @@ export const PrayerTimes = () => {
   const navigate = useNavigate();
   const { location } = useGlobalLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
@@ -226,7 +228,11 @@ export const PrayerTimes = () => {
           >
             Daily Prayer Times
           </h2>
-          <button className="flex items-center gap-1 text-[13px]" style={{ color: BROWN }}>
+          <button
+            onClick={() => setIsLocationPickerOpen(true)}
+            className="flex items-center gap-1 text-[13px] transition-transform active:scale-95"
+            style={{ color: BROWN }}
+          >
             <MapPin className="h-4 w-4" strokeWidth={2} />
             <span className="font-medium">{cityLabel}</span>
             <ChevronDown className="h-3.5 w-3.5" strokeWidth={2} />
@@ -301,6 +307,7 @@ export const PrayerTimes = () => {
 
       <BottomNavigation />
       <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+      <LocationPicker isOpen={isLocationPickerOpen} onClose={() => setIsLocationPickerOpen(false)} />
     </div>
   );
 };
