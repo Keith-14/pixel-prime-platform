@@ -27,6 +27,7 @@ export const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart, getTotalItems } = useCart();
+  const { items } = useCart();
   const { toast } = useToast();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -42,8 +43,14 @@ export const ProductDetail = () => {
     load();
   }, [id]);
 
+  const inCart = !!product && items.some((i) => i.id === product.id);
+
   const handleAdd = () => {
     if (!product) return;
+    if (inCart) {
+      navigate('/cart');
+      return;
+    }
     addToCart({
       id: product.id,
       name: product.name,
@@ -164,7 +171,7 @@ export const ProductDetail = () => {
             className="w-full h-14 rounded-full text-white text-lg font-bold shadow-lg"
             style={{ backgroundColor: BROWN }}
           >
-            Add to Cart
+            {inCart ? 'Go to Cart' : 'Add to Cart'}
           </button>
         </div>
       </div>
