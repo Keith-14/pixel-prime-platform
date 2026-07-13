@@ -300,9 +300,23 @@ export const Register = () => {
 
             {/* Terms */}
             <p className="text-[11px] text-[#7c6a4f] text-center px-6 leading-relaxed pt-6">
-              By continuing, you agree to Barakah <span className="underline font-semibold text-[#3a2a18]">Terms of Service</span>
+              By continuing, you agree to Barakah{' '}
+              <button
+                type="button"
+                onClick={() => navigate('/terms-of-service')}
+                className="underline font-semibold text-[#3a2a18]"
+              >
+                Terms of Service
+              </button>
               <br />
-              and <span className="underline font-semibold text-[#3a2a18]">Privacy Policy.</span>
+              and{' '}
+              <button
+                type="button"
+                onClick={() => navigate('/privacy-policy')}
+                className="underline font-semibold text-[#3a2a18]"
+              >
+                Privacy Policy.
+              </button>
             </p>
           </div>
         )}
