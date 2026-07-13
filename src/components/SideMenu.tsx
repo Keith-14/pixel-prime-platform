@@ -7,6 +7,8 @@ import {
   LayoutGrid,
   Share2,
   Info,
+  Shield,
+  FileText,
   LogOut,
   ArrowLeft,
   Check,
@@ -251,6 +253,16 @@ export const SideMenu = ({ isOpen, onClose }: SideMenuProps) => {
               icon={<Info className="w-[22px] h-[22px]" strokeWidth={1.8} />}
               label="About Us"
               onClick={() => { toast.info('Barakah App · v1.0'); }}
+            />
+            <Row
+              icon={<Shield className="w-[22px] h-[22px]" strokeWidth={1.8} />}
+              label="Privacy Policy"
+              onClick={() => go('/privacy-policy')}
+            />
+            <Row
+              icon={<FileText className="w-[22px] h-[22px]" strokeWidth={1.8} />}
+              label="Terms of Service"
+              onClick={() => go('/terms-of-service')}
             />
           </Section>
 
