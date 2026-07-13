@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ChatAssistant } from '@/components/ChatAssistant';
 import { SideMenu } from '@/components/SideMenu';
 import { BottomNavigation } from '@/components/BottomNavigation';
+import { LocationPicker } from '@/components/LocationPicker';
 import qaQuranAsset from '@/assets/qa-quran-new.png.asset.json';
 import qaAiAsset from '@/assets/qa-ai-new.png.asset.json';
 import qaPlacesAsset from '@/assets/qa-places-new.png.asset.json';
@@ -42,6 +43,7 @@ export const Home = () => {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
@@ -179,11 +181,14 @@ export const Home = () => {
               {userName || 'Friend'}
             </p>
           </div>
-          <div className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-white/70 text-[#F9FAFB]">
+          <button
+            onClick={() => setIsLocationPickerOpen(true)}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-white/70 text-[#F9FAFB] transition-transform active:scale-95"
+          >
             <MapPin className="h-3.5 w-3.5" strokeWidth={2} />
             <span className="text-[12px] font-medium">{cityLabel}</span>
             <ChevronDown className="h-3 w-3" strokeWidth={2} />
-          </div>
+          </button>
         </div>
 
         {/* Arc + center logo + prayer info */}
