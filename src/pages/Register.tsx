@@ -26,7 +26,7 @@ export const Register = () => {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
-  const { signUp, signIn, signInWithGoogle, completeAccountSetup } = useAuth();
+  const { signUp, signIn, signInWithGoogle, signInWithApple, completeAccountSetup } = useAuth();
   const { t } = useLanguage();
 
   const routeByRole = (role: UserRole | null | undefined) => {
@@ -38,6 +38,28 @@ export const Register = () => {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     const { error, role } = await signInWithGoogle();
+    if (error) {
+      toast.error(error.message);
+      setLoading(false);
+      return;
+    }
+    if (role === null) {
+      toast.message('Finish setup', { description: 'Please choose your account type to continue.' });
+      setNeedsSetup(true);
+      setIsSignIn(false);
+      setView('profile');
+      setSelectedRole(null);
+      setFullName('');
+      setLoading(false);
+      return;
+    }
+    routeByRole(role);
+    setLoading(false);
+  };
+
+  const handleAppleSignIn = async () => {
+    setLoading(true);
+    const { error, role } = await signInWithApple();
     if (error) {
       toast.error(error.message);
       setLoading(false);
@@ -191,7 +213,8 @@ export const Register = () => {
           <div className="space-y-3">
             {/* Apple */}
             <Button
-              onClick={() => toast.message('Apple sign-in coming soon')}
+              onClick={handleAppleSignIn}
+              disabled={loading}
               className="w-full h-14 rounded-full text-white text-base font-medium hover:opacity-90"
               style={{ backgroundColor: '#3A1E12' }}
             >
