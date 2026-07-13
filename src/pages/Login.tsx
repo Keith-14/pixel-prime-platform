@@ -135,7 +135,7 @@ export const Login = () => {
               variant="outline" 
               className="w-full rounded-xl h-12 bg-white/90 border-sage/30 hover:bg-white text-sage font-medium"
             >
-              <img src={appleLogo.url} alt="Apple" className="w-5 h-5 mx-3" />
+              <img src={appleLogo.url} alt="Apple" className="w-5 h-5 mx-3 object-contain" />
               {t('login.apple')}
             </Button>
           </div>

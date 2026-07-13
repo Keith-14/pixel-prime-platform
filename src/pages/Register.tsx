@@ -195,7 +195,7 @@ export const Register = () => {
               className="w-full h-14 rounded-full text-white text-base font-medium hover:opacity-90"
               style={{ backgroundColor: '#3A1E12' }}
             >
-              <img src={appleLogo.url} alt="Apple" className="h-5 w-5 mr-2" />
+              <img src={appleLogo.url} alt="Apple" className="h-5 w-5 mr-2 object-contain" />
               Continue with Apple
             </Button>
 
