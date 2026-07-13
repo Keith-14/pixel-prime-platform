@@ -26,8 +26,7 @@ interface Product {
 export const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart, getTotalItems } = useCart();
-  const { items } = useCart();
+  const { addToCart, getTotalItems, items } = useCart();
   const { toast } = useToast();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
