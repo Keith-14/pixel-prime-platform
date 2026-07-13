@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { User, Briefcase, Plane, ArrowLeft, Star, Chrome } from 'lucide-react';
@@ -301,22 +302,20 @@ export const Register = () => {
             {/* Terms */}
             <p className="text-[11px] text-[#7c6a4f] text-center px-6 leading-relaxed pt-6">
               By continuing, you agree to Barakah{' '}
-              <button
-                type="button"
-                onClick={() => navigate('/terms-of-service')}
-                className="underline font-semibold text-[#3a2a18]"
+              <Link
+                to="/terms-of-service"
+                className="underline font-semibold text-[#3a2a18] cursor-pointer"
               >
                 Terms of Service
-              </button>
+              </Link>
               <br />
               and{' '}
-              <button
-                type="button"
-                onClick={() => navigate('/privacy-policy')}
-                className="underline font-semibold text-[#3a2a18]"
+              <Link
+                to="/privacy-policy"
+                className="underline font-semibold text-[#3a2a18] cursor-pointer"
               >
                 Privacy Policy.
-              </button>
+              </Link>
             </p>
           </div>
         )}
