@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, OAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDIqayL6jUliisaKD0GxR_um0fWEPnvM4E",
@@ -13,8 +13,16 @@ export const auth = getAuth(app);
 
 const googleProvider = new GoogleAuthProvider();
 
+const appleProvider = new OAuthProvider("apple.com");
+appleProvider.addScope("email");
+appleProvider.addScope("name");
+
 export async function signInWithGoogle() {
   return await signInWithPopup(auth, googleProvider);
+}
+
+export async function signInWithApple() {
+  return await signInWithPopup(auth, appleProvider);
 }
 
 export async function signUpWithEmail(email: string, password: string) {
