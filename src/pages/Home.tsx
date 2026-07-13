@@ -341,6 +341,7 @@ export const Home = () => {
       {/* Chat overlay + side menu */}
       <ChatAssistant open={isChatOpen} onClose={() => setIsChatOpen(false)} />
       <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+      <LocationPicker isOpen={isLocationPickerOpen} onClose={() => setIsLocationPickerOpen(false)} />
     </div>
   );
 };
