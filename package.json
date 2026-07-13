@@ -94,5 +94,11 @@
   "trustedDependencies": [
     "protobufjs",
     "protobufjs"
-  ]
+  ],
+  "overrides": {
+    "protobufjs": "^7.5.5"
+  },
+  "resolutions": {
+    "protobufjs": "^7.5.5"
+  }
 }
