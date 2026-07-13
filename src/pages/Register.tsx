@@ -53,6 +53,7 @@ export const Register = () => {
       setLoading(false);
       return;
     }
+    toast.success('Welcome back! You already have an account — signing you in.');
     routeByRole(role);
     setLoading(false);
   };
@@ -75,6 +76,7 @@ export const Register = () => {
       setLoading(false);
       return;
     }
+    toast.success('Welcome back! You already have an account — signing you in.');
     routeByRole(role);
     setLoading(false);
   };
@@ -149,8 +151,18 @@ export const Register = () => {
         }
         const { error, role } = await signUp(email, password, selectedRole, fullName);
         if (error) {
-          if (String(error.message).includes('auth/email-already-in-use')) {
-            toast.error('This email already has an account. Please sign in instead.');
+          const msg = String(error.message || '');
+          if (msg.includes('auth/email-already-in-use')) {
+            toast.error('An account with this email already exists. Please sign in.');
+            setPassword('');
+            setFullName('');
+            setSelectedRole(null);
+            setIsSignIn(true);
+            setView('details');
+          } else if (error.code === '23505' || msg.toLowerCase().includes('duplicate')) {
+            // Role/profile row already exists — user is already registered
+            toast.error('You already have an account. Please sign in.');
+            setPassword('');
             setIsSignIn(true);
             setView('details');
           } else {
