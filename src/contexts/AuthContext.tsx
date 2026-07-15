@@ -9,6 +9,8 @@ type UserRole = 'normal_user' | 'seller' | 'travel_partner' | null;
 // so existing code that reads `user.uid` continues to work.
 export interface AppUser extends SupabaseUser {
   uid: string;
+  displayName: string | null;
+  photoURL: string | null;
 }
 
 interface AuthContextType {
@@ -26,7 +28,19 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const toAppUser = (u: SupabaseUser | null | undefined): AppUser | null =>
-  u ? Object.assign({}, u, { uid: u.id }) as AppUser : null;
+  u
+    ? (Object.assign({}, u, {
+        uid: u.id,
+        displayName:
+          (u.user_metadata?.full_name as string | undefined) ??
+          (u.user_metadata?.name as string | undefined) ??
+          null,
+        photoURL:
+          (u.user_metadata?.avatar_url as string | undefined) ??
+          (u.user_metadata?.picture as string | undefined) ??
+          null,
+      }) as AppUser)
+    : null;
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<AppUser | null>(null);
