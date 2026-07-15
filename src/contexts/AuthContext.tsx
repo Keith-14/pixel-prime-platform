@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { lovable } from '@/integrations/lovable';
 import { useNavigate } from 'react-router-dom';
 
 type UserRole = 'normal_user' | 'seller' | 'travel_partner' | null;
@@ -153,12 +154,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const handleGoogleSignIn = async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: `${window.location.origin}/` },
+      const result: any = await lovable.auth.signInWithOAuth('google', {
+        redirect_uri: `${window.location.origin}/`,
       });
-      if (error) return { error, role: undefined };
-      // Browser will redirect away; role is resolved on return via the auth listener.
+      if (result?.error) return { error: result.error, role: undefined };
       return { error: null, role: null };
     } catch (error: any) {
       return { error: { message: error.message || 'Google sign in failed' }, role: undefined };
@@ -167,11 +166,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const handleAppleSignIn = async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'apple',
-        options: { redirectTo: `${window.location.origin}/` },
+      const result: any = await lovable.auth.signInWithOAuth('apple', {
+        redirect_uri: `${window.location.origin}/`,
       });
-      if (error) return { error, role: undefined };
+      if (result?.error) return { error: result.error, role: undefined };
       return { error: null, role: null };
     } catch (error: any) {
       return { error: { message: error.message || 'Apple sign in failed' }, role: undefined };
