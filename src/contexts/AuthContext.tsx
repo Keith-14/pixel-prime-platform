@@ -3,6 +3,28 @@ import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { lovable } from '@/integrations/lovable';
 import { useNavigate } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
+
+// Custom URL scheme used by the native OAuth deep-link callback.
+// Must be added to Supabase Auth allowed redirect URLs.
+const NATIVE_REDIRECT_URL = 'com.barakah.app://auth/callback';
+
+const isNative = () => Capacitor.isNativePlatform();
+
+// Parse tokens from a Supabase OAuth callback URL (hash or query).
+const parseAuthUrl = (url: string) => {
+  const u = new URL(url);
+  const params = new URLSearchParams(
+    (u.hash?.startsWith('#') ? u.hash.slice(1) : u.search.slice(1)) || u.search.slice(1)
+  );
+  return {
+    access_token: params.get('access_token'),
+    refresh_token: params.get('refresh_token'),
+    error: params.get('error_description') || params.get('error'),
+  };
+};
 
 type UserRole = 'normal_user' | 'seller' | 'travel_partner' | null;
 
@@ -72,7 +94,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
     });
 
-    return () => sub.subscription.unsubscribe();
+    // Native deep-link listener: receive the OAuth callback URL and
+    // establish the Supabase session from the returned tokens.
+    let removeListener: (() => void) | undefined;
+    if (isNative()) {
+      CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
+        try {
+          if (!url || !url.startsWith('com.barakah.app://')) return;
+          const { access_token, refresh_token, error } = parseAuthUrl(url);
+          if (error) {
+            console.error('OAuth callback error:', error);
+          } else if (access_token && refresh_token) {
+            await supabase.auth.setSession({ access_token, refresh_token });
+          }
+        } catch (e) {
+          console.error('appUrlOpen handler failed:', e);
+        } finally {
+          try { await Browser.close(); } catch {}
+        }
+      }).then((handle) => { removeListener = () => handle.remove(); });
+    }
+
+    return () => {
+      sub.subscription.unsubscribe();
+      removeListener?.();
+    };
   }, []);
 
   const fetchUserRole = async (userId: string) => {
@@ -154,6 +200,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const handleGoogleSignIn = async () => {
     try {
+      if (isNative()) {
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: NATIVE_REDIRECT_URL,
+            skipBrowserRedirect: true,
+          },
+        });
+        if (error) return { error, role: undefined };
+        if (data?.url) {
+          await Browser.open({ url: data.url, presentationStyle: 'popover' });
+        }
+        return { error: null, role: null };
+      }
       const result: any = await lovable.auth.signInWithOAuth('google', {
         redirect_uri: `${window.location.origin}/`,
       });
@@ -166,6 +226,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const handleAppleSignIn = async () => {
     try {
+      if (isNative()) {
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'apple',
+          options: {
+            redirectTo: NATIVE_REDIRECT_URL,
+            skipBrowserRedirect: true,
+          },
+        });
+        if (error) return { error, role: undefined };
+        if (data?.url) {
+          await Browser.open({ url: data.url, presentationStyle: 'popover' });
+        }
+        return { error: null, role: null };
+      }
       const result: any = await lovable.auth.signInWithOAuth('apple', {
         redirect_uri: `${window.location.origin}/`,
       });
