@@ -1,13 +1,21 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { User } from 'firebase/auth';
-import { auth, onAuthStateChanged, signUpWithEmail, signInWithEmail, signInWithGoogle, signInWithApple, firebaseSignOut } from '@/lib/firebase';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { lovable } from '@/integrations/lovable';
 import { useNavigate } from 'react-router-dom';
 
 type UserRole = 'normal_user' | 'seller' | 'travel_partner' | null;
 
+// App-facing user type. `uid` is kept as an alias of Supabase's `id`
+// so existing code that reads `user.uid` continues to work.
+export interface AppUser extends SupabaseUser {
+  uid: string;
+  displayName: string | null;
+  photoURL: string | null;
+}
+
 interface AuthContextType {
-  user: User | null;
+  user: AppUser | null;
   userRole: UserRole;
   loading: boolean;
   signUp: (email: string, password: string, role: UserRole, fullName: string) => Promise<{ error: any; role?: UserRole }>;
@@ -20,25 +28,51 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const toAppUser = (u: SupabaseUser | null | undefined): AppUser | null =>
+  u
+    ? (Object.assign({}, u, {
+        uid: u.id,
+        displayName:
+          (u.user_metadata?.full_name as string | undefined) ??
+          (u.user_metadata?.name as string | undefined) ??
+          null,
+        photoURL:
+          (u.user_metadata?.avatar_url as string | undefined) ??
+          (u.user_metadata?.picture as string | undefined) ??
+          null,
+      }) as AppUser)
+    : null;
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser);
-      
-      if (firebaseUser) {
-        await fetchUserRole(firebaseUser.uid);
+    // Set up auth listener FIRST, then check for existing session.
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      const appUser = toAppUser(session?.user);
+      setUser(appUser);
+      if (appUser) {
+        // Defer role fetch to avoid deadlocks inside the callback.
+        setTimeout(() => { fetchUserRole(appUser.id); }, 0);
       } else {
         setUserRole(null);
       }
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const appUser = toAppUser(session?.user);
+      setUser(appUser);
+      if (appUser) {
+        fetchUserRole(appUser.id);
+      }
+      setLoading(false);
+    });
+
+    return () => sub.subscription.unsubscribe();
   }, []);
 
   const fetchUserRole = async (userId: string) => {
@@ -63,26 +97,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUp = async (email: string, password: string, role: UserRole, fullName: string) => {
     try {
-      const userCredential = await signUpWithEmail(email, password);
-      const firebaseUser = userCredential.user;
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: `${window.location.origin}/` },
+      });
+      if (error) return { error, role: undefined };
+      const newUser = data.user;
+      if (!newUser) return { error: { message: 'User creation failed' }, role: undefined };
 
-      if (!firebaseUser) return { error: { message: 'User creation failed' } };
-
-      // Insert user role into Supabase
       const { error: roleError } = await supabase
         .from('user_roles')
-        .insert({ user_id: firebaseUser.uid, role });
+        .insert({ user_id: newUser.id, role });
+      if (roleError && roleError.code !== '23505') return { error: roleError, role: undefined };
 
-      if (roleError) return { error: roleError, role: undefined };
-
-      // Insert profile into Supabase
       const { error: profileError } = await supabase
         .from('profiles')
-        .insert({ 
-          user_id: firebaseUser.uid, 
-          full_name: fullName 
-        });
-
+        .upsert({ user_id: newUser.id, full_name: fullName }, { onConflict: 'user_id' });
       if (profileError) return { error: profileError, role: undefined };
 
       setUserRole(role);
@@ -94,23 +125,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const userCredential = await signInWithEmail(email, password);
-      const firebaseUser = userCredential.user;
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) return { error, role: undefined };
+      const authedUser = data.user;
+      if (!authedUser) return { error: { message: 'Sign in failed' }, role: undefined };
 
-      if (!firebaseUser) return { error: { message: 'Sign in failed' }, role: undefined };
-
-      // Fetch user role from database
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', firebaseUser.uid)
+        .eq('user_id', authedUser.id)
         .limit(1)
         .maybeSingle();
 
       if (roleError) return { error: roleError, role: undefined };
 
-      // Account exists in Firebase, but may be missing role/profile setup in DB.
-      // Return role null so UI can guide the user to finish setup.
       if (!roleData) {
         setUserRole(null);
         return { error: null, role: null };
@@ -126,31 +154,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const handleGoogleSignIn = async () => {
     try {
-      const result = await signInWithGoogle();
-      const firebaseUser = result.user;
-
-      if (!firebaseUser) return { error: { message: 'Google sign in failed' }, role: undefined };
-
-      // Check if user role exists in database
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', firebaseUser.uid)
-        .limit(1)
-        .maybeSingle();
-
-      if (roleError && roleError.code !== 'PGRST116') {
-        // PGRST116 means no rows found, which is expected for new users
-        return { error: roleError, role: undefined };
-      }
-
-      if (roleData) {
-        const role = roleData.role as UserRole;
-        setUserRole(role);
-        return { error: null, role };
-      }
-
-      // New Google user - they need to select a role
+      const result: any = await lovable.auth.signInWithOAuth('google', {
+        redirect_uri: `${window.location.origin}/`,
+      });
+      if (result?.error) return { error: result.error, role: undefined };
       return { error: null, role: null };
     } catch (error: any) {
       return { error: { message: error.message || 'Google sign in failed' }, role: undefined };
@@ -159,28 +166,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const handleAppleSignIn = async () => {
     try {
-      const result = await signInWithApple();
-      const firebaseUser = result.user;
-
-      if (!firebaseUser) return { error: { message: 'Apple sign in failed' }, role: undefined };
-
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', firebaseUser.uid)
-        .limit(1)
-        .maybeSingle();
-
-      if (roleError && roleError.code !== 'PGRST116') {
-        return { error: roleError, role: undefined };
-      }
-
-      if (roleData) {
-        const role = roleData.role as UserRole;
-        setUserRole(role);
-        return { error: null, role };
-      }
-
+      const result: any = await lovable.auth.signInWithOAuth('apple', {
+        redirect_uri: `${window.location.origin}/`,
+      });
+      if (result?.error) return { error: result.error, role: undefined };
       return { error: null, role: null };
     } catch (error: any) {
       return { error: { message: error.message || 'Apple sign in failed' }, role: undefined };
@@ -194,7 +183,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Ensure role row exists
       const { error: roleError } = await supabase
         .from('user_roles')
-        .insert({ user_id: user.uid, role });
+        .insert({ user_id: user.id, role });
 
       // If role already exists, ignore the unique error
       if (roleError && roleError.code !== '23505') {
@@ -206,7 +195,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .from('profiles')
         .upsert(
           {
-            user_id: user.uid,
+            user_id: user.id,
             full_name: fullName,
           },
           { onConflict: 'user_id' }
@@ -222,7 +211,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const handleSignOut = async () => {
-    await firebaseSignOut();
+    await supabase.auth.signOut();
     setUserRole(null);
     navigate('/login');
   };
