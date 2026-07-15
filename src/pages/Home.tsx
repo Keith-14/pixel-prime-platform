@@ -8,6 +8,7 @@ import { ChatAssistant } from '@/components/ChatAssistant';
 import { SideMenu } from '@/components/SideMenu';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import { LocationPicker } from '@/components/LocationPicker';
+import { FeedbackForm } from '@/components/FeedbackForm';
 import qaQuranAsset from '@/assets/qa-quran-new.png.asset.json';
 import qaAiAsset from '@/assets/qa-ai-new.png.asset.json';
 import qaPlacesAsset from '@/assets/qa-places-new.png.asset.json';
@@ -44,6 +45,7 @@ export const Home = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
@@ -202,7 +204,7 @@ export const Home = () => {
 
         {/* Feedback bar */}
         <button
-          onClick={() => window.open('https://form.typeform.com/to/ZErNoDQc', '_blank', 'noopener,noreferrer')}
+          onClick={() => setIsFeedbackOpen(true)}
           className="relative z-10 mx-5 mb-3 w-[calc(100%-2.5rem)] flex items-center justify-between rounded-xl px-4 py-3 border transition-transform active:scale-[0.99]"
           style={{ background: '#FFF5E5', borderColor: '#E8D5C4' }}
         >
@@ -342,6 +344,7 @@ export const Home = () => {
       <ChatAssistant open={isChatOpen} onClose={() => setIsChatOpen(false)} />
       <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
       <LocationPicker isOpen={isLocationPickerOpen} onClose={() => setIsLocationPickerOpen(false)} />
+      <FeedbackForm open={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
     </div>
   );
 };
