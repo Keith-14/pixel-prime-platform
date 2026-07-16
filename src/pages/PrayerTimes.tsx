@@ -14,6 +14,7 @@ import zakatIcon from '@/assets/zakat-icon.png.asset.json';
 import duaIcon from '@/assets/dua-icon.png.asset.json';
 import qiblaIcon from '@/assets/qibla-icon.png.asset.json';
 import prayerMarkIcon from '@/assets/prayer-mark-icon.png.asset.json';
+import { assetUrl } from '@/lib/assetUrl';
 
 const CREAM = '#FFF5E5';
 const CREAM_CARD = '#FFF5E5';
@@ -43,14 +44,14 @@ const fmt12 = (h: number, m: number) => {
 };
 
 const essentials = [
-  { label: 'Hadith', img: hadithIcon.url, icon: null, path: '/hadith' },
-  { label: 'Quran', img: quranIcon.url, icon: null, path: '/quran' },
-  { label: 'Hajj Packages', img: hajjIcon.url, icon: null, path: '/hajj' },
-  { label: 'Places', img: placesIcon.url, icon: null, path: '/places' },
-  { label: 'Zakat Calc.', img: zakatIcon.url, icon: null, path: '/zakat' },
-  { label: "Dua's", img: duaIcon.url, icon: null, path: '/mood' },
-  { label: 'Qibla', img: qiblaIcon.url, icon: null, path: '/qibla' },
-  { label: 'Prayer Mark', img: prayerMarkIcon.url, icon: null, path: '/progress' },
+  { label: 'Hadith', img: assetUrl(hadithIcon), icon: null, path: '/hadith' },
+  { label: 'Quran', img: assetUrl(quranIcon), icon: null, path: '/quran' },
+  { label: 'Hajj Packages', img: assetUrl(hajjIcon), icon: null, path: '/hajj' },
+  { label: 'Places', img: assetUrl(placesIcon), icon: null, path: '/places' },
+  { label: 'Zakat Calc.', img: assetUrl(zakatIcon), icon: null, path: '/zakat' },
+  { label: "Dua's", img: assetUrl(duaIcon), icon: null, path: '/mood' },
+  { label: 'Qibla', img: assetUrl(qiblaIcon), icon: null, path: '/qibla' },
+  { label: 'Prayer Mark', img: assetUrl(prayerMarkIcon), icon: null, path: '/progress' },
 ];
 
 const hadithBooks = [
@@ -149,7 +150,7 @@ export const PrayerTimes = () => {
         {/* Arc + Logo image */}
         <div className="absolute inset-x-0 top-3 flex justify-center">
           <img
-            src={prayerArcLogo.url}
+            src={assetUrl(prayerArcLogo)}
             alt="Barakah"
             className="w-full max-w-[300px] object-contain"
             style={{ height: 150 }}

@@ -6,6 +6,7 @@ import ReactMarkdown from 'react-markdown';
 import { supabase } from '@/integrations/supabase/client';
 import aiAssistantLogo from '@/assets/ai-assistant-logo.png.asset.json';
 import aiSendBtn from '@/assets/ai-send-btn.png.asset.json';
+import { assetUrl } from '@/lib/assetUrl';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 type Thread = { id: string; title: string; updated_at: string };
@@ -284,7 +285,7 @@ export const ChatAssistant = ({ open, onClose }: ChatAssistantProps) => {
 
 const Logo = ({ size = 32 }: { size?: number }) => (
   <img
-    src={aiAssistantLogo.url}
+    src={assetUrl(aiAssistantLogo)}
     alt="Islamic AI Assistant"
     className="rounded-full shrink-0 object-cover"
     style={{ width: size, height: size }}
@@ -563,7 +564,7 @@ const ChatView = ({
           aria-label="Send"
         >
           <img
-            src={aiSendBtn.url}
+            src={assetUrl(aiSendBtn)}
             alt="Send"
             className="h-full w-full object-cover"
           />

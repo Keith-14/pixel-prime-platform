@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { useLanguage } from '@/contexts/LanguageContext';
 import appleLogo from '@/assets/AppleLogo.png.asset.json';
+import { assetUrl } from '@/lib/assetUrl';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
@@ -135,7 +136,7 @@ export const Login = () => {
               variant="outline" 
               className="w-full rounded-xl h-12 bg-white/90 border-sage/30 hover:bg-white text-sage font-medium"
             >
-              <img src={appleLogo.url} alt="Apple" className="w-5 h-5 mx-3 object-contain" />
+              <img src={assetUrl(appleLogo)} alt="Apple" className="w-5 h-5 mx-3 object-contain" />
               {t('login.apple')}
             </Button>
           </div>
