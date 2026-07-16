@@ -5,6 +5,7 @@ import navChatIcon from '@/assets/nav-chat-icon.png.asset.json';
 import { ScanLine } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { assetUrl } from '@/lib/assetUrl';
 
 const PILL_BG = '#FFFFFF';
 const ACTIVE_BG = '#F5E3D3';
@@ -14,7 +15,7 @@ const TEXT_INACTIVE = '#9A9A9A';
 // Custom image icon components
 const HomeIconImg = ({ isActive }: { isActive: boolean }) => (
   <img
-    src={navHomeIcon.url}
+    src={assetUrl(navHomeIcon)}
     alt="Home"
     className="shrink-0"
     style={{
@@ -28,7 +29,7 @@ const HomeIconImg = ({ isActive }: { isActive: boolean }) => (
 
 const MarketplaceIconImg = ({ isActive }: { isActive: boolean }) => (
   <img
-    src={navMarketplaceIcon.url}
+    src={assetUrl(navMarketplaceIcon)}
     alt="Marketplace"
     className="shrink-0"
     style={{
@@ -42,7 +43,7 @@ const MarketplaceIconImg = ({ isActive }: { isActive: boolean }) => (
 
 const PrayerIconImg = ({ isActive }: { isActive: boolean }) => (
   <img
-    src={navPrayerIcon.url}
+    src={assetUrl(navPrayerIcon)}
     alt="Prayer"
     className="shrink-0"
     style={{
@@ -117,7 +118,7 @@ export const BottomNavigation = () => {
           aria-label="Guftagu"
         >
           <img
-            src={navChatIcon.url}
+            src={assetUrl(navChatIcon)}
             alt="Guftagu"
             className="shrink-0"
             style={{ width: 22, height: 22, objectFit: 'contain' }}

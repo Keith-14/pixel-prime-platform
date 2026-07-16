@@ -11,6 +11,7 @@ import { LanguageSelector } from '@/components/LanguageSelector';
 import { useLanguage } from '@/contexts/LanguageContext';
 import loginFullBg from '@/assets/login-full-bg.png.asset.json';
 import appleLogo from '@/assets/AppleLogo.png.asset.json';
+import { assetUrl } from '@/lib/assetUrl';
 
 type UserRole = 'normal_user' | 'seller' | 'travel_partner';
 
@@ -202,7 +203,7 @@ export const Register = () => {
     <div
       className="min-h-screen max-w-md mx-auto relative overflow-hidden flex flex-col"
       style={{
-        backgroundImage: `url(${loginFullBg.url})`,
+        backgroundImage: `url(${assetUrl(loginFullBg)})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center top',
         backgroundRepeat: 'no-repeat',
@@ -231,7 +232,7 @@ export const Register = () => {
               className="w-full h-14 rounded-full text-white text-base font-medium hover:opacity-90"
               style={{ backgroundColor: '#3A1E12' }}
             >
-              <img src={appleLogo.url} alt="Apple" className="h-5 w-5 mr-2 object-contain" />
+              <img src={assetUrl(appleLogo)} alt="Apple" className="h-5 w-5 mr-2 object-contain" />
               Continue with Apple
             </Button>
 

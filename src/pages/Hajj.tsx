@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search } from 'lucide-react';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import hajjImage from '@/assets/hajj-coming-soon-user.png.asset.json';
+import { assetUrl } from '@/lib/assetUrl';
 
 const CREAM = '#FFF8F0';
 const WHITE = '#FFFFFF';
@@ -53,7 +54,7 @@ export const Hajj = () => {
       {/* Image only */}
       <div className="flex-1 flex items-center justify-center px-6">
         <img
-          src={hajjImage.url}
+          src={assetUrl(hajjImage)}
           alt="Hajj and Umrah coming soon"
           className="w-full max-w-[380px] h-auto object-contain"
         />

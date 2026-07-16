@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGlobalLocation } from '@/contexts/LocationContext';
 import { toast } from 'sonner';
 import mosqueIcon from '@/assets/qibla-mosque-icon.png.asset.json';
+import { assetUrl } from '@/lib/assetUrl';
 
 // Theme tokens
 const CREAM = '#FFF5E5';
@@ -212,7 +213,7 @@ export const Qibla = () => {
                 }}
               >
                 <img
-                  src={mosqueIcon.url}
+                  src={assetUrl(mosqueIcon)}
                   alt="Mosque"
                   className="block"
                   style={{

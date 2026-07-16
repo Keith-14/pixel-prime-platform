@@ -15,6 +15,7 @@ import qaPlacesAsset from '@/assets/qa-places-new.png.asset.json';
 import qaHajjAsset from '@/assets/qa-hajj-new.png.asset.json';
 import barakahArcLogo from '@/assets/barakah-arc-logo.png.asset.json';
 import barakahLogo from '@/assets/barakah-logo.png.asset.json';
+import { assetUrl } from '@/lib/assetUrl';
 
 interface NewsItem {
   id: string;
@@ -110,10 +111,10 @@ export const Home = () => {
   const cityLabel = location?.city || 'Dubai';
 
   const quickActions = [
-    { label: 'Quran', img: qaQuranAsset.url, onClick: () => navigate('/quran') },
-    { label: 'Islamic AI', img: qaAiAsset.url, onClick: () => setIsChatOpen(true) },
-    { label: 'Places', img: qaPlacesAsset.url, onClick: () => navigate('/places') },
-    { label: 'Hajj Packages', img: qaHajjAsset.url, onClick: () => navigate('/hajj') },
+    { label: 'Quran', img: assetUrl(qaQuranAsset), onClick: () => navigate('/quran') },
+    { label: 'Islamic AI', img: assetUrl(qaAiAsset), onClick: () => setIsChatOpen(true) },
+    { label: 'Places', img: assetUrl(qaPlacesAsset), onClick: () => navigate('/places') },
+    { label: 'Hajj Packages', img: assetUrl(qaHajjAsset), onClick: () => navigate('/hajj') },
   ];
 
   return (
@@ -160,7 +161,7 @@ export const Home = () => {
             <Menu className="h-6 w-6" strokeWidth={2} />
           </button>
           <img
-            src={barakahLogo.url}
+            src={assetUrl(barakahLogo)}
             alt="Barakah"
             className="h-7 w-auto object-contain"
           />
@@ -391,7 +392,7 @@ const ArcTimeline = ({
     <div className="relative h-[230px] mt-4">
       {/* Arc + Logo image */}
       <img
-        src={barakahArcLogo.url}
+        src={assetUrl(barakahArcLogo)}
         alt="Barakah"
         className="absolute left-1/2 -translate-x-1/2 top-0 w-[280px] h-auto"
       />

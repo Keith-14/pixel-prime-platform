@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import splashLastFrame from '@/assets/splash-last-frame.png';
 import desertBottom from '@/assets/desert-bottom.png.asset.json';
+import { assetUrl } from '@/lib/assetUrl';
 
 export const LoadingScreen = () => {
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ export const LoadingScreen = () => {
 
       {/* Bottom desert with palms */}
       <img
-        src={desertBottom.url}
+        src={assetUrl(desertBottom)}
         alt=""
         aria-hidden="true"
         className="absolute bottom-0 left-0 w-full pointer-events-none select-none"
