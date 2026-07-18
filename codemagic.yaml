@@ -32,9 +32,21 @@ workflows:
 
       - name: Build IPA
         script: |
-          xcode-project build-ipa \
-          --project ios/App/App.xcodeproj \
-          --scheme App
+          cd ios/App
 
+          xcodebuild \
+            -project App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -archivePath build/App.xcarchive \
+            archive \
+            CODE_SIGN_STYLE=Automatic \
+            DEVELOPMENT_TEAM=<YOUR_TEAM_ID>
+
+          xcodebuild \
+            -exportArchive \
+            -archivePath build/App.xcarchive \
+            -exportPath build \
+            -exportOptionsPlist ExportOptions.plist
     artifacts:
       - build/ios/ipa/*.ipa
