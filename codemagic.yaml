@@ -2,6 +2,9 @@ workflows:
   ios-workflow:
     name: Barakah iOS
 
+    integrations:
+      app_store_connect: Barakah App
+
     environment:
       xcode: latest
       node: 22
