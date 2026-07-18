@@ -9,7 +9,7 @@ import { Browser } from '@capacitor/browser';
 
 // Custom URL scheme used by the native OAuth deep-link callback.
 // Must be added to Supabase Auth allowed redirect URLs.
-const NATIVE_REDIRECT_URL = 'com.barakah.app://auth/callback';
+const NATIVE_REDIRECT_URL = 'com.barakah.services://auth/callback';
 
 const isNative = () => Capacitor.isNativePlatform();
 
@@ -100,7 +100,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (isNative()) {
       CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
         try {
-          if (!url || !url.startsWith('com.barakah.app://')) return;
+          if (!url || !url.startsWith('com.barakah.services://')) return;
           const { access_token, refresh_token, error } = parseAuthUrl(url);
           if (error) {
             console.error('OAuth callback error:', error);
