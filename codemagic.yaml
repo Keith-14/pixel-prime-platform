@@ -1,3 +1,17 @@
+workflows:
+  ios-workflow:
+    name: Barakah iOS
+
+    environment:
+      xcode: latest
+      node: 22
+
+      ios_signing:
+        certificates:
+          - Barakah
+        provisioning_profiles:
+          - barakah_appstore_profile
+
     scripts:
       - name: Install dependencies
         script: |
@@ -19,5 +33,8 @@
       - name: Build IPA
         script: |
           xcode-project build-ipa \
-            --workspace ios/App/App.xcworkspace \
+            --project ios/App/App.xcodeproj \
             --scheme App
+
+    artifacts:
+      - build/ios/ipa/*.ipa
