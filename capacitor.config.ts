@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.barakah.app',
+  appId: 'com.barakah.services',
   appName: 'Barakah',
   webDir: 'dist',
   bundledWebRuntime: false,
@@ -12,7 +12,7 @@ const config: CapacitorConfig = {
     hostname: 'localhost',
   },
   ios: {
-    scheme: 'com.barakah.app',
+    scheme: 'com.barakah.services',
     contentInset: 'always',
     infoPlist: {
       NSCameraUsageDescription: 'Barakah uses the camera to scan barcodes for halal product verification.',
