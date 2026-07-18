@@ -41,7 +41,7 @@ workflows:
             -archivePath build/App.xcarchive \
             archive \
             CODE_SIGN_STYLE=Automatic \
-            DEVELOPMENT_TEAM=<YOUR_TEAM_ID>
+            DEVELOPMENT_TEAM=KCKAG38Z36
 
           xcodebuild \
             -exportArchive \
