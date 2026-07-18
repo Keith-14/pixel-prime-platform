@@ -25,10 +25,12 @@ workflows:
         script: |
           npx cap sync ios
 
-      - name: Install CocoaPods
+      - name: Check iOS folder
         script: |
-          cd ios/App
-          pod install
+          pwd
+          ls -la
+          ls -la ios
+          ls -la ios/App
 
       - name: Build IPA
         script: |
