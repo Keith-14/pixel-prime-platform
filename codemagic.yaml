@@ -7,15 +7,13 @@ workflows:
       node: 22
 
       ios_signing:
-        certificates:
-          - Barakah
-        provisioning_profiles:
-          - barakah_appstore_profile
+        distribution_type: app_store
+        bundle_identifier: com.barakah.services
 
     scripts:
       - name: Install dependencies
         script: |
-          npm install
+          npm ci
 
       - name: Build web
         script: |
@@ -25,28 +23,19 @@ workflows:
         script: |
           npx cap sync ios
 
-      - name: Inspect iOS project
+      - name: Configure code signing
         script: |
-          pwd
-          find ios -maxdepth 3 | sort
+          xcode-project use-profiles
 
       - name: Build IPA
         script: |
-          cd ios/App
+          xcode-project build-ipa \
+            --project ios/App/App.xcodeproj \
+            --scheme App
 
-          xcodebuild \
-            -project App.xcodeproj \
-            -scheme App \
-            -configuration Release \
-            -archivePath build/App.xcarchive \
-            archive \
-            CODE_SIGN_STYLE=Automatic \
-            DEVELOPMENT_TEAM=KCKAG38Z36
-
-          xcodebuild \
-            -exportArchive \
-            -archivePath build/App.xcarchive \
-            -exportPath build \
-            -exportOptionsPlist ExportOptions.plist
     artifacts:
       - build/ios/ipa/*.ipa
+
+    publishing:
+      app_store_connect:
+        auth: integration
