@@ -267,7 +267,7 @@ export const Register = () => {
                 placeholder="Continue with Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-14 rounded-full bg-[#FFF5E5] border border-[#EADFC9] pl-12 pr-4 text-[15px] placeholder:text-[#9a8a70] focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="h-14 rounded-full bg-[#FFF5E5] border border-[#EADFC9] pl-12 pr-4 text-[15px] text-black placeholder:text-[#9a8a70] focus-visible:ring-0 focus-visible:ring-offset-0"
                 dir="ltr"
               />
             </div>
