@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -26,9 +26,19 @@ export const Register = () => {
   const [isSignIn, setIsSignIn] = useState(false);
   const [needsSetup, setNeedsSetup] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [awaitingOauth, setAwaitingOauth] = useState(false);
 
   const navigate = useNavigate();
-  const { signUp, signIn, signInWithGoogle, signInWithApple, completeAccountSetup } = useAuth();
+  const {
+    user,
+    userRole,
+    loading: authLoading,
+    signUp,
+    signIn,
+    signInWithGoogle,
+    signInWithApple,
+    completeAccountSetup,
+  } = useAuth();
   const { t } = useLanguage();
 
   const routeByRole = (role: UserRole | null | undefined) => {
@@ -37,49 +47,63 @@ export const Register = () => {
     else navigate('/');
   };
 
+  // Resolve pending OAuth flow once the session/role is hydrated.
+  useEffect(() => {
+    if (!awaitingOauth) return;
+    if (authLoading) return;
+    if (!user) return; // still waiting for deep link / redirect
+    setAwaitingOauth(false);
+    setLoading(false);
+    if (userRole) {
+      toast.success('Welcome back!');
+      routeByRole(userRole);
+    } else {
+      toast.message('Finish setup', { description: 'Please choose your account type to continue.' });
+      setNeedsSetup(true);
+      setIsSignIn(false);
+      setSelectedRole(null);
+      setFullName('');
+      setView('profile');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [awaitingOauth, authLoading, user, userRole]);
+
   const handleGoogleSignIn = async () => {
     setLoading(true);
-    const { error, role } = await signInWithGoogle();
+    const { error, role, pending } = await signInWithGoogle();
     if (error) {
       toast.error(error.message);
       setLoading(false);
       return;
     }
-    if (role === null) {
-      toast.message('Finish setup', { description: 'Please choose your account type to continue.' });
-      setNeedsSetup(true);
-      setIsSignIn(false);
-      setView('profile');
-      setSelectedRole(null);
-      setFullName('');
-      setLoading(false);
+    if (pending) {
+      // Wait for session to hydrate via deep link / redirect.
+      setAwaitingOauth(true);
       return;
     }
-    toast.success('Welcome back! You already have an account — signing you in.');
-    routeByRole(role);
+    if (role) {
+      toast.success('Welcome back!');
+      routeByRole(role);
+    }
     setLoading(false);
   };
 
   const handleAppleSignIn = async () => {
     setLoading(true);
-    const { error, role } = await signInWithApple();
+    const { error, role, pending } = await signInWithApple();
     if (error) {
       toast.error(error.message);
       setLoading(false);
       return;
     }
-    if (role === null) {
-      toast.message('Finish setup', { description: 'Please choose your account type to continue.' });
-      setNeedsSetup(true);
-      setIsSignIn(false);
-      setView('profile');
-      setSelectedRole(null);
-      setFullName('');
-      setLoading(false);
+    if (pending) {
+      setAwaitingOauth(true);
       return;
     }
-    toast.success('Welcome back! You already have an account — signing you in.');
-    routeByRole(role);
+    if (role) {
+      toast.success('Welcome back!');
+      routeByRole(role);
+    }
     setLoading(false);
   };
 
