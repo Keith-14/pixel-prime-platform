@@ -400,6 +400,120 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          ai_email: boolean
+          ai_in_app: boolean
+          ai_push: boolean
+          community_email: boolean
+          community_in_app: boolean
+          community_push: boolean
+          hajj_email: boolean
+          hajj_in_app: boolean
+          hajj_push: boolean
+          marketplace_email: boolean
+          marketplace_in_app: boolean
+          marketplace_push: boolean
+          news_email: boolean
+          news_in_app: boolean
+          news_push: boolean
+          prayer_email: boolean
+          prayer_in_app: boolean
+          prayer_push: boolean
+          system_email: boolean
+          system_in_app: boolean
+          system_push: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_email?: boolean
+          ai_in_app?: boolean
+          ai_push?: boolean
+          community_email?: boolean
+          community_in_app?: boolean
+          community_push?: boolean
+          hajj_email?: boolean
+          hajj_in_app?: boolean
+          hajj_push?: boolean
+          marketplace_email?: boolean
+          marketplace_in_app?: boolean
+          marketplace_push?: boolean
+          news_email?: boolean
+          news_in_app?: boolean
+          news_push?: boolean
+          prayer_email?: boolean
+          prayer_in_app?: boolean
+          prayer_push?: boolean
+          system_email?: boolean
+          system_in_app?: boolean
+          system_push?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_email?: boolean
+          ai_in_app?: boolean
+          ai_push?: boolean
+          community_email?: boolean
+          community_in_app?: boolean
+          community_push?: boolean
+          hajj_email?: boolean
+          hajj_in_app?: boolean
+          hajj_push?: boolean
+          marketplace_email?: boolean
+          marketplace_in_app?: boolean
+          marketplace_push?: boolean
+          news_email?: boolean
+          news_in_app?: boolean
+          news_push?: boolean
+          prayer_email?: boolean
+          prayer_in_app?: boolean
+          prayer_push?: boolean
+          system_email?: boolean
+          system_in_app?: boolean
+          system_push?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          category: string
+          created_at: string
+          data: Json
+          id: string
+          is_read: boolean
+          link: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          category: string
+          created_at?: string
+          data?: Json
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          category?: string
+          created_at?: string
+          data?: Json
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string
@@ -625,6 +739,36 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      push_tokens: {
+        Row: {
+          created_at: string
+          device_id: string | null
+          id: string
+          platform: string
+          token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_id?: string | null
+          id?: string
+          platform: string
+          token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_id?: string | null
+          id?: string
+          platform?: string
+          token?: string
           updated_at?: string
           user_id?: string
         }
