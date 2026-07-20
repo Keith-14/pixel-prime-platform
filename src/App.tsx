@@ -53,6 +53,8 @@ const Hadith = lazy(() => import("./pages/Hadith").then(m => ({ default: m.Hadit
 const HadithBook = lazy(() => import("./pages/HadithBook").then(m => ({ default: m.HadithBook })));
 const PrivacyPolicy = lazy(() => import("./pages/legal/PrivacyPolicy").then(m => ({ default: m.PrivacyPolicy })));
 const TermsOfService = lazy(() => import("./pages/legal/TermsOfService").then(m => ({ default: m.TermsOfService })));
+const Notifications = lazy(() => import("./pages/Notifications").then(m => ({ default: m.Notifications })));
+const NotificationSettings = lazy(() => import("./pages/NotificationSettings").then(m => ({ default: m.NotificationSettings })));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -136,6 +138,8 @@ const App = () => (
                   <Route path="/halal-scanner" element={<ProtectedRoute><HalalScanner /></ProtectedRoute>} />
                   <Route path="/hadith" element={<ProtectedRoute><Hadith /></ProtectedRoute>} />
                   <Route path="/hadith/:slug" element={<ProtectedRoute><HadithBook /></ProtectedRoute>} />
+                  <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+                  <Route path="/notifications/settings" element={<ProtectedRoute><NotificationSettings /></ProtectedRoute>} />
                   <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                   <Route path="/terms-of-service" element={<TermsOfService />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

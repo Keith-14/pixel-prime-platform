@@ -1,6 +1,7 @@
-import { Menu, Bell, Search } from 'lucide-react';
+import { Menu, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import { NotificationBell } from '@/components/NotificationBell';
 import { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -51,13 +52,7 @@ export const TopHeader = ({ onMenuClick, title, rightContent, onSearchClick, sho
                 <Search className="h-5 w-5" strokeWidth={1.5} />
               </Button>
             ) : (
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className={cn("hover:bg-primary/10 hover:text-primary rounded-xl h-10 w-10 border border-transparent hover:border-primary/25 transition-all duration-300", buttonClassName || "text-foreground")}
-              >
-                <Bell className="h-5 w-5" strokeWidth={1.5} />
-              </Button>
+              <NotificationBell buttonClassName={buttonClassName} />
             )}
           </>
         )}
