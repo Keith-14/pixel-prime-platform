@@ -47,6 +47,7 @@ export const Onboarding = () => {
 
   const finish = () => {
     localStorage.setItem(ONBOARDING_KEY, 'true');
+    sessionStorage.setItem('barakah_startup_shown', 'true');
     navigate('/login', { replace: true });
   };
 
