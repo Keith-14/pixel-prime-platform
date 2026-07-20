@@ -72,11 +72,12 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <LoadingScreen />;
   }
 
+  // Force splash + onboarding once per app launch (cold start)
+  if (typeof window !== 'undefined' && !sessionStorage.getItem('barakah_startup_shown')) {
+    return <Navigate to="/loading" replace />;
+  }
+
   if (!user) {
-    // Force splash + onboarding once per app launch before showing login
-    if (typeof window !== 'undefined' && !sessionStorage.getItem('barakah_startup_shown')) {
-      return <Navigate to="/loading" replace />;
-    }
     return <Navigate to="/login" replace />;
   }
 
