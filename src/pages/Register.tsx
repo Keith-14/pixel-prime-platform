@@ -12,6 +12,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import loginFullBg from '@/assets/login-full-bg.png.asset.json';
 import appleLogo from '@/assets/AppleLogo.png.asset.json';
 import { assetUrl } from '@/lib/assetUrl';
+import { supabase } from '@/integrations/supabase/client';
 
 type UserRole = 'normal_user' | 'seller' | 'travel_partner';
 
@@ -52,19 +53,34 @@ export const Register = () => {
     if (!awaitingOauth) return;
     if (authLoading) return;
     if (!user) return; // still waiting for deep link / redirect
-    setAwaitingOauth(false);
-    setLoading(false);
-    if (userRole) {
-      toast.success('Welcome back!');
-      routeByRole(userRole);
-    } else {
-      toast.message('Finish setup', { description: 'Please choose your account type to continue.' });
-      setNeedsSetup(true);
-      setIsSignIn(false);
-      setSelectedRole(null);
-      setFullName('');
-      setView('profile');
-    }
+    // Query role directly to avoid a race with the deferred role fetch
+    // in AuthContext — otherwise registered users briefly appear roleless
+    // and get pushed into the setup flow.
+    (async () => {
+      let role: UserRole | null = userRole ?? null;
+      if (!role) {
+        const { data } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .limit(1)
+          .maybeSingle();
+        role = (data?.role as UserRole) ?? null;
+      }
+      setAwaitingOauth(false);
+      setLoading(false);
+      if (role) {
+        toast.success('Welcome back!');
+        routeByRole(role);
+      } else {
+        toast.message('Finish setup', { description: 'Please choose your account type to continue.' });
+        setNeedsSetup(true);
+        setIsSignIn(false);
+        setSelectedRole(null);
+        setFullName('');
+        setView('profile');
+      }
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [awaitingOauth, authLoading, user, userRole]);
 
