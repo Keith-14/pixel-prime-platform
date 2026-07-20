@@ -22,12 +22,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- OAuth deep-link callback: com.barakah.app://auth/callback -->
+            <!-- OAuth deep-link callback: com.barakah.services://auth/callback -->
             <intent-filter android:autoVerify="false">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="com.barakah.app" android:host="auth" />
+                <data android:scheme="com.barakah.services" android:host="auth" />
             </intent-filter>
 
         </activity>
