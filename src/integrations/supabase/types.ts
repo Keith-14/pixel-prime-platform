@@ -924,6 +924,60 @@ export type Database = {
         }
         Relationships: []
       }
+      scan_history: {
+        Row: {
+          barcode: string | null
+          brand: string | null
+          category: string | null
+          confidence: number | null
+          id: string
+          ingredients: Json | null
+          ingredients_hash: string | null
+          product_name: string
+          raw_response: Json | null
+          region: string | null
+          scanned_at: string | null
+          session_id: string | null
+          status: string
+          user_id: string | null
+          verdict: string | null
+        }
+        Insert: {
+          barcode?: string | null
+          brand?: string | null
+          category?: string | null
+          confidence?: number | null
+          id?: string
+          ingredients?: Json | null
+          ingredients_hash?: string | null
+          product_name: string
+          raw_response?: Json | null
+          region?: string | null
+          scanned_at?: string | null
+          session_id?: string | null
+          status: string
+          user_id?: string | null
+          verdict?: string | null
+        }
+        Update: {
+          barcode?: string | null
+          brand?: string | null
+          category?: string | null
+          confidence?: number | null
+          id?: string
+          ingredients?: Json | null
+          ingredients_hash?: string | null
+          product_name?: string
+          raw_response?: Json | null
+          region?: string | null
+          scanned_at?: string | null
+          session_id?: string | null
+          status?: string
+          user_id?: string | null
+          verdict?: string | null
+        }
+        Relationships: []
+      }
       seller_profiles: {
         Row: {
           about_us: string | null
