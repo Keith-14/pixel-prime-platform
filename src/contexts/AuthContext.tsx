@@ -42,8 +42,8 @@ interface AuthContextType {
   loading: boolean;
   signUp: (email: string, password: string, role: UserRole, fullName: string) => Promise<{ error: any; role?: UserRole }>;
   signIn: (email: string, password: string) => Promise<{ error: any; role?: UserRole }>;
-  signInWithGoogle: () => Promise<{ error: any; role?: UserRole }>;
-  signInWithApple: () => Promise<{ error: any; role?: UserRole }>;
+  signInWithGoogle: () => Promise<{ error: any; role?: UserRole; pending?: boolean }>;
+  signInWithApple: () => Promise<{ error: any; role?: UserRole; pending?: boolean }>;
   completeAccountSetup: (role: Exclude<UserRole, null>, fullName: string) => Promise<{ error: any; role?: UserRole }>;
   signOut: () => Promise<void>;
 }
@@ -212,13 +212,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (data?.url) {
           await Browser.open({ url: data.url, presentationStyle: 'popover' });
         }
-        return { error: null, role: null };
+        // Native flow: session will be set asynchronously via deep-link listener.
+        return { error: null, pending: true };
       }
       const result: any = await lovable.auth.signInWithOAuth('google', {
         redirect_uri: `${window.location.origin}/`,
       });
       if (result?.error) return { error: result.error, role: undefined };
-      return { error: null, role: null };
+      // Web managed flow: browser will full-page redirect; on return the
+      // session is hydrated by onAuthStateChange. Treat as pending here.
+      return { error: null, pending: true };
     } catch (error: any) {
       return { error: { message: error.message || 'Google sign in failed' }, role: undefined };
     }
@@ -238,13 +241,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (data?.url) {
           await Browser.open({ url: data.url, presentationStyle: 'popover' });
         }
-        return { error: null, role: null };
+        return { error: null, pending: true };
       }
       const result: any = await lovable.auth.signInWithOAuth('apple', {
         redirect_uri: `${window.location.origin}/`,
       });
       if (result?.error) return { error: result.error, role: undefined };
-      return { error: null, role: null };
+      return { error: null, pending: true };
     } catch (error: any) {
       return { error: { message: error.message || 'Apple sign in failed' }, role: undefined };
     }
