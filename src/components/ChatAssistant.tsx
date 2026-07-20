@@ -391,7 +391,7 @@ const ChatView = ({
   onBack: () => void;
   messages: Msg[];
   input: string;
-  setInput: (v: string) => void;
+  setInput: (v: string | ((prev: string) => string)) => void;
   isLoading: boolean;
   send: () => void;
   scrollRef: React.RefObject<HTMLDivElement>;
@@ -400,6 +400,53 @@ const ChatView = ({
   onNewChat: () => void;
 }) => {
   const empty = messages.length === 0;
+
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      
+      recognitionRef.current.onresult = (event: any) => {
+        let finalTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          }
+        }
+        if (finalTranscript) {
+          setInput(prev => (prev ? prev + ' ' : '') + finalTranscript);
+        }
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onerror = (event: any) => {
+        console.error('Speech recognition error', event.error);
+        setIsListening(false);
+      };
+    }
+  }, [setInput]);
+
+  const toggleListen = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    } else {
+      if (recognitionRef.current) {
+        recognitionRef.current.start();
+        setIsListening(true);
+      } else {
+        alert("Speech recognition is not supported in this browser.");
+      }
+    }
+  };
 
   return (
     <>
@@ -552,8 +599,12 @@ const ChatView = ({
             className="flex-1 bg-transparent outline-none text-[15px] placeholder:text-[#9E948A]"
             style={{ color: BROWN }}
           />
-          <button className="opacity-80" aria-label="Voice input">
-            <Mic className="h-5 w-5" style={{ color: '#7A6B5E' }} strokeWidth={1.75} />
+          <button 
+            onClick={toggleListen}
+            className={`opacity-80 transition-colors ${isListening ? 'animate-pulse' : ''}`} 
+            aria-label="Voice input"
+          >
+            <Mic className="h-5 w-5" style={{ color: isListening ? '#EF4444' : '#7A6B5E' }} strokeWidth={1.75} />
           </button>
         </div>
         <button
