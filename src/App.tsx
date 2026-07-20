@@ -8,6 +8,8 @@ import { CartProvider } from "./contexts/CartContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { LocationProvider } from "./contexts/LocationContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
+import { useEffect } from "react";
+import { useNativePushRegistration, schedulePrayerReminders } from "./hooks/useNativeNotifications";
 
 // Eager — needed for first paint / auth flow
 import { Home } from "./pages/Home";
@@ -53,6 +55,8 @@ const Hadith = lazy(() => import("./pages/Hadith").then(m => ({ default: m.Hadit
 const HadithBook = lazy(() => import("./pages/HadithBook").then(m => ({ default: m.HadithBook })));
 const PrivacyPolicy = lazy(() => import("./pages/legal/PrivacyPolicy").then(m => ({ default: m.PrivacyPolicy })));
 const TermsOfService = lazy(() => import("./pages/legal/TermsOfService").then(m => ({ default: m.TermsOfService })));
+const Notifications = lazy(() => import("./pages/Notifications").then(m => ({ default: m.Notifications })));
+const NotificationSettings = lazy(() => import("./pages/NotificationSettings").then(m => ({ default: m.NotificationSettings })));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -84,6 +88,24 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const NotificationsBootstrap = () => {
+  useNativePushRegistration();
+  const { user } = useAuth();
+  useEffect(() => {
+    if (!user) return;
+    // Schedule default prayer reminders. Times mirror PRAYERS in PrayerTimes.tsx
+    // and can later be replaced with live computed values.
+    schedulePrayerReminders({
+      Fajr: '04:52',
+      Dhuhr: '12:45',
+      Asr: '15:47',
+      Maghrib: '18:38',
+      Isha: '19:55',
+    });
+  }, [user]);
+  return null;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -94,6 +116,7 @@ const App = () => (
               <CartProvider>
                 <Toaster />
                 <Sonner />
+                <NotificationsBootstrap />
                 <Suspense fallback={<LoadingScreen />}>
                 <Routes>
                   <Route path="/loading" element={<LoadingScreen />} />
@@ -136,6 +159,8 @@ const App = () => (
                   <Route path="/halal-scanner" element={<ProtectedRoute><HalalScanner /></ProtectedRoute>} />
                   <Route path="/hadith" element={<ProtectedRoute><Hadith /></ProtectedRoute>} />
                   <Route path="/hadith/:slug" element={<ProtectedRoute><HadithBook /></ProtectedRoute>} />
+                  <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+                  <Route path="/notifications/settings" element={<ProtectedRoute><NotificationSettings /></ProtectedRoute>} />
                   <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                   <Route path="/terms-of-service" element={<TermsOfService />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
