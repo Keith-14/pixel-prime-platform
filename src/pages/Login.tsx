@@ -42,7 +42,10 @@ export const Login = () => {
       </div>
 
       {/* Language Selector - Top right */}
-      <div className="absolute top-4 right-4 z-20">
+      <div
+        className="absolute right-4 z-20"
+        style={{ top: 'calc(env(safe-area-inset-top) + 0.5rem)' }}
+      >
         <LanguageSelector />
       </div>
 
