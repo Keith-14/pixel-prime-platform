@@ -20,7 +20,10 @@ interface TopHeaderProps {
 
 export const TopHeader = ({ onMenuClick, title, rightContent, onSearchClick, showSearch, className, titleClassName, titleStyle, buttonClassName, leftAlignTitle }: TopHeaderProps) => {
   return (
-    <header className={cn("relative z-20 px-5 py-4 flex items-center font-arabic", leftAlignTitle ? "justify-start gap-3" : "justify-between", className)}>
+    <header
+      className={cn("relative z-20 px-5 pb-4 flex items-center font-arabic", leftAlignTitle ? "justify-start gap-3" : "justify-between", className)}
+      style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1rem)' }}
+    >
       <Button 
         variant="ghost" 
         size="icon" 
