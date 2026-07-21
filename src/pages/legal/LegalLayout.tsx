@@ -11,7 +11,10 @@ export const LegalLayout = ({ title, children }: LegalLayoutProps) => {
   const navigate = useNavigate();
   return (
     <div className="min-h-screen max-w-md mx-auto bg-[#FFF1DD]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-      <header className="sticky top-0 z-20 flex items-center gap-3 px-5 py-4 bg-[#FFF1DD] border-b border-[#EADFC9]">
+      <header
+        className="sticky top-0 z-20 flex items-center gap-3 px-5 pb-4 bg-[#FFF1DD] border-b border-[#EADFC9]"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1rem)' }}
+      >
         <button
           onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}
           aria-label="Back"

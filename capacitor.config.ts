@@ -13,7 +13,8 @@ const config: CapacitorConfig = {
   },
   ios: {
     scheme: 'com.barakah.services',
-    contentInset: 'always',
+    contentInset: 'never',
+    backgroundColor: '#2D190F',
     infoPlist: {
       NSCameraUsageDescription: 'Barakah uses the camera to scan barcodes for halal product verification.',
       NSLocationWhenInUseUsageDescription: 'Barakah uses your location to provide prayer times and nearby place recommendations.',
