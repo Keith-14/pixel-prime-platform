@@ -9,7 +9,8 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { LocationProvider } from "./contexts/LocationContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { useEffect } from "react";
-import { useNativePushRegistration, schedulePrayerReminders } from "./hooks/useNativeNotifications";
+import { useNativePushRegistration, schedulePrayerReminders, type PrayerOccurrence, type PrayerName } from "./hooks/useNativeNotifications";
+import { useGlobalLocation } from "./contexts/LocationContext";
 
 // Eager — needed for first paint / auth flow
 import { Home } from "./pages/Home";
@@ -91,18 +92,49 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const NotificationsBootstrap = () => {
   useNativePushRegistration();
   const { user } = useAuth();
+  const { location } = useGlobalLocation();
+
   useEffect(() => {
-    if (!user) return;
-    // Schedule default prayer reminders. Times mirror PRAYERS in PrayerTimes.tsx
-    // and can later be replaced with live computed values.
-    schedulePrayerReminders({
-      Fajr: '04:52',
-      Dhuhr: '12:45',
-      Asr: '15:47',
-      Maghrib: '18:38',
-      Isha: '19:55',
-    });
-  }, [user]);
+    if (!user || !location) return;
+    let cancelled = false;
+
+    const PRAYERS: PrayerName[] = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+
+    const fetchDay = async (d: Date): Promise<PrayerOccurrence[]> => {
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const yyyy = d.getFullYear();
+      // Aladhan timings API — method 2 (ISNA); returns times in the location's local tz.
+      const url = `https://api.aladhan.com/v1/timings/${dd}-${mm}-${yyyy}?latitude=${location.latitude}&longitude=${location.longitude}&method=2`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('aladhan fetch failed');
+      const json = await res.json();
+      const timings = json?.data?.timings || {};
+      return PRAYERS.map((name) => {
+        const raw: string = timings[name] || '00:00';
+        const [h, m] = raw.split(':').map((s: string) => parseInt(s, 10));
+        const at = new Date(d.getFullYear(), d.getMonth(), d.getDate(), h, m, 0, 0);
+        return { name, at };
+      });
+    };
+
+    const run = async () => {
+      try {
+        const today = new Date();
+        const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+        const [t1, t2] = await Promise.all([fetchDay(today), fetchDay(tomorrow)]);
+        if (cancelled) return;
+        await schedulePrayerReminders([...t1, ...t2]);
+      } catch (e) {
+        console.warn('Prayer reminder schedule failed', e);
+      }
+    };
+
+    run();
+    // Re-run every 6h so tomorrow's shifting times get scheduled without a manual app open.
+    const iv = setInterval(run, 6 * 60 * 60 * 1000);
+    return () => { cancelled = true; clearInterval(iv); };
+  }, [user, location?.latitude, location?.longitude]);
   return null;
 };
 
