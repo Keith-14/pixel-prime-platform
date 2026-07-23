@@ -152,18 +152,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const newUser = data.user;
       if (!newUser) return { error: { message: 'User creation failed' }, role: undefined };
 
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({ user_id: newUser.id, role });
-      if (roleError && roleError.code !== '23505') return { error: roleError, role: undefined };
-
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({ user_id: newUser.id, full_name: fullName }, { onConflict: 'user_id' });
-      if (profileError) return { error: profileError, role: undefined };
-
-      setUserRole(role);
-      return { error: null, role };
+      // Profile + role are inserted exactly once inside completeAccountSetup
+      // (the "Create Profile" step). This keeps sign-in idempotent and prevents
+      // duplicate upserts on every auth event.
+      const { error: setupError, role: assignedRole } = await completeAccountSetup(role!, fullName);
+      if (setupError) return { error: setupError, role: undefined };
+      return { error: null, role: assignedRole };
     } catch (error: any) {
       return { error: { message: error.message || 'Sign up failed' }, role: undefined };
     }
