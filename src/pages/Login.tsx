@@ -5,8 +5,6 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { useLanguage } from '@/contexts/LanguageContext';
-import appleLogo from '@/assets/AppleLogo.png.asset.json';
-import { assetUrl } from '@/lib/assetUrl';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
