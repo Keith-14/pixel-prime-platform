@@ -133,13 +133,6 @@ export const Login = () => {
               {t('login.google')}
             </Button>
 
-            <Button 
-              variant="outline" 
-              className="w-full rounded-xl h-12 bg-white/90 border-sage/30 hover:bg-white text-sage font-medium"
-            >
-              <img src={assetUrl(appleLogo)} alt="Apple" className="w-5 h-5 mx-3 object-contain" />
-              {t('login.apple')}
-            </Button>
           </div>
 
           <p className="text-xs text-sage/60 text-center px-4 leading-relaxed">
