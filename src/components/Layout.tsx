@@ -41,7 +41,13 @@ export const Layout = ({ children, showNavigation = true, showHeader = true, hea
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col max-w-md mx-auto relative overflow-hidden font-arabic">
+    <div
+      className={cn(
+        "min-h-screen flex flex-col max-w-md mx-auto relative overflow-hidden font-arabic",
+        showHeader ? "bg-background" : "bg-[#FFF5E5]"
+      )}
+      style={{ paddingTop: showHeader ? undefined : 'env(safe-area-inset-top)' }}
+    >
       {/* Background with warm brown tint */}
       <div className="fixed inset-0 pointer-events-none">
         {/* Dark brown-tinted base */}

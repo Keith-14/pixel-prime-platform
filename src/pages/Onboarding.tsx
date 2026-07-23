@@ -6,6 +6,8 @@ import onboarding2Full from '@/assets/onboarding-2-full.png';
 import onboarding3Full from '@/assets/onboarding-3-full.png';
 
 const ONBOARDING_KEY = 'barakah_onboarding_completed';
+const ONBOARDING_DESTINATION_KEY = 'barakah_onboarding_destination';
+const STARTUP_KEY = 'barakah_startup_shown';
 
 type Slide = {
   image?: string;
@@ -47,8 +49,11 @@ export const Onboarding = () => {
 
   const finish = () => {
     localStorage.setItem(ONBOARDING_KEY, 'true');
-    sessionStorage.setItem('barakah_startup_shown', 'true');
-    navigate('/login', { replace: true });
+    sessionStorage.setItem(STARTUP_KEY, 'true');
+
+    const destination = localStorage.getItem(ONBOARDING_DESTINATION_KEY) || '/login';
+    localStorage.removeItem(ONBOARDING_DESTINATION_KEY);
+    navigate(destination, { replace: true });
   };
 
   const handleNext = () => {

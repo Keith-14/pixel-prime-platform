@@ -1,24 +1,50 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import splashLastFrame from '@/assets/splash-last-frame.png';
 import desertBottom from '@/assets/desert-bottom.png.asset.json';
 import { assetUrl } from '@/lib/assetUrl';
+import { useAuth } from '@/contexts/AuthContext';
 
-export const LoadingScreen = () => {
+const ONBOARDING_KEY = 'barakah_onboarding_completed';
+const STARTUP_KEY = 'barakah_startup_shown';
+
+type LoadingScreenProps = {
+  autoNavigate?: boolean;
+};
+
+export const LoadingScreen = ({ autoNavigate = false }: LoadingScreenProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user, loading } = useAuth();
   const [frozen, setFrozen] = useState(false);
 
   useEffect(() => {
     // GIF duration ~1850ms — freeze on last frame after one play
     const freezeTimer = setTimeout(() => setFrozen(true), 1850);
     const navTimer = setTimeout(() => {
-      navigate('/onboarding');
+      if (!autoNavigate) return;
+      if (loading) return;
+
+      sessionStorage.setItem(STARTUP_KEY, 'true');
+
+      if (localStorage.getItem(ONBOARDING_KEY) !== 'true') {
+        navigate('/onboarding', { replace: true });
+        return;
+      }
+
+      const from = location.state?.from;
+      const destination =
+        from?.pathname && from.pathname !== '/loading'
+          ? `${from.pathname}${from.search || ''}${from.hash || ''}`
+          : '/';
+
+      navigate(user ? destination : '/login', { replace: true });
     }, 2600);
     return () => {
       clearTimeout(freezeTimer);
       clearTimeout(navTimer);
     };
-  }, [navigate]);
+  }, [autoNavigate, loading, location.state, navigate, user]);
 
   return (
     <div className="min-h-screen max-w-md mx-auto relative overflow-hidden flex items-center justify-center" style={{ backgroundColor: '#fff5e7' }}>

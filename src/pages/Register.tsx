@@ -423,7 +423,7 @@ export const Register = () => {
                   placeholder={t('login.email_placeholder')}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-14 rounded-full bg-[#FFF5E5] border border-[#EADFC9] px-5 text-[#1a1a1a] caret-[#A35334] placeholder:text-[#9a8a70] focus-visible:ring-0 focus-visible:ring-offset-0"
+                  className="h-14 rounded-full bg-[#FFF5E5] border border-[#EADFC9] px-5 text-black caret-[#A35334] placeholder:text-[#9a8a70] focus-visible:ring-0 focus-visible:ring-offset-0"
                 />
                 <Input
                   type="password"

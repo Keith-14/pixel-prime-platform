@@ -104,7 +104,10 @@ export const Progress = () => {
   return (
     <div className="min-h-screen flex flex-col max-w-md mx-auto relative font-arabic" style={{ background: CREAM }}>
       {/* Header */}
-      <header className="px-5 pt-5 pb-4 flex items-center gap-3 bg-white">
+      <header
+        className="px-5 pt-5 pb-4 flex items-center gap-3 bg-white"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1.25rem)' }}
+      >
         <button
           onClick={() => navigate('/prayer-times')}
           className="h-10 w-10 rounded-full border flex items-center justify-center"

@@ -5,6 +5,7 @@ import { SideMenu } from '@/components/SideMenu';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import { LocationPicker } from '@/components/LocationPicker';
 import { useGlobalLocation } from '@/contexts/LocationContext';
+import { schedulePrayerReminders, type PrayerName, type PrayerOccurrence } from '@/hooks/useNativeNotifications';
 import prayerArcLogo from '@/assets/prayer-arc-logo.png.asset.json';
 import hadithIcon from '@/assets/hadith-icon-v2.png.asset.json';
 import quranIcon from '@/assets/quran-icon.png.asset.json';
@@ -33,6 +34,10 @@ const PRAYERS: { key: PrayerKey; label: string; h: number; m: number; icon: any 
   { key: 'maghrib', label: 'Maghrib', h: 18, m: 38, icon: Sunset },
   { key: 'isha', label: 'Isha', h: 19, m: 55, icon: Moon },
 ];
+
+const NOTIFICATION_PRAYERS = PRAYERS.filter((p) => p.key !== 'sunrise') as Array<
+  { key: Exclude<PrayerKey, 'sunrise'>; label: PrayerName; h: number; m: number; icon: any }
+>;
 
 const fmt = (h: number, m: number) =>
   `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
@@ -83,7 +88,7 @@ const hadithBooks = [
 
 export const PrayerTimes = () => {
   const navigate = useNavigate();
-  const { location } = useGlobalLocation();
+  const { location, loading: locationLoading, refresh: refreshLocation } = useGlobalLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
   const [now, setNow] = useState(new Date());
@@ -91,6 +96,27 @@ export const PrayerTimes = () => {
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 30000);
     return () => clearInterval(id);
+  }, []);
+
+  const buildPrayerOccurrences = () => {
+    const today = new Date();
+    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+    const days = [today, tomorrow];
+
+    return days.flatMap((day) =>
+      NOTIFICATION_PRAYERS.map<PrayerOccurrence>((p) => ({
+        name: p.label,
+        at: new Date(day.getFullYear(), day.getMonth(), day.getDate(), p.h, p.m, 0, 0),
+      }))
+    );
+  };
+
+  const scheduleVisiblePrayerNotifications = async () => {
+    await schedulePrayerReminders(buildPrayerOccurrences());
+  };
+
+  useEffect(() => {
+    scheduleVisiblePrayerNotifications();
   }, []);
 
   const hijri = useMemo(
@@ -109,7 +135,10 @@ export const PrayerTimes = () => {
   const orderedDay = PRAYERS.filter((p) => p.key !== 'sunrise');
   const next =
     orderedDay.find((p) => p.h * 60 + p.m > cur) || orderedDay[0];
-  const cityLabel = location?.city || 'Dubai';
+  const cityLabel =
+    location?.city && location.city !== 'Unknown'
+      ? location.city
+      : location?.fullAddress || (locationLoading ? 'Locating...' : 'Set location');
 
   return (
     <div
@@ -117,7 +146,10 @@ export const PrayerTimes = () => {
       style={{ background: CREAM }}
     >
       {/* Top bar */}
-      <div className="flex items-center justify-between px-5 pt-4 pb-3" style={{ background: CREAM }}>
+      <div
+        className="flex items-center justify-between px-5 pt-4 pb-3"
+        style={{ background: CREAM, paddingTop: 'calc(env(safe-area-inset-top) + 1rem)' }}
+      >
         <button
           onClick={() => setIsMenuOpen(true)}
           className="p-2 -ml-2"
@@ -133,6 +165,7 @@ export const PrayerTimes = () => {
           Prayers
         </h1>
         <button
+          onClick={scheduleVisiblePrayerNotifications}
           className="w-10 h-10 rounded-full flex items-center justify-center relative"
           style={{ background: '#F1E0C8', color: BROWN }}
           aria-label="Notifications"
@@ -230,7 +263,10 @@ export const PrayerTimes = () => {
             Daily Prayer Times
           </h2>
           <button
-            onClick={() => setIsLocationPickerOpen(true)}
+            onClick={() => {
+              refreshLocation();
+              setIsLocationPickerOpen(true);
+            }}
             className="flex items-center gap-1 text-[13px] transition-transform active:scale-95"
             style={{ color: BROWN }}
           >

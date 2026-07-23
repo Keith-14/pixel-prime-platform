@@ -22,7 +22,7 @@ interface LocationPickerProps {
 }
 
 export const LocationPicker = ({ isOpen, onClose }: LocationPickerProps) => {
-  const { setManualLocation, clearManualLocation, location } = useGlobalLocation();
+  const { setManualLocation, clearManualLocation, location, refresh } = useGlobalLocation();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<NominatimResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -108,21 +108,20 @@ export const LocationPicker = ({ isOpen, onClose }: LocationPickerProps) => {
         <div className="mt-3 overflow-y-auto flex-1">
           {query.trim().length < 2 && (
             <>
-              {location?.isManual && (
-                <button
-                  onClick={() => {
-                    clearManualLocation();
-                    onClose();
-                  }}
-                  className="w-full flex items-center gap-3 px-3 py-3 rounded-xl mb-2"
-                  style={{ background: '#FFE8CA' }}
-                >
-                  <Navigation className="h-4 w-4" style={{ color: '#B0431E' }} />
-                  <span className="text-[13px] font-semibold" style={{ color: '#2C1309' }}>
-                    Use my current location (GPS)
-                  </span>
-                </button>
-              )}
+              <button
+                onClick={() => {
+                  if (location?.isManual) clearManualLocation();
+                  else refresh();
+                  onClose();
+                }}
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl mb-2"
+                style={{ background: '#FFE8CA' }}
+              >
+                <Navigation className="h-4 w-4" style={{ color: '#B0431E' }} />
+                <span className="text-[13px] font-semibold" style={{ color: '#2C1309' }}>
+                  Use my current location (GPS)
+                </span>
+              </button>
               <p className="text-[12px] px-1" style={{ color: '#8B5A3C' }}>
                 Type at least 2 characters to search for a city or country.
               </p>

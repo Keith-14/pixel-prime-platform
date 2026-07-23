@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, Bell, MapPin, ChevronDown, Newspaper } from 'lucide-react';
+import { Menu, Bell, MapPin, ChevronDown, Newspaper, X } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGlobalLocation } from '@/contexts/LocationContext';
+import { schedulePrayerReminders, type PrayerName, type PrayerOccurrence } from '@/hooks/useNativeNotifications';
 import { supabase } from '@/integrations/supabase/client';
 import { ChatAssistant } from '@/components/ChatAssistant';
 import { SideMenu } from '@/components/SideMenu';
@@ -26,6 +28,13 @@ interface NewsItem {
   published_at?: string | null;
 }
 
+interface PrayerAlert {
+  id: string;
+  prayer: PrayerName;
+  title: string;
+  at: Date;
+}
+
 const FALLBACK_IMG =
   'https://images.unsplash.com/photo-1564769625905-50e93615e769?w=200&h=200&fit=crop';
 
@@ -37,17 +46,22 @@ const timeAgo = (iso?: string | null) => {
   return `${Math.floor(diff / 86400)}d ago`;
 };
 
+const formatAlertTime = (date: Date) =>
+  date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+
 export const Home = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { location } = useGlobalLocation();
+  const { location, loading: locationLoading, refresh: refreshLocation } = useGlobalLocation();
   const [userName, setUserName] = useState('');
   const [news, setNews] = useState<NewsItem[]>([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [now, setNow] = useState(new Date());
+  const isIosNative = Capacitor.getPlatform() === 'ios';
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 30000);
@@ -92,7 +106,7 @@ export const Home = () => {
     .replace(' AH', '');
 
   // Next prayer
-  const prayerTimes: Array<[string, number, number]> = [
+  const prayerTimes: Array<[PrayerName, number, number]> = [
     ['Fajr', 5, 12],
     ['Dhuhr', 12, 30],
     ['Asr', 15, 45],
@@ -108,7 +122,47 @@ export const Home = () => {
   const displayHour = ((nextHour + 11) % 12) + 1;
   const prayerTime = `${displayHour}:${nextMin.toString().padStart(2, '0')} ${ampm}`;
 
-  const cityLabel = location?.city || 'Dubai';
+  const cityLabel =
+    location?.city && location.city !== 'Unknown'
+      ? location.city
+      : location?.fullAddress || (locationLoading ? 'Locating...' : 'Set location');
+
+  const buildPrayerOccurrences = (): PrayerOccurrence[] => {
+    const today = new Date();
+    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+    return [today, tomorrow].flatMap((day) =>
+      prayerTimes.map(([name, h, m]) => ({
+        name,
+        at: new Date(day.getFullYear(), day.getMonth(), day.getDate(), h, m, 0, 0),
+      }))
+    );
+  };
+
+  const notificationAlerts: PrayerAlert[] = buildPrayerOccurrences()
+    .flatMap((occurrence) => [
+      {
+        id: `${occurrence.name}-${occurrence.at.toISOString()}-before`,
+        prayer: occurrence.name,
+        title: `${occurrence.name} in 5 minutes`,
+        at: new Date(occurrence.at.getTime() - 5 * 60 * 1000),
+      },
+      {
+        id: `${occurrence.name}-${occurrence.at.toISOString()}-time`,
+        prayer: occurrence.name,
+        title: `${occurrence.name} time`,
+        at: occurrence.at,
+      },
+    ])
+    .filter((alert) => alert.at.getTime() > now.getTime())
+    .sort((a, b) => a.at.getTime() - b.at.getTime())
+    .slice(0, 8);
+
+  const handleNotificationClick = async () => {
+    if (isIosNative) {
+      await schedulePrayerReminders(buildPrayerOccurrences());
+      setIsNotificationOpen(true);
+    }
+  };
 
   const quickActions = [
     { label: 'Quran', img: assetUrl(qaQuranAsset), onClick: () => navigate('/quran') },
@@ -125,7 +179,10 @@ export const Home = () => {
       {/* HERO — brown gradient top section */}
       <div
         className="relative pt-4 pb-16 overflow-hidden"
-        style={{ background: 'linear-gradient(177deg, #78351A 2.14%, #CE5728 60%, #D97A4A 85%, #E8A87C 100%)' }}
+        style={{
+          background: 'linear-gradient(177deg, #78351A 2.14%, #CE5728 60%, #D97A4A 85%, #E8A87C 100%)',
+          paddingTop: 'calc(env(safe-area-inset-top) + 1rem)',
+        }}
       >
         {/* soft radial glows */}
         <div
@@ -166,11 +223,18 @@ export const Home = () => {
             className="h-7 w-auto object-contain"
           />
           <button
-            className="w-9 h-9 rounded-full flex items-center justify-center text-[#F9FAFB]"
+            onClick={handleNotificationClick}
+            className="relative w-9 h-9 rounded-full flex items-center justify-center text-[#F9FAFB]"
             style={{ background: 'rgba(255,255,255,0.15)' }}
             aria-label="Notifications"
           >
             <Bell className="h-4 w-4" strokeWidth={2} />
+            {isIosNative && notificationAlerts.length > 0 && (
+              <span
+                className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full"
+                style={{ background: '#E89D2F' }}
+              />
+            )}
           </button>
         </div>
 
@@ -185,7 +249,10 @@ export const Home = () => {
             </p>
           </div>
           <button
-            onClick={() => setIsLocationPickerOpen(true)}
+            onClick={() => {
+              refreshLocation();
+              setIsLocationPickerOpen(true);
+            }}
             className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-white/70 text-[#F9FAFB] transition-transform active:scale-95"
           >
             <MapPin className="h-3.5 w-3.5" strokeWidth={2} />
@@ -346,6 +413,76 @@ export const Home = () => {
       <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
       <LocationPicker isOpen={isLocationPickerOpen} onClose={() => setIsLocationPickerOpen(false)} />
       <FeedbackForm open={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
+
+      {isIosNative && isNotificationOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setIsNotificationOpen(false)} />
+          <div
+            className="relative w-full max-w-md rounded-t-[28px] px-5 pt-5"
+            style={{
+              background: '#FFF5E5',
+              paddingBottom: 'calc(env(safe-area-inset-bottom) + 1.5rem)',
+            }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-[20px] font-bold" style={{ color: '#2C1309' }}>
+                  Prayer Alerts
+                </h2>
+                <p className="text-[13px] mt-0.5" style={{ color: '#8B6F5C' }}>
+                  {cityLabel}
+                </p>
+              </div>
+              <button
+                onClick={() => setIsNotificationOpen(false)}
+                className="h-9 w-9 rounded-full flex items-center justify-center"
+                style={{ background: 'rgba(176,67,30,0.08)', color: '#B0431E' }}
+                aria-label="Close notifications"
+              >
+                <X className="h-5 w-5" strokeWidth={2} />
+              </button>
+            </div>
+
+            {notificationAlerts.length > 0 ? (
+              <div className="space-y-2.5">
+                {notificationAlerts.map((alert) => (
+                  <div
+                    key={alert.id}
+                    className="rounded-2xl border px-4 py-3 flex items-center justify-between"
+                    style={{ background: '#FFFFFF', borderColor: '#E8D5C4' }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="h-10 w-10 rounded-full flex items-center justify-center"
+                        style={{ background: 'rgba(176,67,30,0.08)', color: '#B0431E' }}
+                      >
+                        <Bell className="h-4 w-4" strokeWidth={2} />
+                      </div>
+                      <div>
+                        <p className="text-[14px] font-semibold" style={{ color: '#2C1309' }}>
+                          {alert.title}
+                        </p>
+                        <p className="text-[12px] mt-0.5" style={{ color: '#8B6F5C' }}>
+                          {alert.prayer} reminder
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-[13px] font-semibold tabular-nums" style={{ color: '#B0431E' }}>
+                      {formatAlertTime(alert.at)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-2xl border px-4 py-8 text-center" style={{ background: '#FFFFFF', borderColor: '#E8D5C4' }}>
+                <p className="text-[15px] font-semibold" style={{ color: '#2C1309' }}>
+                  No new notifications
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

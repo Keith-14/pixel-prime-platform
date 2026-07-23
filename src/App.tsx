@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { CartProvider } from "./contexts/CartContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { LocationProvider } from "./contexts/LocationContext";
@@ -72,6 +72,7 @@ const queryClient = new QueryClient({
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return <LoadingScreen />;
@@ -79,7 +80,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   // Force splash + onboarding once per app launch (cold start)
   if (typeof window !== 'undefined' && !sessionStorage.getItem('barakah_startup_shown')) {
-    return <Navigate to="/loading" replace />;
+    return <Navigate to="/loading" replace state={{ from: location }} />;
   }
 
   if (!user) {
@@ -151,7 +152,7 @@ const App = () => (
                 <NotificationsBootstrap />
                 <Suspense fallback={<LoadingScreen />}>
                 <Routes>
-                  <Route path="/loading" element={<LoadingScreen />} />
+                  <Route path="/loading" element={<LoadingScreen autoNavigate />} />
                   <Route path="/login" element={<Register />} />
                   <Route path="/onboarding" element={<Onboarding />} />
                   <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
