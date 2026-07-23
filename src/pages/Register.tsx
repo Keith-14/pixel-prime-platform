@@ -277,17 +277,6 @@ export const Register = () => {
       >
         {view === 'welcome' && (
           <div className="space-y-3">
-            {/* Apple */}
-            <Button
-              onClick={handleAppleSignIn}
-              disabled={loading}
-              className="w-full h-14 rounded-full text-white text-base font-medium hover:opacity-90"
-              style={{ backgroundColor: '#3A1E12' }}
-            >
-              <img src={assetUrl(appleLogo)} alt="Apple" className="h-5 w-5 mr-2 object-contain" />
-              Continue with Apple
-            </Button>
-
             {/* Google */}
             <Button
               onClick={handleGoogleSignIn}
