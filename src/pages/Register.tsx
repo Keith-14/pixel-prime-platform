@@ -89,7 +89,6 @@ export const Register = () => {
         setFullName('');
         setView('profile');
       }
-      setRoutingCheck(false);
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
