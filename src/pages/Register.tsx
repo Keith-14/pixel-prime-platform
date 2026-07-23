@@ -99,41 +99,7 @@ export const Register = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, authLoading]);
 
-  // Resolve pending OAuth flow once the session/role is hydrated.
-  useEffect(() => {
-    if (!awaitingOauth) return;
-    if (authLoading) return;
-    if (!user) return; // still waiting for deep link / redirect
-    // Query role directly to avoid a race with the deferred role fetch
-    // in AuthContext — otherwise registered users briefly appear roleless
-    // and get pushed into the setup flow.
-    (async () => {
-      let role: UserRole | null = userRole ?? null;
-      if (!role) {
-        const { data } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .limit(1)
-          .maybeSingle();
-        role = (data?.role as UserRole) ?? null;
-      }
-      setAwaitingOauth(false);
-      setLoading(false);
-      if (role) {
-        toast.success('Welcome back!');
-        routeByRole(role);
-      } else {
-        toast.message('Finish setup', { description: 'Please choose your account type to continue.' });
-        setNeedsSetup(true);
-        setIsSignIn(false);
-        setSelectedRole(null);
-        setFullName('');
-        setView('profile');
-      }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [awaitingOauth, authLoading, user, userRole]);
+  // (OAuth pending flow is handled by the profile-existence effect above.)
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
