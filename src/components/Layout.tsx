@@ -73,7 +73,7 @@ export const Layout = ({ children, showNavigation = true, showHeader = true, hea
       
       <main className={cn(
         "flex-1 relative z-10",
-        showNavigation && "pb-24",
+        showNavigation ? "pb-[calc(6rem+env(safe-area-inset-bottom))]" : "pb-[env(safe-area-inset-bottom)]",
         isTransitioning && "animate-fade-in"
       )}>
         {children}

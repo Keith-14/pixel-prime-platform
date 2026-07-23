@@ -56,11 +56,13 @@ export const useNativePushRegistration = () => {
 
 /**
  * Schedule the 5 daily prayer reminders as local notifications on-device.
- * Pass the times in "HH:MM" 24-hour format. No-op on web.
+ * Accepts an array of concrete Date objects (one per prayer occurrence) so
+ * caller can pass real, location-based times that shift day-to-day. No-op on web.
  */
-export const schedulePrayerReminders = async (
-  times: Record<'Fajr' | 'Dhuhr' | 'Asr' | 'Maghrib' | 'Isha', string>
-) => {
+export type PrayerName = 'Fajr' | 'Dhuhr' | 'Asr' | 'Maghrib' | 'Isha';
+export interface PrayerOccurrence { name: PrayerName; at: Date; }
+
+export const schedulePrayerReminders = async (occurrences: PrayerOccurrence[]) => {
   if (!Capacitor.isNativePlatform()) return;
   try {
     const { LocalNotifications } = await import('@capacitor/local-notifications');
@@ -70,29 +72,30 @@ export const schedulePrayerReminders = async (
       if (req.display !== 'granted') return;
     }
 
-    // Cancel any previously scheduled prayer reminders (ids 1..5).
+    // Cancel any previously scheduled prayer reminders (ids 1..20 cover ~4 days).
     try {
-      await LocalNotifications.cancel({ notifications: [1, 2, 3, 4, 5].map((id) => ({ id })) });
+      const ids = Array.from({ length: 20 }, (_, i) => i + 1);
+      await LocalNotifications.cancel({ notifications: ids.map((id) => ({ id })) });
     } catch {}
 
-    const prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'] as const;
-    const now = new Date();
-
-    const notifications = prayers.map((name, idx) => {
-      const [h, m] = (times[name] || '00:00').split(':').map(Number);
-      const at = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0, 0);
-      if (at.getTime() <= now.getTime()) at.setDate(at.getDate() + 1);
-      return {
+    const now = Date.now();
+    const notifications = occurrences
+      .filter((o) => o.at.getTime() > now)
+      .slice(0, 20)
+      .map((o, idx) => ({
         id: idx + 1,
-        title: `${name} time`,
-        body: `It's time for ${name} prayer.`,
-        schedule: { at, repeats: true, every: 'day' as const, allowWhileIdle: true },
+        title: `${o.name} time`,
+        body: `It's time for ${o.name} prayer.`,
+        // One-shot at the exact computed instant — no daily repeat, because
+        // prayer times shift each day. Re-scheduled daily by the caller.
+        schedule: { at: o.at, allowWhileIdle: true },
         smallIcon: 'ic_launcher',
         channelId: 'prayer',
-      };
-    });
+      }));
 
-    await LocalNotifications.schedule({ notifications });
+    if (notifications.length) {
+      await LocalNotifications.schedule({ notifications });
+    }
   } catch (e) {
     console.warn('Local prayer reminders unavailable', e);
   }

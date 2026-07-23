@@ -77,15 +77,21 @@ export const Onboarding = () => {
             />
           ) : null
         )}
-        <div className="flex justify-end px-6 pt-6 relative z-10">
+        <div
+          className="flex justify-end px-6 relative z-10"
+          style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1rem)' }}
+        >
           <button onClick={finish} className="text-white/95 text-base font-medium">
             Skip
           </button>
         </div>
         <div className="flex-1" />
         <div
-          className="relative z-10 px-8 pt-6 pb-8"
-          style={{ background: 'linear-gradient(180deg, rgba(251,241,221,0) 0%, #fbf1dd 30%, #fbf1dd 100%)' }}
+          className="relative z-10 px-8 pt-6"
+          style={{
+            background: 'linear-gradient(180deg, rgba(251,241,221,0) 0%, #fbf1dd 30%, #fbf1dd 100%)',
+            paddingBottom: 'calc(env(safe-area-inset-bottom) + 2rem)',
+          }}
         >
           <Button
             onClick={handleNext}
@@ -105,7 +111,10 @@ export const Onboarding = () => {
       style={{ background: slide.bg }}
     >
       {/* Skip */}
-      <div className="flex justify-end px-6 pt-6 relative z-10">
+      <div
+        className="flex justify-end px-6 relative z-10"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1rem)' }}
+      >
         <button
           onClick={finish}
           className="text-white/95 text-base font-medium"
@@ -125,8 +134,8 @@ export const Onboarding = () => {
 
       {/* Bottom cream sheet */}
       <div
-        className="rounded-t-[32px] px-8 pt-10 pb-8 shadow-[0_-10px_30px_rgba(0,0,0,0.08)]"
-        style={{ backgroundColor: '#fbf1dd' }}
+        className="rounded-t-[32px] px-8 pt-10 shadow-[0_-10px_30px_rgba(0,0,0,0.08)]"
+        style={{ backgroundColor: '#fbf1dd', paddingBottom: 'calc(env(safe-area-inset-bottom) + 2rem)' }}
       >
         <h1
           className="text-center text-[28px] leading-tight font-bold mb-4"
