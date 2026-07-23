@@ -28,7 +28,6 @@ export const Register = () => {
   const [needsSetup, setNeedsSetup] = useState(false);
   const [loading, setLoading] = useState(false);
   const [awaitingOauth, setAwaitingOauth] = useState(false);
-  const [routingCheck, setRoutingCheck] = useState(true);
 
   const navigate = useNavigate();
   const {
@@ -55,16 +54,13 @@ export const Register = () => {
   // email sign-in, and browser back-nav to /login while already signed in).
   useEffect(() => {
     if (authLoading) {
-      setRoutingCheck(true);
       return;
     }
     if (!user) {
-      setRoutingCheck(false);
       return;
     }
     let cancelled = false;
     (async () => {
-      setRoutingCheck(true);
       const { data: profile } = await supabase
         .from('profiles')
         .select('user_id')
