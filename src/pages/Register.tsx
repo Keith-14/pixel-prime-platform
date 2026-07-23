@@ -28,6 +28,7 @@ export const Register = () => {
   const [needsSetup, setNeedsSetup] = useState(false);
   const [loading, setLoading] = useState(false);
   const [awaitingOauth, setAwaitingOauth] = useState(false);
+  const [routingCheck, setRoutingCheck] = useState(true);
 
   const navigate = useNavigate();
   const {
@@ -47,6 +48,56 @@ export const Register = () => {
     else if (role === 'travel_partner') navigate('/business-account');
     else navigate('/');
   };
+
+  // Single source of truth: if the authenticated user already has a profile row,
+  // send them straight to Home. Only users WITHOUT a profile see "Create Profile".
+  // Runs on mount and whenever the session hydrates (covers Google/Apple return,
+  // email sign-in, and browser back-nav to /login while already signed in).
+  useEffect(() => {
+    if (authLoading) {
+      setRoutingCheck(true);
+      return;
+    }
+    if (!user) {
+      setRoutingCheck(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setRoutingCheck(true);
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (cancelled) return;
+
+      if (profile) {
+        // Existing user — resolve their role and go straight to Home/dashboard.
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .limit(1)
+          .maybeSingle();
+        setAwaitingOauth(false);
+        setLoading(false);
+        routeByRole((roleData?.role as UserRole) ?? null);
+      } else {
+        // First-time user — collect profile once.
+        setAwaitingOauth(false);
+        setLoading(false);
+        setNeedsSetup(true);
+        setIsSignIn(false);
+        setSelectedRole(null);
+        setFullName('');
+        setView('profile');
+      }
+      setRoutingCheck(false);
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, authLoading]);
 
   // Resolve pending OAuth flow once the session/role is hydrated.
   useEffect(() => {
