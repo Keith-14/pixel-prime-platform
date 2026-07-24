@@ -167,7 +167,7 @@ export const Register = () => {
     setEmail(normalizedEmail);
     setView('otp');
     toast.success('Verification code sent', {
-      description: `Enter the 4-digit code sent to ${normalizedEmail}.`,
+      description: `Enter the 6-digit code sent to ${normalizedEmail}.`,
     });
   };
 
@@ -206,15 +206,18 @@ export const Register = () => {
   };
 
   const handleVerifyOtp = async () => {
-    if (otp.length !== 4) return toast.error('Please enter the 4-digit code');
+    if (otp.length !== 6) return toast.error('Please enter the 6-digit code');
 
     setLoading(true);
     try {
-      const { error } = await supabase.functions.invoke('auth-email-otp', {
+      const { data, error } = await supabase.functions.invoke('auth-email-otp', {
         body: {
-          action: 'verify',
+          action: 'complete',
           email: otpEmail || email,
           code: otp,
+          password,
+          role: selectedRole,
+          fullName,
         },
       });
 
@@ -223,7 +226,19 @@ export const Register = () => {
         return;
       }
 
-      await createAccount();
+      const { error: signInError, role } = await signIn(otpEmail || email, password);
+      if (signInError) {
+        toast.error(signInError.message || 'Account created, but sign in failed');
+        return;
+      }
+
+      toast.success('Account created successfully!');
+      let destination = '/';
+      const createdRole = role ?? data?.role;
+      if (createdRole === 'seller') destination = '/seller-onboarding';
+      else if (createdRole === 'travel_partner') destination = '/business-account';
+      localStorage.setItem('barakah_onboarding_destination', destination);
+      navigate('/onboarding');
     } catch (error: unknown) {
       toast.error(errorMessage(error, 'Verification failed. Please try again.'));
     } finally {
@@ -578,24 +593,24 @@ export const Register = () => {
                 Confirm your email
               </h2>
               <p className="text-sm text-[#7c6a4f] leading-relaxed">
-                Enter the 4-digit code sent to<br />
+                Enter the 6-digit code sent to<br />
                 <span className="font-semibold text-[#1a1a1a]">{otpEmail || email}</span>
               </p>
             </div>
 
             <InputOTP
-              maxLength={4}
+              maxLength={6}
               value={otp}
               onChange={(value) => setOtp(value.replace(/\D/g, ''))}
-              containerClassName="justify-center gap-3"
+              containerClassName="justify-center gap-2"
               disabled={loading}
             >
-              <InputOTPGroup className="gap-3">
-                {[0, 1, 2, 3].map((index) => (
+              <InputOTPGroup className="gap-2">
+                {[0, 1, 2, 3, 4, 5].map((index) => (
                   <InputOTPSlot
                     key={index}
                     index={index}
-                    className="h-14 w-14 rounded-2xl border bg-[#FFF5E5] text-xl font-bold text-[#1a1a1a] border-[#EADFC9] first:rounded-2xl first:border-l last:rounded-2xl"
+                    className="h-12 w-12 rounded-2xl border bg-[#FFF5E5] text-lg font-bold text-[#1a1a1a] border-[#EADFC9] first:rounded-2xl first:border-l last:rounded-2xl"
                   />
                 ))}
               </InputOTPGroup>
@@ -603,7 +618,7 @@ export const Register = () => {
 
             <Button
               onClick={handleVerifyOtp}
-              disabled={loading || otp.length !== 4}
+              disabled={loading || otp.length !== 6}
               className="w-full h-14 rounded-full text-white text-base font-medium hover:opacity-90 disabled:opacity-60"
               style={{ backgroundColor: '#A35334' }}
             >

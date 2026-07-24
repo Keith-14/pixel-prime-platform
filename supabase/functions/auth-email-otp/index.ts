@@ -12,7 +12,8 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
-type Action = 'request' | 'verify'
+type Action = 'request' | 'verify' | 'complete'
+const USER_ROLES = new Set(['normal_user', 'seller', 'travel_partner'])
 
 function json(body: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -31,7 +32,7 @@ function normalizeEmail(value: unknown): string | null {
 function generateOtp(): string {
   const values = new Uint32Array(1)
   crypto.getRandomValues(values)
-  return String(1000 + (values[0] % 9000))
+  return String(100000 + (values[0] % 900000))
 }
 
 async function sha256(value: string): Promise<string> {
@@ -51,7 +52,7 @@ function otpEmailHtml(code: string): string {
     <div style="font-family: Arial, sans-serif; background:#FFF5E5; padding:24px;">
       <div style="max-width:420px; margin:0 auto; background:#ffffff; border:1px solid #E8D2A8; border-radius:18px; padding:24px;">
         <h1 style="margin:0 0 12px; color:#2C1309; font-size:22px;">Confirm your email</h1>
-        <p style="margin:0 0 18px; color:#8B6E4A; line-height:1.5;">Enter this 4-digit code in Barakah to finish creating your account.</p>
+        <p style="margin:0 0 18px; color:#8B6E4A; line-height:1.5;">Enter this 6-digit code in Barakah to finish creating your account.</p>
         <div style="font-size:34px; letter-spacing:12px; color:#A35233; font-weight:700; text-align:center; padding:18px 10px; background:#FFF2DF; border-radius:14px;">${code}</div>
         <p style="margin:18px 0 0; color:#8B6E4A; font-size:13px;">This code expires in ${OTP_TTL_MINUTES} minutes. If you did not request it, you can ignore this email.</p>
       </div>
@@ -85,7 +86,7 @@ Deno.serve(async (req) => {
   const action = body.action as Action | undefined
   const email = normalizeEmail(body.email)
 
-  if ((action !== 'request' && action !== 'verify') || !email) {
+  if ((action !== 'request' && action !== 'verify' && action !== 'complete') || !email) {
     return json({ error: 'Invalid request' }, 400)
   }
 
@@ -167,8 +168,8 @@ Deno.serve(async (req) => {
   }
 
   const code = typeof body.code === 'string' ? body.code.trim() : ''
-  if (!/^\d{4}$/.test(code)) {
-    return json({ error: 'Enter the 4-digit code' }, 400)
+  if (!/^\d{6}$/.test(code)) {
+    return json({ error: 'Enter the 6-digit code' }, 400)
   }
 
   const { data: challenge, error: readError } = await supabase
@@ -210,5 +211,57 @@ Deno.serve(async (req) => {
     })
     .eq('email', email)
 
-  return json({ verified: true })
+  if (action === 'verify') {
+    return json({ verified: true })
+  }
+
+  const password = typeof body.password === 'string' ? body.password : ''
+  const fullName = typeof body.fullName === 'string' ? body.fullName.trim() : ''
+  const role = typeof body.role === 'string' ? body.role : ''
+
+  if (password.length < 6 || !fullName || !USER_ROLES.has(role)) {
+    return json({ error: 'Invalid account details' }, 400)
+  }
+
+  const { data: created, error: createError } = await supabase.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: {
+      full_name: fullName,
+      role,
+    },
+  })
+
+  if (createError || !created.user) {
+    const message = createError?.message || 'Could not create account'
+    const lower = message.toLowerCase()
+    const status = lower.includes('already') || lower.includes('registered') ? 409 : 500
+    return json({ error: message }, status)
+  }
+
+  const { error: roleError } = await supabase
+    .from('user_roles')
+    .insert({ user_id: created.user.id, role })
+
+  if (roleError && roleError.code !== '23505') {
+    console.error('Failed to store user role', roleError)
+    return json({ error: 'Account created, but role setup failed' }, 500)
+  }
+
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .upsert({ user_id: created.user.id, full_name: fullName }, { onConflict: 'user_id' })
+
+  if (profileError) {
+    console.error('Failed to store profile', profileError)
+    return json({ error: 'Account created, but profile setup failed' }, 500)
+  }
+
+  await supabase
+    .from('auth_email_otps')
+    .delete()
+    .eq('email', email)
+
+  return json({ created: true, role })
 })
