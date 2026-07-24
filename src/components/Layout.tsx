@@ -43,10 +43,14 @@ export const Layout = ({ children, showNavigation = true, showHeader = true, hea
   return (
     <div
       className={cn(
-        "min-h-screen flex flex-col max-w-md mx-auto relative overflow-hidden font-arabic",
+        "flex flex-col max-w-md mx-auto relative overflow-x-hidden font-arabic",
         showHeader ? "bg-background" : "bg-[#FFF5E5]"
       )}
-      style={{ paddingTop: showHeader ? undefined : 'env(safe-area-inset-top)' }}
+      style={{
+        minHeight: '100dvh',
+        height: '100dvh',
+        paddingTop: showHeader ? undefined : 'env(safe-area-inset-top)',
+      }}
     >
       {/* Background with warm brown tint */}
       <div className="fixed inset-0 pointer-events-none">
@@ -78,8 +82,8 @@ export const Layout = ({ children, showNavigation = true, showHeader = true, hea
       {showHeader && <TopHeader onMenuClick={handleMenuClick} title={headerTitle} rightContent={headerRight} onSearchClick={onSearchClick} showSearch={showSearch} className={headerClassName} titleClassName={headerTitleClassName} titleStyle={headerTitleStyle} buttonClassName={headerButtonClassName} leftAlignTitle={leftAlignHeaderTitle} />}
       
       <main className={cn(
-        "flex-1 relative z-10",
-        showNavigation ? "pb-[calc(6rem+env(safe-area-inset-bottom))]" : "pb-[env(safe-area-inset-bottom)]",
+        "flex-1 min-h-0 relative z-10 overflow-y-auto overflow-x-hidden",
+        showNavigation ? "pb-24" : "",
         isTransitioning && "animate-fade-in"
       )}>
         {children}
