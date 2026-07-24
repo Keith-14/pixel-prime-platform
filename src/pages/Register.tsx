@@ -268,12 +268,15 @@ export const Register = () => {
       </div>
 
       {/* Spacer to push card below the mosque graphic area */}
-      <div className="flex-1" style={{ maxHeight: '36vh' }} />
+      <div className="flex-1" style={{ minHeight: '52vh', maxHeight: '58vh' }} />
 
       {/* Bottom sheet card with login flows */}
       <div
-        className="px-6 pb-8 pt-8 relative z-10 rounded-t-[28px]"
-        style={{ backgroundColor: '#FFF1DD' }}
+        className="px-6 pt-8 relative z-10 rounded-t-[28px] flex-1"
+        style={{
+          backgroundColor: '#FFF1DD',
+          paddingBottom: 'calc(2rem + env(safe-area-inset-bottom))',
+        }}
       >
         {view === 'welcome' && (
           <div className="space-y-3">
