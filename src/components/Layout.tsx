@@ -1,9 +1,9 @@
-import { ReactNode, useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import { BottomNavigation } from './BottomNavigation';
-import { TopHeader } from './TopHeader';
-import { SideMenu } from './SideMenu';
-import { cn } from '@/lib/utils';
+import { ReactNode, useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import { BottomNavigation } from "./BottomNavigation";
+import { TopHeader } from "./TopHeader";
+import { SideMenu } from "./SideMenu";
+import { cn } from "@/lib/utils";
 
 interface LayoutProps {
   children: ReactNode;
@@ -20,7 +20,20 @@ interface LayoutProps {
   leftAlignHeaderTitle?: boolean;
 }
 
-export const Layout = ({ children, showNavigation = true, showHeader = true, headerTitle, headerRight, onSearchClick, showSearch, headerClassName, headerTitleClassName, headerTitleStyle, headerButtonClassName, leftAlignHeaderTitle }: LayoutProps) => {
+export const Layout = ({
+  children,
+  showNavigation = true,
+  showHeader = true,
+  headerTitle,
+  headerRight,
+  onSearchClick,
+  showSearch,
+  headerClassName,
+  headerTitleClassName,
+  headerTitleStyle,
+  headerButtonClassName,
+  leftAlignHeaderTitle,
+}: LayoutProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(true);
   const location = useLocation();
@@ -43,54 +56,66 @@ export const Layout = ({ children, showNavigation = true, showHeader = true, hea
   return (
     <div
       className={cn(
-        "flex flex-col max-w-md mx-auto relative overflow-x-hidden font-arabic",
-        showHeader ? "bg-background" : "bg-[#FFF5E5]"
+        "min-h-screen flex flex-col max-w-md mx-auto relative overflow-hidden font-arabic",
+        showHeader ? "bg-background" : "bg-[#FFF5E5]",
       )}
-      style={{
-        minHeight: '100dvh',
-        height: '100dvh',
-        paddingTop: showHeader ? undefined : 'env(safe-area-inset-top)',
-      }}
+      style={{ paddingTop: showHeader ? undefined : "env(safe-area-inset-top)" }}
     >
       {/* Background with warm brown tint */}
       <div className="fixed inset-0 pointer-events-none">
         {/* Dark brown-tinted base */}
-        <div 
+        <div
           className="absolute inset-0"
-          style={{ 
-            background: 'linear-gradient(180deg, rgba(45, 25, 15, 1) 0%, rgba(25, 15, 10, 1) 50%, rgba(15, 10, 8, 1) 100%)' 
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(45, 25, 15, 1) 0%, rgba(25, 15, 10, 1) 50%, rgba(15, 10, 8, 1) 100%)",
           }}
         />
-        
+
         {/* Warm brown overlay for the tint */}
-        <div 
+        <div
           className="absolute inset-0"
-          style={{ 
-            background: 'rgba(139, 90, 43, 0.08)' 
+          style={{
+            background: "rgba(139, 90, 43, 0.08)",
           }}
         />
-        
+
         {/* Subtle lighter glow at top center */}
-        <div 
+        <div
           className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[50%]"
-          style={{ 
-            background: 'radial-gradient(ellipse at top, rgba(163, 82, 51, 0.15) 0%, transparent 70%)' 
+          style={{
+            background: "radial-gradient(ellipse at top, rgba(163, 82, 51, 0.15) 0%, transparent 70%)",
           }}
         />
       </div>
-      
-      {showHeader && <TopHeader onMenuClick={handleMenuClick} title={headerTitle} rightContent={headerRight} onSearchClick={onSearchClick} showSearch={showSearch} className={headerClassName} titleClassName={headerTitleClassName} titleStyle={headerTitleStyle} buttonClassName={headerButtonClassName} leftAlignTitle={leftAlignHeaderTitle} />}
-      
-      <main className={cn(
-        "flex-1 min-h-0 relative z-10 overflow-y-auto overflow-x-hidden",
-        showNavigation ? "pb-24" : "",
-        isTransitioning && "animate-fade-in"
-      )}>
+
+      {showHeader && (
+        <TopHeader
+          onMenuClick={handleMenuClick}
+          title={headerTitle}
+          rightContent={headerRight}
+          onSearchClick={onSearchClick}
+          showSearch={showSearch}
+          className={headerClassName}
+          titleClassName={headerTitleClassName}
+          titleStyle={headerTitleStyle}
+          buttonClassName={headerButtonClassName}
+          leftAlignTitle={leftAlignHeaderTitle}
+        />
+      )}
+
+      <main
+        className={cn(
+          "flex-1 relative z-10",
+          showNavigation ? "pb-[calc(6rem+env(safe-area-inset-bottom))]" : "pb-[env(safe-area-inset-bottom)]",
+          isTransitioning && "animate-fade-in",
+        )}
+      >
         {children}
       </main>
-      
+
       {showNavigation && <BottomNavigation />}
-      
+
       {/* Side Menu */}
       <SideMenu isOpen={isMenuOpen} onClose={handleMenuClose} />
     </div>
