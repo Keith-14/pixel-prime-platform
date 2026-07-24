@@ -13,7 +13,9 @@ const config: CapacitorConfig = {
   },
   ios: {
     scheme: 'com.barakah.services',
-    contentInset: 'always',
+    // 'never' lets the WebView extend edge-to-edge under the status bar and
+    // home indicator. Safe-area is handled in CSS via env(safe-area-inset-*).
+    contentInset: 'never',
     backgroundColor: '#2D190F',
     infoPlist: {
       NSCameraUsageDescription: 'Barakah uses the camera to scan barcodes for halal product verification.',
