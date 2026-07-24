@@ -268,7 +268,7 @@ export const Register = () => {
       </div>
 
       {/* Spacer to push card below the mosque graphic area */}
-      <div className="flex-1" style={{ maxHeight: '36vh' }} />
+      <div className="flex-1" style={{ minHeight: '52vh', maxHeight: '58vh' }} />
 
       {/* Bottom sheet card with login flows */}
       <div
