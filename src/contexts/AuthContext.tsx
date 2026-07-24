@@ -42,8 +42,8 @@ interface AuthContextType {
   loading: boolean;
   signUp: (email: string, password: string, role: UserRole, fullName: string) => Promise<{ error: any; role?: UserRole }>;
   signIn: (email: string, password: string) => Promise<{ error: any; role?: UserRole }>;
-  signInWithGoogle: () => Promise<{ error: any; role?: UserRole; pending?: boolean }>;
-  signInWithApple: () => Promise<{ error: any; role?: UserRole; pending?: boolean }>;
+  signInWithGoogle: () => Promise<{ error: any; role?: UserRole }>;
+  signInWithApple: () => Promise<{ error: any; role?: UserRole }>;
   completeAccountSetup: (role: Exclude<UserRole, null>, fullName: string) => Promise<{ error: any; role?: UserRole }>;
   signOut: () => Promise<void>;
 }
@@ -64,6 +64,28 @@ const toAppUser = (u: SupabaseUser | null | undefined): AppUser | null =>
           null,
       }) as AppUser)
     : null;
+
+const getUserRoleFromDatabase = async (userId: string): Promise<UserRole> => {
+  const { data: roleData, error: roleError } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', userId)
+    .limit(1)
+    .maybeSingle();
+
+  if (roleError) throw roleError;
+  if (roleData?.role) return roleData.role as UserRole;
+
+  const { data: sellerProfile, error: sellerProfileError } = await supabase
+    .from('seller_profiles')
+    .select('user_id')
+    .eq('user_id', userId)
+    .limit(1)
+    .maybeSingle();
+
+  if (sellerProfileError) throw sellerProfileError;
+  return sellerProfile ? 'seller' : null;
+};
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<AppUser | null>(null);
@@ -123,21 +145,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchUserRole = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .limit(1)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error fetching user role:', error);
-        return;
-      }
-
-      setUserRole((data?.role as UserRole) || null);
+      const role = await getUserRoleFromDatabase(userId);
+      setUserRole(role);
     } catch (error) {
       console.error('Error in fetchUserRole:', error);
+      setUserRole(null);
     }
   };
 
@@ -152,8 +164,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const newUser = data.user;
       if (!newUser) return { error: { message: 'User creation failed' }, role: undefined };
 
-      // Insert role + profile exactly once at signup. Login paths never touch
-      // these tables — existing users are detected via profile lookup in the UI.
       const { error: roleError } = await supabase
         .from('user_roles')
         .insert({ user_id: newUser.id, role });
@@ -161,8 +171,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       const { error: profileError } = await supabase
         .from('profiles')
-        .insert({ user_id: newUser.id, full_name: fullName });
-      if (profileError && profileError.code !== '23505') return { error: profileError, role: undefined };
+        .upsert({ user_id: newUser.id, full_name: fullName }, { onConflict: 'user_id' });
+      if (profileError) return { error: profileError, role: undefined };
 
       setUserRole(role);
       return { error: null, role };
@@ -178,21 +188,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const authedUser = data.user;
       if (!authedUser) return { error: { message: 'Sign in failed' }, role: undefined };
 
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', authedUser.id)
-        .limit(1)
-        .maybeSingle();
-
-      if (roleError) return { error: roleError, role: undefined };
-
-      if (!roleData) {
-        setUserRole(null);
-        return { error: null, role: null };
-      }
-
-      const role = roleData?.role as UserRole;
+      const role = await getUserRoleFromDatabase(authedUser.id);
       setUserRole(role);
       return { error: null, role };
     } catch (error: any) {
@@ -214,16 +210,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (data?.url) {
           await Browser.open({ url: data.url, presentationStyle: 'popover' });
         }
-        // Native flow: session will be set asynchronously via deep-link listener.
-        return { error: null, pending: true };
+        return { error: null, role: null };
       }
       const result: any = await lovable.auth.signInWithOAuth('google', {
         redirect_uri: `${window.location.origin}/`,
       });
       if (result?.error) return { error: result.error, role: undefined };
-      // Web managed flow: browser will full-page redirect; on return the
-      // session is hydrated by onAuthStateChange. Treat as pending here.
-      return { error: null, pending: true };
+      const { data: authData } = await supabase.auth.getUser();
+      if (!authData.user) return { error: null, role: null };
+      const role = await getUserRoleFromDatabase(authData.user.id);
+      setUserRole(role);
+      return { error: null, role };
     } catch (error: any) {
       return { error: { message: error.message || 'Google sign in failed' }, role: undefined };
     }
@@ -243,13 +240,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (data?.url) {
           await Browser.open({ url: data.url, presentationStyle: 'popover' });
         }
-        return { error: null, pending: true };
+        return { error: null, role: null };
       }
       const result: any = await lovable.auth.signInWithOAuth('apple', {
         redirect_uri: `${window.location.origin}/`,
       });
       if (result?.error) return { error: result.error, role: undefined };
-      return { error: null, pending: true };
+      const { data: authData } = await supabase.auth.getUser();
+      if (!authData.user) return { error: null, role: null };
+      const role = await getUserRoleFromDatabase(authData.user.id);
+      setUserRole(role);
+      return { error: null, role };
     } catch (error: any) {
       return { error: { message: error.message || 'Apple sign in failed' }, role: undefined };
     }

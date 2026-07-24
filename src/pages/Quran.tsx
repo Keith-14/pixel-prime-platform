@@ -35,23 +35,58 @@ interface SurahDetail extends Surah {
   audio: Record<string, { reciter: string; url: string; originalUrl: string }>;
 }
 
-interface ParaRange {
-  paraNo: number;
+interface JuzRange {
+  juz: number;
   start: { surah: number; ayah: number };
   end: { surah: number; ayah: number };
 }
 
 interface ParaVerse {
+  key: string;
   surahNo: number;
-  verseNo: number;
+  surahName: string;
+  ayahNo: number;
   arabic: string;
-  english: string;
+  english?: string;
 }
 
 interface ParaDetail {
-  range: ParaRange;
+  paraNo: number;
   verses: ParaVerse[];
 }
+
+const JUZ_RANGES: JuzRange[] = [
+  { juz: 1, start: { surah: 1, ayah: 1 }, end: { surah: 2, ayah: 141 } },
+  { juz: 2, start: { surah: 2, ayah: 142 }, end: { surah: 2, ayah: 252 } },
+  { juz: 3, start: { surah: 2, ayah: 253 }, end: { surah: 3, ayah: 92 } },
+  { juz: 4, start: { surah: 3, ayah: 93 }, end: { surah: 4, ayah: 23 } },
+  { juz: 5, start: { surah: 4, ayah: 24 }, end: { surah: 4, ayah: 147 } },
+  { juz: 6, start: { surah: 4, ayah: 148 }, end: { surah: 5, ayah: 81 } },
+  { juz: 7, start: { surah: 5, ayah: 82 }, end: { surah: 6, ayah: 110 } },
+  { juz: 8, start: { surah: 6, ayah: 111 }, end: { surah: 7, ayah: 87 } },
+  { juz: 9, start: { surah: 7, ayah: 88 }, end: { surah: 8, ayah: 40 } },
+  { juz: 10, start: { surah: 8, ayah: 41 }, end: { surah: 9, ayah: 92 } },
+  { juz: 11, start: { surah: 9, ayah: 93 }, end: { surah: 11, ayah: 5 } },
+  { juz: 12, start: { surah: 11, ayah: 6 }, end: { surah: 12, ayah: 52 } },
+  { juz: 13, start: { surah: 12, ayah: 53 }, end: { surah: 14, ayah: 52 } },
+  { juz: 14, start: { surah: 15, ayah: 1 }, end: { surah: 16, ayah: 128 } },
+  { juz: 15, start: { surah: 17, ayah: 1 }, end: { surah: 18, ayah: 74 } },
+  { juz: 16, start: { surah: 18, ayah: 75 }, end: { surah: 20, ayah: 135 } },
+  { juz: 17, start: { surah: 21, ayah: 1 }, end: { surah: 22, ayah: 78 } },
+  { juz: 18, start: { surah: 23, ayah: 1 }, end: { surah: 25, ayah: 20 } },
+  { juz: 19, start: { surah: 25, ayah: 21 }, end: { surah: 27, ayah: 55 } },
+  { juz: 20, start: { surah: 27, ayah: 56 }, end: { surah: 29, ayah: 45 } },
+  { juz: 21, start: { surah: 29, ayah: 46 }, end: { surah: 33, ayah: 30 } },
+  { juz: 22, start: { surah: 33, ayah: 31 }, end: { surah: 36, ayah: 27 } },
+  { juz: 23, start: { surah: 36, ayah: 28 }, end: { surah: 39, ayah: 31 } },
+  { juz: 24, start: { surah: 39, ayah: 32 }, end: { surah: 41, ayah: 46 } },
+  { juz: 25, start: { surah: 41, ayah: 47 }, end: { surah: 45, ayah: 37 } },
+  { juz: 26, start: { surah: 46, ayah: 1 }, end: { surah: 51, ayah: 30 } },
+  { juz: 27, start: { surah: 51, ayah: 31 }, end: { surah: 57, ayah: 29 } },
+  { juz: 28, start: { surah: 58, ayah: 1 }, end: { surah: 66, ayah: 12 } },
+  { juz: 29, start: { surah: 67, ayah: 1 }, end: { surah: 77, ayah: 50 } },
+  { juz: 30, start: { surah: 78, ayah: 1 }, end: { surah: 114, ayah: 6 } },
+];
 
 const RECITERS: Record<string, string> = {
   '1': 'Mishary Rashid Al Afasy',
@@ -74,39 +109,6 @@ const verseAudio = (surahNo: number, verseNo: number, reciterId: string) =>
     verseNo,
   ).padStart(3, '0')}.mp3`;
 
-const PARA_RANGES: ParaRange[] = [
-  { paraNo: 1, start: { surah: 1, ayah: 1 }, end: { surah: 2, ayah: 141 } },
-  { paraNo: 2, start: { surah: 2, ayah: 142 }, end: { surah: 2, ayah: 252 } },
-  { paraNo: 3, start: { surah: 2, ayah: 253 }, end: { surah: 3, ayah: 92 } },
-  { paraNo: 4, start: { surah: 3, ayah: 93 }, end: { surah: 4, ayah: 23 } },
-  { paraNo: 5, start: { surah: 4, ayah: 24 }, end: { surah: 4, ayah: 147 } },
-  { paraNo: 6, start: { surah: 4, ayah: 148 }, end: { surah: 5, ayah: 81 } },
-  { paraNo: 7, start: { surah: 5, ayah: 82 }, end: { surah: 6, ayah: 110 } },
-  { paraNo: 8, start: { surah: 6, ayah: 111 }, end: { surah: 7, ayah: 87 } },
-  { paraNo: 9, start: { surah: 7, ayah: 88 }, end: { surah: 8, ayah: 40 } },
-  { paraNo: 10, start: { surah: 8, ayah: 41 }, end: { surah: 9, ayah: 92 } },
-  { paraNo: 11, start: { surah: 9, ayah: 93 }, end: { surah: 11, ayah: 5 } },
-  { paraNo: 12, start: { surah: 11, ayah: 6 }, end: { surah: 12, ayah: 52 } },
-  { paraNo: 13, start: { surah: 12, ayah: 53 }, end: { surah: 14, ayah: 52 } },
-  { paraNo: 14, start: { surah: 15, ayah: 1 }, end: { surah: 16, ayah: 128 } },
-  { paraNo: 15, start: { surah: 17, ayah: 1 }, end: { surah: 18, ayah: 74 } },
-  { paraNo: 16, start: { surah: 18, ayah: 75 }, end: { surah: 20, ayah: 135 } },
-  { paraNo: 17, start: { surah: 21, ayah: 1 }, end: { surah: 22, ayah: 78 } },
-  { paraNo: 18, start: { surah: 23, ayah: 1 }, end: { surah: 25, ayah: 20 } },
-  { paraNo: 19, start: { surah: 25, ayah: 21 }, end: { surah: 27, ayah: 55 } },
-  { paraNo: 20, start: { surah: 27, ayah: 56 }, end: { surah: 29, ayah: 45 } },
-  { paraNo: 21, start: { surah: 29, ayah: 46 }, end: { surah: 33, ayah: 30 } },
-  { paraNo: 22, start: { surah: 33, ayah: 31 }, end: { surah: 36, ayah: 27 } },
-  { paraNo: 23, start: { surah: 36, ayah: 28 }, end: { surah: 39, ayah: 31 } },
-  { paraNo: 24, start: { surah: 39, ayah: 32 }, end: { surah: 41, ayah: 46 } },
-  { paraNo: 25, start: { surah: 41, ayah: 47 }, end: { surah: 45, ayah: 37 } },
-  { paraNo: 26, start: { surah: 46, ayah: 1 }, end: { surah: 51, ayah: 30 } },
-  { paraNo: 27, start: { surah: 51, ayah: 31 }, end: { surah: 57, ayah: 29 } },
-  { paraNo: 28, start: { surah: 58, ayah: 1 }, end: { surah: 66, ayah: 12 } },
-  { paraNo: 29, start: { surah: 67, ayah: 1 }, end: { surah: 77, ayah: 50 } },
-  { paraNo: 30, start: { surah: 78, ayah: 1 }, end: { surah: 114, ayah: 6 } },
-];
-
 /* ---------------- Reusable bits ---------------- */
 
 const StarBadge = ({ n }: { n: number }) => (
@@ -121,10 +123,7 @@ const StarBadge = ({ n }: { n: number }) => (
 );
 
 const TopBar = ({ onBack }: { onBack: () => void }) => (
-  <div
-    className="px-5 pt-4 pb-3 flex items-center justify-between"
-    style={{ backgroundColor: CREAM_BG, paddingTop: 'calc(env(safe-area-inset-top) + 1rem)' }}
-  >
+  <div className="px-5 pt-4 pb-3 flex items-center justify-between" style={{ backgroundColor: CREAM_BG }}>
     <div className="flex items-center gap-3">
       <button onClick={onBack} aria-label="Back" className="-ml-1">
         <ArrowLeft className="h-5 w-5" style={{ color: BROWN_ACCENT }} strokeWidth={2} />
@@ -181,29 +180,52 @@ export const Quran = () => {
     }
   };
 
-  const fetchParaDetails = async (range: ParaRange) => {
+  const fetchParaDetails = async (paraNo: number) => {
+    const range = JUZ_RANGES[paraNo - 1];
+    if (!range) return;
+
     setLoadingPara(true);
     setDetailTab('translation');
     setSelectedSurah(null);
-    setSelectedPara({ range, verses: [] });
-    try {
-      const verses: ParaVerse[] = [];
-      for (let surahNo = range.start.surah; surahNo <= range.end.surah; surahNo += 1) {
-        const r = await fetch(`https://quranapi.pages.dev/api/${surahNo}.json`);
-        const data: SurahDetail = await r.json();
-        const startAyah = surahNo === range.start.surah ? range.start.ayah : 1;
-        const endAyah = surahNo === range.end.surah ? range.end.ayah : data.arabic1.length;
+    setSelectedPara({ paraNo, verses: [] });
 
-        for (let verseNo = startAyah; verseNo <= endAyah; verseNo += 1) {
-          verses.push({
-            surahNo,
-            verseNo,
-            arabic: data.arabic1[verseNo - 1],
-            english: data.english?.[verseNo - 1] || '',
+    try {
+      const surahNumbers = Array.from(
+        { length: range.end.surah - range.start.surah + 1 },
+        (_, index) => range.start.surah + index,
+      );
+      const details = await Promise.all(
+        surahNumbers.map(async (surahNo) => {
+          const response = await fetch(`https://quranapi.pages.dev/api/${surahNo}.json`);
+          const data = await response.json();
+          return { ...data, surahNo } as SurahDetail;
+        }),
+      );
+
+      const verses = details.flatMap((surah) => {
+        const firstAyah =
+          surah.surahNo === range.start.surah ? range.start.ayah : 1;
+        const lastAyah =
+          surah.surahNo === range.end.surah
+            ? range.end.ayah
+            : surah.arabic1.length;
+
+        return surah.arabic1
+          .slice(firstAyah - 1, lastAyah)
+          .map((arabic, index) => {
+            const ayahNo = firstAyah + index;
+            return {
+              key: `${surah.surahNo}:${ayahNo}`,
+              surahNo: surah.surahNo,
+              surahName: surah.surahName,
+              ayahNo,
+              arabic,
+              english: surah.english?.[ayahNo - 1],
+            };
           });
-        }
-      }
-      setSelectedPara({ range, verses });
+      });
+
+      setSelectedPara({ paraNo, verses });
     } finally {
       setLoadingPara(false);
     }
@@ -238,10 +260,6 @@ export const Quran = () => {
     setPlayingVerse(key);
   };
 
-  useEffect(() => {
-    return () => currentAudio?.pause();
-  }, [currentAudio]);
-
   const filtered = useMemo(
     () =>
       surahs.filter(
@@ -253,28 +271,26 @@ export const Quran = () => {
     [surahs, searchQuery],
   );
 
-  const surahLabel = (surahNo: number) => surahs[surahNo - 1]?.surahName || `Surah ${surahNo}`;
-  const paraRangeLabel = (range: ParaRange) =>
-    `${surahLabel(range.start.surah)} ${range.start.ayah} - ${surahLabel(range.end.surah)} ${range.end.ayah}`;
-
   /* ---------------- Para detail view ---------------- */
   if (selectedPara) {
+    const range = JUZ_RANGES[selectedPara.paraNo - 1];
+
     return (
       <div className="min-h-screen max-w-md mx-auto pb-28 font-arabic" style={{ backgroundColor: CREAM_BG }}>
         <TopBar onBack={() => setSelectedPara(null)} />
 
         <div className="px-5 mt-2">
           <div
-            className="rounded-[28px] px-6 pt-7 pb-8 text-center text-white shadow-sm overflow-hidden"
+            className="rounded-[28px] px-6 pt-7 pb-10 text-center text-white shadow-sm overflow-hidden"
             style={{ backgroundColor: OLIVE }}
           >
             <h2 className="text-[32px] font-bold leading-tight" style={{ fontFamily: SERIF }}>
-              Para {selectedPara.range.paraNo}
+              Para {selectedPara.paraNo}
             </h2>
-            <p className="text-[16px] mt-1 opacity-95">Juz {selectedPara.range.paraNo}</p>
+            <p className="text-[16px] mt-1 opacity-95">Juz {selectedPara.paraNo}</p>
             <div className="my-3 h-px mx-auto w-2/3" style={{ backgroundColor: 'rgba(255,255,255,0.35)' }} />
-            <p className="text-[11px] tracking-[0.14em] font-medium opacity-95">
-              {paraRangeLabel(selectedPara.range).toUpperCase()}
+            <p className="text-[11px] tracking-[0.22em] font-medium opacity-95">
+              SURAH {range.start.surah}:{range.start.ayah} TO {range.end.surah}:{range.end.ayah}
             </p>
           </div>
         </div>
@@ -329,22 +345,21 @@ export const Quran = () => {
           ) : detailTab === 'translation' ? (
             <div className="space-y-7">
               {selectedPara.verses.map((verse) => {
-                const audioKey = `para-${verse.surahNo}-${verse.verseNo}`;
-                const isPlaying = playingVerse === audioKey;
+                const isPlaying = playingVerse === verse.key;
                 return (
-                  <div key={audioKey}>
+                  <div key={verse.key}>
                     <div
                       className="rounded-full flex items-center justify-between px-2 py-2"
                       style={{ backgroundColor: '#F1E0BC' }}
                     >
                       <div
-                        className="h-8 px-3 rounded-full flex items-center justify-center text-white text-[12px] font-semibold"
+                        className="min-h-8 rounded-full flex items-center justify-center text-white text-[12px] font-semibold px-3"
                         style={{ backgroundColor: BROWN_ACCENT }}
                       >
-                        {verse.surahNo}:{verse.verseNo}
+                        {verse.surahName} {verse.ayahNo}
                       </div>
                       <button
-                        onClick={() => playVerse(verse.surahNo, verse.verseNo, audioKey)}
+                        onClick={() => playVerse(verse.surahNo, verse.ayahNo, verse.key)}
                         aria-label={isPlaying ? 'Pause' : 'Play'}
                         className="h-8 w-8 rounded-full flex items-center justify-center"
                         style={{ color: BROWN_ACCENT }}
@@ -380,13 +395,13 @@ export const Quran = () => {
               style={{ fontFamily: ARABIC_FONT, color: BROWN }}
             >
               {selectedPara.verses.map((verse) => (
-                <span key={`${verse.surahNo}-${verse.verseNo}`}>
+                <span key={verse.key}>
                   {verse.arabic}
                   <span
                     className="inline-block mx-1 align-middle text-[14px] rounded-full px-2"
                     style={{ color: BROWN_ACCENT, border: `1px solid ${BORDER}` }}
                   >
-                    {verse.surahNo}:{verse.verseNo}
+                    {verse.surahNo}:{verse.ayahNo}
                   </span>{' '}
                 </span>
               ))}
@@ -399,7 +414,7 @@ export const Quran = () => {
     );
   }
 
-  /* ---------------- Detail view ---------------- */
+  /* ---------------- Surah detail view ---------------- */
   if (selectedSurah) {
     return (
       <div className="min-h-screen max-w-md mx-auto pb-28 font-arabic" style={{ backgroundColor: CREAM_BG }}>
@@ -483,8 +498,8 @@ export const Quran = () => {
             <div className="space-y-7">
               {selectedSurah.arabic1?.map((arabic, i) => {
                 const n = i + 1;
-                const audioKey = `surah-${selectedSurah.surahNo}-${n}`;
-                const isPlaying = playingVerse === audioKey;
+                const playbackKey = `${selectedSurah.surahNo}:${n}`;
+                const isPlaying = playingVerse === playbackKey;
                 return (
                   <div key={n}>
                     {/* Action bar */}
@@ -500,7 +515,7 @@ export const Quran = () => {
                       </div>
                       <div className="flex items-center gap-1">
                         <button
-                          onClick={() => playVerse(selectedSurah.surahNo, n, audioKey)}
+                          onClick={() => playVerse(selectedSurah.surahNo, n, playbackKey)}
                           aria-label={isPlaying ? 'Pause' : 'Play'}
                           className="h-8 w-8 rounded-full flex items-center justify-center"
                           style={{ color: BROWN_ACCENT }}
@@ -563,10 +578,7 @@ export const Quran = () => {
   return (
     <div className="min-h-screen max-w-md mx-auto pb-28 font-arabic" style={{ backgroundColor: CREAM_BG }}>
       {/* Header */}
-      <div
-        className="px-5 pt-4 pb-3 flex items-center justify-between"
-        style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1rem)' }}
-      >
+      <div className="px-5 pt-4 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate('/')} aria-label="Back" className="-ml-1">
             <ArrowLeft className="h-5 w-5" style={{ color: BROWN_ACCENT }} strokeWidth={2} />
@@ -677,10 +689,10 @@ export const Quran = () => {
           </ul>
         ) : (
           <ul>
-            {PARA_RANGES.map((range, i) => (
+            {Array.from({ length: 30 }).map((_, i) => (
               <li key={i}>
                 <button
-                  onClick={() => fetchParaDetails(range)}
+                  onClick={() => fetchParaDetails(i + 1)}
                   className="w-full text-left px-5 py-4 flex items-center gap-4"
                 >
                   <StarBadge n={i + 1} />
@@ -688,8 +700,8 @@ export const Quran = () => {
                     <div className="text-[16px] font-semibold" style={{ color: BROWN }}>
                       Para {i + 1}
                     </div>
-                    <div className="text-[11px] tracking-[0.12em] font-medium mt-0.5 truncate" style={{ color: MUTED }}>
-                      {paraRangeLabel(range)}
+                    <div className="text-[11px] tracking-[0.18em] font-medium mt-0.5" style={{ color: MUTED }}>
+                      JUZ {i + 1}
                     </div>
                   </div>
                   <div
@@ -700,7 +712,7 @@ export const Quran = () => {
                     الجزء {i + 1}
                   </div>
                 </button>
-                {i < PARA_RANGES.length - 1 && <div className="mx-5 h-px" style={{ backgroundColor: BORDER }} />}
+                {i < 29 && <div className="mx-5 h-px" style={{ backgroundColor: BORDER }} />}
               </li>
             ))}
           </ul>

@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { useLanguage } from '@/contexts/LanguageContext';
+import appleLogo from '@/assets/AppleLogo.png.asset.json';
+import { assetUrl } from '@/lib/assetUrl';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
@@ -40,10 +42,7 @@ export const Login = () => {
       </div>
 
       {/* Language Selector - Top right */}
-      <div
-        className="absolute right-4 z-20"
-        style={{ top: 'calc(env(safe-area-inset-top) + 0.5rem)' }}
-      >
+      <div className="absolute top-4 right-4 z-20">
         <LanguageSelector />
       </div>
 
@@ -104,7 +103,7 @@ export const Login = () => {
               placeholder={t('login.email_placeholder')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="bg-white/90 border-sage/30 rounded-xl h-12 text-center text-black placeholder:text-gray-500"
+              className="bg-white/90 border-sage/30 rounded-xl h-12 text-center text-black caret-black placeholder:text-sage/50"
               dir="ltr"
             />
 
@@ -133,6 +132,13 @@ export const Login = () => {
               {t('login.google')}
             </Button>
 
+            <Button 
+              variant="outline" 
+              className="w-full rounded-xl h-12 bg-white/90 border-sage/30 hover:bg-white text-sage font-medium"
+            >
+              <img src={assetUrl(appleLogo)} alt="Apple" className="w-5 h-5 mx-3 object-contain" />
+              {t('login.apple')}
+            </Button>
           </div>
 
           <p className="text-xs text-sage/60 text-center px-4 leading-relaxed">

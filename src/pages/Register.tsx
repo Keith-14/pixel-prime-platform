@@ -1,18 +1,17 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { User, Briefcase, Plane, ArrowLeft, Star, Chrome } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { useLanguage } from '@/contexts/LanguageContext';
 import loginFullBg from '@/assets/login-full-bg.png.asset.json';
-import appleLogo from '@/assets/AppleLogo.png.asset.json';
 import { assetUrl } from '@/lib/assetUrl';
-import { supabase } from '@/integrations/supabase/client';
 
 type UserRole = 'normal_user' | 'seller' | 'travel_partner';
 
@@ -27,111 +26,101 @@ export const Register = () => {
   const [isSignIn, setIsSignIn] = useState(false);
   const [needsSetup, setNeedsSetup] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [awaitingOauth, setAwaitingOauth] = useState(false);
 
   const navigate = useNavigate();
-  const {
-    user,
-    userRole,
-    loading: authLoading,
-    signUp,
-    signIn,
-    signInWithGoogle,
-    signInWithApple,
-    completeAccountSetup,
-  } = useAuth();
+  const { signUp, signIn, signInWithGoogle, signInWithApple, completeAccountSetup } = useAuth();
   const { t } = useLanguage();
 
-  const routeByRole = (role: UserRole | null | undefined) => {
-    if (role === 'seller') navigate('/seller-onboarding');
-    else if (role === 'travel_partner') navigate('/business-account');
+  const resolveCurrentAccountRole = async () => {
+    const { data: authData } = await supabase.auth.getUser();
+    const userId = authData.user?.id;
+    if (!userId) return null;
+
+    const { data: roleData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .limit(1)
+      .maybeSingle();
+
+    if (roleData?.role) return roleData.role as UserRole;
+
+    const { data: sellerProfile } = await supabase
+      .from('seller_profiles')
+      .select('user_id')
+      .eq('user_id', userId)
+      .limit(1)
+      .maybeSingle();
+
+    return sellerProfile ? 'seller' : null;
+  };
+
+  const routeByRole = async (role: UserRole | null | undefined) => {
+    if (role === 'seller') {
+      const { data: authData } = await supabase.auth.getUser();
+      const userId = authData.user?.id;
+
+      if (userId) {
+        const { data: sellerProfile } = await supabase
+          .from('seller_profiles')
+          .select('onboarding_completed')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        navigate(sellerProfile?.onboarding_completed ? '/seller-dashboard' : '/seller-onboarding');
+        return;
+      }
+
+      navigate('/seller-onboarding');
+    } else if (role === 'travel_partner') navigate('/business-account');
     else navigate('/');
   };
 
-  // Single source of truth: if the authenticated user already has a profile row,
-  // send them straight to Home. Only users WITHOUT a profile see "Create Profile".
-  // Runs on mount and whenever the session hydrates (covers Google/Apple return,
-  // email sign-in, and browser back-nav to /login while already signed in).
-  useEffect(() => {
-    if (authLoading) {
-      return;
-    }
-    if (!user) {
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('user_id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      if (cancelled) return;
-
-      if (profile) {
-        // Existing user — resolve their role and go straight to Home/dashboard.
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .limit(1)
-          .maybeSingle();
-        setAwaitingOauth(false);
-        setLoading(false);
-        routeByRole((roleData?.role as UserRole) ?? null);
-      } else {
-        // First-time user — collect profile once.
-        setAwaitingOauth(false);
-        setLoading(false);
-        setNeedsSetup(true);
-        setIsSignIn(false);
-        setSelectedRole(null);
-        setFullName('');
-        setView('profile');
-      }
-    })();
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, authLoading]);
-
-  // (OAuth pending flow is handled by the profile-existence effect above.)
-
   const handleGoogleSignIn = async () => {
     setLoading(true);
-    const { error, role, pending } = await signInWithGoogle();
+    const { error, role } = await signInWithGoogle();
     if (error) {
       toast.error(error.message);
       setLoading(false);
       return;
     }
-    if (pending) {
-      // Wait for session to hydrate via deep link / redirect.
-      setAwaitingOauth(true);
+    const resolvedRole = role ?? await resolveCurrentAccountRole();
+    if (resolvedRole === null) {
+      toast.message('Finish setup', { description: 'Please choose your account type to continue.' });
+      setNeedsSetup(true);
+      setIsSignIn(false);
+      setView('profile');
+      setSelectedRole(null);
+      setFullName('');
+      setLoading(false);
       return;
     }
-    if (role) {
-      toast.success('Welcome back!');
-      routeByRole(role);
-    }
+    toast.success('Welcome back! You already have an account — signing you in.');
+    await routeByRole(resolvedRole);
     setLoading(false);
   };
 
   const handleAppleSignIn = async () => {
     setLoading(true);
-    const { error, role, pending } = await signInWithApple();
+    const { error, role } = await signInWithApple();
     if (error) {
       toast.error(error.message);
       setLoading(false);
       return;
     }
-    if (pending) {
-      setAwaitingOauth(true);
+    const resolvedRole = role ?? await resolveCurrentAccountRole();
+    if (resolvedRole === null) {
+      toast.message('Finish setup', { description: 'Please choose your account type to continue.' });
+      setNeedsSetup(true);
+      setIsSignIn(false);
+      setView('profile');
+      setSelectedRole(null);
+      setFullName('');
+      setLoading(false);
       return;
     }
-    if (role) {
-      toast.success('Welcome back!');
-      routeByRole(role);
-    }
+    toast.success('Welcome back! You already have an account — signing you in.');
+    await routeByRole(resolvedRole);
     setLoading(false);
   };
 
@@ -166,7 +155,7 @@ export const Register = () => {
         if (error) return toast.error(error.message);
         toast.success('Account setup completed!');
         setNeedsSetup(false);
-        routeByRole(role);
+        await routeByRole(role);
       } finally {
         setLoading(false);
       }
@@ -188,14 +177,17 @@ export const Register = () => {
           } else {
             toast.error(error.message);
           }
-        } else if (role === null) {
-          toast.message('Finish setup', { description: 'Please choose your account type to continue.' });
-          setNeedsSetup(true);
-          setIsSignIn(false);
-          setView('profile');
         } else {
-          toast.success('Signed in successfully!');
-          routeByRole(role);
+          const resolvedRole = role ?? await resolveCurrentAccountRole();
+          if (resolvedRole === null) {
+            toast.message('Finish setup', { description: 'Please choose your account type to continue.' });
+            setNeedsSetup(true);
+            setIsSignIn(false);
+            setView('profile');
+          } else {
+            toast.success('Signed in successfully!');
+            await routeByRole(resolvedRole);
+          }
         }
       } else {
         if (!fullName) {
@@ -268,15 +260,12 @@ export const Register = () => {
       </div>
 
       {/* Spacer to push card below the mosque graphic area */}
-      <div className="flex-1" style={{ minHeight: '52vh', maxHeight: '58vh' }} />
+      <div className="h-[38vh] shrink-0" />
 
       {/* Bottom sheet card with login flows */}
       <div
-        className="px-6 pt-8 relative z-10 rounded-t-[28px] flex-1"
-        style={{
-          backgroundColor: '#FFF1DD',
-          paddingBottom: 'calc(2rem + env(safe-area-inset-bottom))',
-        }}
+        className="flex-1 overflow-y-auto px-6 pb-8 pt-8 relative z-10 rounded-t-[28px]"
+        style={{ backgroundColor: '#FFF1DD' }}
       >
         {view === 'welcome' && (
           <div className="space-y-3">
@@ -311,7 +300,7 @@ export const Register = () => {
                 placeholder="Continue with Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-14 rounded-full bg-[#FFF5E5] border border-[#EADFC9] pl-12 pr-4 text-[15px] text-black placeholder:text-[#9a8a70] focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="h-14 rounded-full bg-[#FFF5E5] border border-[#EADFC9] pl-12 pr-4 text-[15px] text-[#1a1a1a] caret-[#A35334] placeholder:text-[#9a8a70] focus-visible:ring-0 focus-visible:ring-offset-0"
                 dir="ltr"
               />
             </div>
@@ -426,7 +415,7 @@ export const Register = () => {
                   placeholder={t('login.email_placeholder')}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-14 rounded-full bg-[#FFF5E5] border border-[#EADFC9] px-5 text-black caret-[#A35334] placeholder:text-[#9a8a70] focus-visible:ring-0 focus-visible:ring-offset-0"
+                  className="h-14 rounded-full bg-[#FFF5E5] border border-[#EADFC9] px-5 text-[#1a1a1a] caret-[#A35334] placeholder:text-[#9a8a70] focus-visible:ring-0 focus-visible:ring-offset-0"
                 />
                 <Input
                   type="password"
