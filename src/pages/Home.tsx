@@ -27,6 +27,7 @@ import {
   getNextPrayer,
   prayerMinutes,
 } from '@/lib/islamicPrayerTimes';
+import { formatGregorianDate, formatHijriDate } from '@/lib/hijriDate';
 
 interface NewsItem {
   id: string;
@@ -98,14 +99,8 @@ export const Home = () => {
     })();
   }, []);
 
-  // Islamic (Hijri) date
-  const hijri = new Intl.DateTimeFormat('en-u-ca-islamic', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
-    .format(now)
-    .replace(' AH', '');
+  const hijri = formatHijriDate(now);
+  const gregorianDate = formatGregorianDate(now);
 
   // Next prayer
   const prayerTimes = apiPrayers.filter((prayer) => prayer.key !== 'sunrise');
@@ -228,6 +223,7 @@ export const Home = () => {
         {/* Arc + center logo + prayer info */}
         <ArcTimeline
           hijri={hijri}
+          gregorianDate={gregorianDate}
           currentPrayer={prayerStatusLabel}
           prayerTime={prayerTime}
           nowMinutes={cur}
@@ -446,6 +442,7 @@ export const Home = () => {
 
 type ArcTimelineProps = {
   hijri: string;
+  gregorianDate: string;
   currentPrayer: string;
   prayerTime: string;
   nowMinutes: number;
@@ -454,6 +451,7 @@ type ArcTimelineProps = {
 
 const ArcTimeline = ({
   hijri,
+  gregorianDate,
   currentPrayer,
   prayerTime,
   nowMinutes,
@@ -499,6 +497,12 @@ const ArcTimeline = ({
           style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 300 }}
         >
           {hijri}
+        </p>
+        <p
+          className="text-[11px] mt-1 tracking-tight"
+          style={{ color: 'rgba(255,255,255,0.72)', fontWeight: 300 }}
+        >
+          {gregorianDate}
         </p>
         <p
           className="text-white text-[30px] mt-2 tracking-tight leading-none"

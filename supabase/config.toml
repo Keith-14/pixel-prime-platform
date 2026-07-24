@@ -2,6 +2,10 @@ project_id = "ozgzflinyfarmebulpkk"
 
 [functions.process-email-queue]
 verify_jwt = true
+
+[functions.auth-email-otp]
+verify_jwt = false
+
 [functions.analyze-halal]
 enabled = true
 verify_jwt = false

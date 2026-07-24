@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { User, Briefcase, Plane, ArrowLeft, Star, Chrome } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { useLanguage } from '@/contexts/LanguageContext';
 import loginFullBg from '@/assets/login-full-bg.png.asset.json';
@@ -15,8 +16,11 @@ import { assetUrl } from '@/lib/assetUrl';
 
 type UserRole = 'normal_user' | 'seller' | 'travel_partner';
 
+const errorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error ? error.message : fallback;
+
 export const Register = () => {
-  const [view, setView] = useState<'welcome' | 'profile' | 'details'>('welcome');
+  const [view, setView] = useState<'welcome' | 'profile' | 'details' | 'otp'>('welcome');
   const step = view;
   const setStep = setView;
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
@@ -26,6 +30,8 @@ export const Register = () => {
   const [isSignIn, setIsSignIn] = useState(false);
   const [needsSetup, setNeedsSetup] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [otpEmail, setOtpEmail] = useState('');
 
   const navigate = useNavigate();
   const { signUp, signIn, signInWithGoogle, signInWithApple, completeAccountSetup } = useAuth();
@@ -145,6 +151,86 @@ export const Register = () => {
     setView('details');
   };
 
+  const requestSignupOtp = async () => {
+    const normalizedEmail = email.trim().toLowerCase();
+    const { error } = await supabase.functions.invoke('auth-email-otp', {
+      body: {
+        action: 'request',
+        email: normalizedEmail,
+      },
+    });
+
+    if (error) throw error;
+
+    setOtp('');
+    setOtpEmail(normalizedEmail);
+    setEmail(normalizedEmail);
+    setView('otp');
+    toast.success('Verification code sent', {
+      description: `Enter the 4-digit code sent to ${normalizedEmail}.`,
+    });
+  };
+
+  const createAccount = async () => {
+    const { error, role } = await signUp(email, password, selectedRole, fullName);
+    if (error) {
+      const msg = String(error.message || '');
+      if (msg.includes('auth/email-already-in-use')) {
+        toast.error('An account with this email already exists. Please sign in.');
+        setPassword('');
+        setFullName('');
+        setSelectedRole(null);
+        setOtp('');
+        setOtpEmail('');
+        setIsSignIn(true);
+        setView('details');
+      } else if (error.code === '23505' || msg.toLowerCase().includes('duplicate')) {
+        toast.error('You already have an account. Please sign in.');
+        setPassword('');
+        setOtp('');
+        setOtpEmail('');
+        setIsSignIn(true);
+        setView('details');
+      } else {
+        toast.error(error.message);
+      }
+      return;
+    }
+
+    toast.success('Account created successfully!');
+    let destination = '/';
+    if (role === 'seller') destination = '/seller-onboarding';
+    else if (role === 'travel_partner') destination = '/business-account';
+    localStorage.setItem('barakah_onboarding_destination', destination);
+    navigate('/onboarding');
+  };
+
+  const handleVerifyOtp = async () => {
+    if (otp.length !== 4) return toast.error('Please enter the 4-digit code');
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.functions.invoke('auth-email-otp', {
+        body: {
+          action: 'verify',
+          email: otpEmail || email,
+          code: otp,
+        },
+      });
+
+      if (error) {
+        toast.error(error.message || 'Invalid verification code');
+        return;
+      }
+
+      await createAccount();
+    } catch (error: unknown) {
+      toast.error(errorMessage(error, 'Verification failed. Please try again.'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (needsSetup) {
       if (!selectedRole) return toast.error('Please select a profile type');
@@ -195,6 +281,8 @@ export const Register = () => {
           setLoading(false);
           return;
         }
+        await requestSignupOtp();
+        return;
         const { error, role } = await signUp(email, password, selectedRole, fullName);
         if (error) {
           const msg = String(error.message || '');
@@ -233,6 +321,9 @@ export const Register = () => {
   const handleBack = () => {
     if (view === 'details') {
       setView(isSignIn ? 'welcome' : 'profile');
+    } else if (view === 'otp') {
+      setOtp('');
+      setView('details');
     } else if (view === 'profile') {
       setView('welcome');
     }
@@ -433,7 +524,7 @@ export const Register = () => {
               className="w-full h-14 rounded-full text-white text-base font-medium hover:opacity-90"
               style={{ backgroundColor: '#A35334' }}
             >
-              {loading ? t('login.please_wait') : needsSetup ? 'Finish setup' : isSignIn ? t('login.sign_in') : t('login.create_account_btn')}
+              {loading ? t('login.please_wait') : needsSetup ? 'Finish setup' : isSignIn ? t('login.sign_in') : 'Send verification code'}
             </Button>
 
             {!needsSetup && (
@@ -474,6 +565,68 @@ export const Register = () => {
                 </button>
               </p>
             )}
+          </div>
+        )}
+
+        {view === 'otp' && (
+          <div className="space-y-5">
+            <button onClick={handleBack} className="flex items-center gap-1 text-[#5a3a20] text-sm mb-1">
+              <ArrowLeft className="h-4 w-4" /> Back
+            </button>
+            <div className="text-center space-y-2">
+              <h2 className="text-lg font-semibold" style={{ color: '#A35334', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                Confirm your email
+              </h2>
+              <p className="text-sm text-[#7c6a4f] leading-relaxed">
+                Enter the 4-digit code sent to<br />
+                <span className="font-semibold text-[#1a1a1a]">{otpEmail || email}</span>
+              </p>
+            </div>
+
+            <InputOTP
+              maxLength={4}
+              value={otp}
+              onChange={(value) => setOtp(value.replace(/\D/g, ''))}
+              containerClassName="justify-center gap-3"
+              disabled={loading}
+            >
+              <InputOTPGroup className="gap-3">
+                {[0, 1, 2, 3].map((index) => (
+                  <InputOTPSlot
+                    key={index}
+                    index={index}
+                    className="h-14 w-14 rounded-2xl border bg-[#FFF5E5] text-xl font-bold text-[#1a1a1a] border-[#EADFC9] first:rounded-2xl first:border-l last:rounded-2xl"
+                  />
+                ))}
+              </InputOTPGroup>
+            </InputOTP>
+
+            <Button
+              onClick={handleVerifyOtp}
+              disabled={loading || otp.length !== 4}
+              className="w-full h-14 rounded-full text-white text-base font-medium hover:opacity-90 disabled:opacity-60"
+              style={{ backgroundColor: '#A35334' }}
+            >
+              {loading ? t('login.please_wait') : t('login.create_account_btn')}
+            </Button>
+
+            <button
+              type="button"
+              disabled={loading}
+              onClick={async () => {
+                setLoading(true);
+                try {
+                  await requestSignupOtp();
+                } catch (error: unknown) {
+                  toast.error(errorMessage(error, 'Could not resend verification code'));
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              className="w-full text-center text-sm font-semibold text-[#A35334] disabled:opacity-60"
+            >
+              Resend code
+            </button>
           </div>
         )}
       </div>
