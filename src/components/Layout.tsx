@@ -9,6 +9,7 @@ interface LayoutProps {
   children: ReactNode;
   showNavigation?: boolean;
   showHeader?: boolean;
+  pageBackgroundColor?: string;
   headerTitle?: string;
   headerRight?: ReactNode;
   onSearchClick?: () => void;
@@ -24,6 +25,7 @@ export const Layout = ({
   children,
   showNavigation = true,
   showHeader = true,
+  pageBackgroundColor = "#FFF5E5",
   headerTitle,
   headerRight,
   onSearchClick,
@@ -57,36 +59,17 @@ export const Layout = ({
     <div
       className={cn(
         "min-h-screen flex flex-col max-w-md mx-auto relative overflow-hidden font-arabic",
-        showHeader ? "bg-background" : "bg-[#FFF5E5]",
       )}
-      style={{ paddingTop: showHeader ? undefined : "env(safe-area-inset-top)" }}
+      style={{
+        backgroundColor: pageBackgroundColor,
+        paddingTop: showHeader ? undefined : "env(safe-area-inset-top)",
+      }}
     >
-      {/* Background with warm brown tint */}
-      <div className="fixed inset-0 pointer-events-none">
-        {/* Dark brown-tinted base */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(180deg, rgba(45, 25, 15, 1) 0%, rgba(25, 15, 10, 1) 50%, rgba(15, 10, 8, 1) 100%)",
-          }}
-        />
-
-        {/* Warm brown overlay for the tint */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: "rgba(139, 90, 43, 0.08)",
-          }}
-        />
-
-        {/* Subtle lighter glow at top center */}
-        <div
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[50%]"
-          style={{
-            background: "radial-gradient(ellipse at top, rgba(163, 82, 51, 0.15) 0%, transparent 70%)",
-          }}
-        />
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{ backgroundColor: pageBackgroundColor }}
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(163,82,51,0.08),transparent_58%)]" />
       </div>
 
       {showHeader && (
@@ -110,6 +93,7 @@ export const Layout = ({
           showNavigation ? "pb-[calc(6rem+env(safe-area-inset-bottom))]" : "pb-[env(safe-area-inset-bottom)]",
           isTransitioning && "animate-fade-in",
         )}
+        style={{ backgroundColor: pageBackgroundColor }}
       >
         {children}
       </main>

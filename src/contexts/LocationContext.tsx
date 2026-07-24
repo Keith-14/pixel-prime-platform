@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { Geolocation } from '@capacitor/geolocation';
 import { toast } from 'sonner';
 
 interface LocationData {
@@ -52,6 +54,7 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
   const [location, setLocation] = useState<LocationData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const activeRequestRef = useRef(0);
 
   const getCachedLocation = (): LocationData | null => {
     try {
@@ -148,7 +151,40 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
     fetchLocation();
   };
 
+  const getDevicePosition = async (): Promise<GeolocationPosition | import('@capacitor/geolocation').Position> => {
+    const options: PositionOptions = {
+      enableHighAccuracy: true,
+      timeout: 20000,
+      maximumAge: 0
+    };
+
+    if (Capacitor.isNativePlatform()) {
+      const permission = await Geolocation.checkPermissions();
+      if (permission.location === 'denied') {
+        throw new Error('Location access denied. Please enable location permissions.');
+      }
+      if (permission.location !== 'granted') {
+        const requested = await Geolocation.requestPermissions();
+        if (requested.location !== 'granted') {
+          throw new Error('Location access denied. Please enable location permissions.');
+        }
+      }
+
+      return Geolocation.getCurrentPosition(options);
+    }
+
+    if (!navigator.geolocation) {
+      throw new Error('Geolocation is not supported by your browser');
+    }
+
+    return new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, options);
+    });
+  };
+
   const fetchLocation = useCallback(async () => {
+    const requestId = activeRequestRef.current + 1;
+    activeRequestRef.current = requestId;
     setLoading(true);
     setError(null);
 
@@ -157,6 +193,7 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
     if (manualLocation) {
       const parsed = normalizeLocation(JSON.parse(manualLocation));
       if (parsed) {
+        if (requestId !== activeRequestRef.current) return;
         setLocation(parsed);
         setLoading(false);
         return;
@@ -167,72 +204,68 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
     // Check cache
     const cached = getCachedLocation();
     if (cached && !cached.isManual) {
+      if (requestId !== activeRequestRef.current) return;
       setLocation(cached);
       setLoading(false);
       return;
     }
 
-    if (!navigator.geolocation) {
-      setError('Geolocation is not supported by your browser');
-      setLoading(false);
-      return;
+    try {
+      const position = await getDevicePosition();
+      if (requestId !== activeRequestRef.current) return;
+
+      const { latitude, longitude, accuracy } = position.coords;
+      console.log(`Location accuracy: ${accuracy} meters`);
+
+      const geoData = await reverseGeocode(latitude, longitude);
+      if (requestId !== activeRequestRef.current) return;
+      
+      const locationData: LocationData = {
+        latitude,
+        longitude,
+        city: geoData.city || 'Unknown',
+        country: geoData.country || 'Unknown',
+        fullAddress: geoData.fullAddress || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
+        isManual: false
+      };
+
+      setLocation(locationData);
+      cacheLocation(locationData);
+      setError(null);
+    } catch (err) {
+      if (requestId !== activeRequestRef.current) return;
+
+      let errorMessage = err instanceof Error ? err.message : 'Unable to get your location';
+      const code = typeof err === 'object' && err !== null && 'code' in err ? (err as { code?: number | string }).code : undefined;
+      
+      switch (code) {
+        case 1:
+        case 'PERMISSION_DENIED':
+        case 'OS-PLUG-GLOC-0003':
+          errorMessage = 'Location access denied. Please enable location permissions.';
+          break;
+        case 2:
+        case 'POSITION_UNAVAILABLE':
+          errorMessage = 'Location information unavailable. Please try again.';
+          break;
+        case 3:
+        case 'TIMEOUT':
+          errorMessage = 'Location request timed out. Please try again.';
+          break;
+      }
+
+      setError(errorMessage);
+      
+      // Try to use any cached location as fallback
+      const fallback = getCachedLocation();
+      if (fallback) {
+        setLocation(fallback);
+      }
+    } finally {
+      if (requestId === activeRequestRef.current) {
+        setLoading(false);
+      }
     }
-
-    // Use highest accuracy settings
-    const options: PositionOptions = {
-      enableHighAccuracy: true,
-      timeout: 20000,
-      maximumAge: 0 // Always get fresh location
-    };
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude, accuracy } = position.coords;
-        
-        console.log(`Location accuracy: ${accuracy} meters`);
-
-        const geoData = await reverseGeocode(latitude, longitude);
-        
-        const locationData: LocationData = {
-          latitude,
-          longitude,
-          city: geoData.city || 'Unknown',
-          country: geoData.country || 'Unknown',
-          fullAddress: geoData.fullAddress || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
-          isManual: false
-        };
-
-        setLocation(locationData);
-        cacheLocation(locationData);
-        setError(null);
-        setLoading(false);
-      },
-      (err) => {
-        let errorMessage = 'Unable to get your location';
-        
-        switch (err.code) {
-          case err.PERMISSION_DENIED:
-            errorMessage = 'Location access denied. Please enable location permissions.';
-            break;
-          case err.POSITION_UNAVAILABLE:
-            errorMessage = 'Location information unavailable. Please try again.';
-            break;
-          case err.TIMEOUT:
-            errorMessage = 'Location request timed out. Please try again.';
-            break;
-        }
-
-        setError(errorMessage);
-        setLoading(false);
-        
-        // Try to use any cached location as fallback
-        const cached = getCachedLocation();
-        if (cached) {
-          setLocation(cached);
-        }
-      },
-      options
-    );
   }, []);
 
   useEffect(() => {

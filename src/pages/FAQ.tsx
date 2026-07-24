@@ -5,6 +5,15 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 
+const CREAM_BG = '#FFF5E5';
+const CREAM_SOFT = '#FFF2DF';
+const CARD_BG = '#FFFFFF';
+const HEADER_TEXT = '#2C1309';
+const BROWN = '#A35233';
+const BROWN_DARK = '#5C2A14';
+const MUTED_TEXT = '#8B6E4A';
+const SOFT_BORDER = '#E8D2A8';
+
 const faqs = [
   {
     id: 1,
@@ -45,41 +54,66 @@ export const FAQ = () => {
   };
 
   return (
-    <Layout>
-      <div className="px-4 py-6 space-y-6">
-        <h1 className="text-2xl font-bold text-primary">FAQ's</h1>
+    <Layout pageBackgroundColor={CREAM_BG}>
+      <div className="min-h-screen px-4 py-6 space-y-6" style={{ backgroundColor: CREAM_BG }}>
+        <div>
+          <p className="text-xs font-bold tracking-wide uppercase" style={{ color: BROWN }}>
+            Help and Support
+          </p>
+          <h1 className="text-2xl font-bold mt-1" style={{ color: HEADER_TEXT }}>
+            FAQ's
+          </h1>
+        </div>
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Search
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4"
+            style={{ color: MUTED_TEXT }}
+          />
           <Input 
             placeholder="Search" 
-            className="pl-10 bg-card border-border rounded-full"
+            className="h-12 pl-11 rounded-full shadow-none focus-visible:ring-1 focus-visible:ring-[#A35233]/30 focus-visible:ring-offset-0"
+            style={{
+              backgroundColor: CARD_BG,
+              borderColor: SOFT_BORDER,
+              color: HEADER_TEXT,
+            }}
           />
         </div>
 
         {/* FAQ Items */}
         <div className="space-y-3">
           {faqs.map((faq) => (
-            <Card key={faq.id} className="rounded-2xl overflow-hidden bg-card">
+            <Card
+              key={faq.id}
+              className="rounded-2xl overflow-hidden shadow-none"
+              style={{
+                backgroundColor: CARD_BG,
+                borderColor: SOFT_BORDER,
+                boxShadow: '0 2px 8px rgba(92, 42, 20, 0.05)',
+              }}
+            >
               <Collapsible 
                 open={openItems.includes(faq.id)}
                 onOpenChange={() => toggleItem(faq.id)}
               >
                 <CollapsibleTrigger className="w-full p-4 text-left">
                   <div className="flex items-center justify-between">
-                    <span className="font-medium text-foreground">
+                    <span className="font-semibold" style={{ color: BROWN_DARK }}>
                       {faq.id}. {faq.question}
                     </span>
                     <Plus 
-                      className={`h-5 w-5 text-primary transition-transform ${
+                      className={`h-5 w-5 transition-transform ${
                         openItems.includes(faq.id) ? 'rotate-45' : ''
                       }`} 
+                      style={{ color: BROWN }}
                     />
                   </div>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="px-4 pb-4">
-                  <p className="text-sm text-muted-foreground">
+                  <div className="h-px mb-3" style={{ backgroundColor: CREAM_SOFT }} />
+                  <p className="text-sm leading-relaxed" style={{ color: MUTED_TEXT }}>
                     {faq.answer}
                   </p>
                 </CollapsibleContent>

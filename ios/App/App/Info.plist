@@ -62,6 +62,8 @@
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Barakah uses the camera to scan product barcodes and ingredient labels for halal verification.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Barakah uses your location to provide prayer times and nearby place recommendations.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 </dict>

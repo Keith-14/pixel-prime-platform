@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +22,7 @@ const SOFT_BORDER = '#E8D2A8';
 const MUTED_TEXT = '#8B6E4A';
 
 // Fix Leaflet default markers
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+delete (L.Icon.Default.prototype as L.Icon.Default & { _getIconUrl?: string })._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
@@ -41,6 +41,22 @@ interface Place {
   type: PlaceType;
 }
 
+interface OverpassElement {
+  id: number | string;
+  type?: string;
+  lat?: number | string;
+  lon?: number | string;
+  center?: {
+    lat?: number | string;
+    lon?: number | string;
+  };
+  tags?: Record<string, string | undefined>;
+}
+
+interface OverpassResponse {
+  elements?: OverpassElement[];
+}
+
 export const Places = () => {
   const { location: userLocation, loading: locationLoading, error: locationError, refresh: refreshLocation, setManualLocation, clearManualLocation } = useGlobalLocation();
   const [places, setPlaces] = useState<Place[]>([]);
@@ -54,6 +70,12 @@ export const Places = () => {
   const [citySearch, setCitySearch] = useState('');
   const [searchingCity, setSearchingCity] = useState(false);
   const [restaurantFilter, setRestaurantFilter] = useState<'Nearest' | 'Open Now' | 'Top Rated' | 'Turkish'>('Nearest');
+  const placesRequestRef = useRef(0);
+  const userLatitude = userLocation?.latitude;
+  const userLongitude = userLocation?.longitude;
+  const locationKey = userLatitude !== undefined && userLongitude !== undefined
+    ? `${userLatitude.toFixed(5)},${userLongitude.toFixed(5)}`
+    : '';
 
   // Calculate distance between two points
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -151,13 +173,17 @@ export const Places = () => {
   };
 
   // Fetch with retry across multiple servers
-  const fetchWithRetry = async (query: string): Promise<any> => {
+  const fetchWithRetry = async (query: string, signal: AbortSignal): Promise<OverpassResponse> => {
     let lastError: Error | null = null;
     
     for (const server of OVERPASS_SERVERS) {
+      if (signal.aborted) throw new DOMException('Request aborted', 'AbortError');
+
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 20000);
+        const abortRequest = () => controller.abort();
+        const timeoutId = setTimeout(abortRequest, 20000);
+        signal.addEventListener('abort', abortRequest, { once: true });
         
         const response = await fetch(server, {
           method: 'POST',
@@ -169,12 +195,14 @@ export const Places = () => {
         });
         
         clearTimeout(timeoutId);
+        signal.removeEventListener('abort', abortRequest);
         
         if (response.ok) {
           return await response.json();
         }
         lastError = new Error(`Server ${server} returned ${response.status}`);
       } catch (err) {
+        if (signal.aborted) throw new DOMException('Request aborted', 'AbortError');
         lastError = err as Error;
         // Silent fallback to next Overpass mirror — noise-free.
       }
@@ -184,13 +212,16 @@ export const Places = () => {
   };
 
   // Find nearby places using Overpass API
-  const findNearbyPlaces = async (lat: number, lon: number, type: PlaceType) => {
+  const findNearbyPlaces = async (lat: number, lon: number, type: PlaceType, signal?: AbortSignal) => {
+    const requestId = placesRequestRef.current + 1;
+    placesRequestRef.current = requestId;
     setLoading(true);
     try {
       const radius = 5000; // 5km radius
       const overpassQuery = buildOverpassQuery(lat, lon, radius, type);
 
-      const data = await fetchWithRetry(overpassQuery);
+      const data = await fetchWithRetry(overpassQuery, signal || new AbortController().signal);
+      if (requestId !== placesRequestRef.current) return;
       
       const typeLabel = type === 'mosque' ? 'mosques' : 'halal restaurants';
       
@@ -201,18 +232,18 @@ export const Places = () => {
       }
       
       const placesList: Place[] = data.elements
-        .map((element: any) => {
-          const elLat = element.lat || element.center?.lat;
-          const elLon = element.lon || element.center?.lon;
+        .map((element: OverpassElement) => {
+          const elLat = Number(element.lat ?? element.center?.lat);
+          const elLon = Number(element.lon ?? element.center?.lon);
           
-          if (!elLat || !elLon) return null;
+          if (!Number.isFinite(elLat) || !Number.isFinite(elLon)) return null;
           
           const distance = calculateDistance(lat, lon, elLat, elLon);
           
           const defaultName = type === 'mosque' ? 'Mosque' : 'Halal Restaurant';
           
           return {
-            id: element.id.toString(),
+            id: `${element.type || 'place'}-${element.id}`,
             name: element.tags?.name || element.tags?.['name:en'] || element.tags?.['name:ar'] || defaultName,
             lat: elLat,
             lon: elLon,
@@ -232,20 +263,28 @@ export const Places = () => {
         toast.info(`No ${typeLabel} found within 5km.`);
       }
     } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
       console.error('Error finding places:', error);
       const typeLabel = type === 'mosque' ? 'mosques' : 'halal restaurants';
       toast.error(`Failed to find nearby ${typeLabel}. Please try again.`);
     } finally {
-      setLoading(false);
+      if (requestId === placesRequestRef.current) {
+        setLoading(false);
+      }
     }
   };
 
   // Fetch places when location is available or place type changes
   useEffect(() => {
-    if (userLocation && !locationLoading) {
-      findNearbyPlaces(userLocation.latitude, userLocation.longitude, placeType);
+    if (userLatitude !== undefined && userLongitude !== undefined && !locationLoading) {
+      const controller = new AbortController();
+      findNearbyPlaces(userLatitude, userLongitude, placeType, controller.signal);
+
+      return () => controller.abort();
     }
-  }, [userLocation, locationLoading, placeType]);
+  // Refetch only when the tracked coordinate key or selected place type changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationKey, locationLoading, placeType]);
 
   // Filter places based on search query
   const filteredPlaces = places.filter(place =>
