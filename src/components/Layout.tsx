@@ -82,7 +82,7 @@ export const Layout = ({ children, showNavigation = true, showHeader = true, hea
       {showHeader && <TopHeader onMenuClick={handleMenuClick} title={headerTitle} rightContent={headerRight} onSearchClick={onSearchClick} showSearch={showSearch} className={headerClassName} titleClassName={headerTitleClassName} titleStyle={headerTitleStyle} buttonClassName={headerButtonClassName} leftAlignTitle={leftAlignHeaderTitle} />}
       
       <main className={cn(
-        "flex-1 min-h-0 relative z-10 overflow-x-hidden",
+        "flex-1 min-h-0 relative z-10 overflow-y-auto overflow-x-hidden",
         showNavigation ? "pb-24" : "",
         isTransitioning && "animate-fade-in"
       )}>
