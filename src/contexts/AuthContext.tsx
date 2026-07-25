@@ -158,22 +158,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: `${window.location.origin}/` },
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: { role, full_name: fullName },
+        },
       });
       if (error) return { error, role: undefined };
       const newUser = data.user;
       if (!newUser) return { error: { message: 'User creation failed' }, role: undefined };
 
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({ user_id: newUser.id, role });
-      if (roleError && roleError.code !== '23505') return { error: roleError, role: undefined };
-
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({ user_id: newUser.id, full_name: fullName }, { onConflict: 'user_id' });
-      if (profileError) return { error: profileError, role: undefined };
-
+      // Role + profile rows are created by the on_auth_user_created trigger
+      // using the metadata passed above. No client-side insert needed.
       setUserRole(role);
       return { error: null, role };
     } catch (error: any) {
