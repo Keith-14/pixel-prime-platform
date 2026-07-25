@@ -4,7 +4,7 @@ import { ArrowLeft, Flashlight, ScanLine, Check, Shield, Sparkles, ChevronLeft, 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useGlobalLocation } from '@/contexts/LocationContext';
-import scannerProduct from '@/assets/scanner-product.jpg';
+
 import scannerAlt1 from '@/assets/scanner-alt-1.jpg';
 import scannerAlt2 from '@/assets/scanner-alt-2.jpg';
 import { supabase } from '@/integrations/supabase/client';
@@ -35,14 +35,7 @@ type ScanResult = {
   source?: string | null;
 };
 
-const PRODUCT = {
-  name: 'Golden Saffron Tea Biscuits',
-  image: scannerProduct,
-  ingredients: [
-    { name: 'Organic Wheat Flour', ok: true },
-    { name: 'Cane Sugar', ok: true },
-  ] as Ingredient[],
-};
+
 
 const ALTERNATIVES = [
   { brand: 'MEDINA ORGANICS', name: 'Medina Date Crisps', price: '$12.50', rating: '4.9', image: scannerAlt1 },
@@ -801,15 +794,7 @@ const ResultView = ({
         </div>
       </div>
 
-      {/* Product image */}
-      <div className="px-5 mt-5 flex justify-center">
-        <img
-          src={PRODUCT.image}
-          alt={result?.product_name || 'Scanned product'}
-          className="w-[170px] h-[170px] rounded-2xl object-cover"
-          loading="lazy"
-        />
-      </div>
+
 
       {/* Scan another */}
       <div className="px-5 mt-5">
