@@ -3,8 +3,8 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 const OTP_TTL_MINUTES = 10
 const RESEND_COOLDOWN_SECONDS = 60
 const MAX_ATTEMPTS = 5
-const FROM_EMAIL = 'Barakah <no-reply@barakah.services>'
-const SENDER_DOMAIN = 'barakah.services'
+const FROM_EMAIL = 'Barakah <no-reply@notify.barakah.services>'
+const SENDER_DOMAIN = 'notify.barakah.services'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
