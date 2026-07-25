@@ -105,6 +105,7 @@ export const HalalScanner = () => {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const scannerDivRef = useRef<HTMLDivElement>(null);
   const scannerIdRef = useRef(`halal-scanner-${Date.now()}`);
+  const scanStartCountRef = useRef(0);
   const mountedRef = useRef(true);
   const handlingScanRef = useRef(false);
 
@@ -213,14 +214,41 @@ export const HalalScanner = () => {
     await cleanupScanner();
     const el = scannerDivRef.current;
     if (!el) return;
+
+    scanStartCountRef.current += 1;
+    const scannerId = `halal-scanner-${Date.now()}-${scanStartCountRef.current}`;
+    scannerIdRef.current = scannerId;
+
     el.innerHTML = '';
     const container = document.createElement('div');
-    container.id = scannerIdRef.current;
+    container.id = scannerId;
     container.style.width = '100%';
     container.style.height = '100%';
     el.appendChild(container);
+
+    let prewarmStream: MediaStream | null = null;
     try {
-      const scanner = new Html5Qrcode(scannerIdRef.current, {
+      prewarmStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } });
+    } catch (prewarmError: any) {
+      const name = (prewarmError as DOMException)?.name;
+      if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+        if (mountedRef.current) {
+          setError('Camera access was denied. Please allow camera access in Settings and try again.');
+          setScanning(false);
+        }
+        return;
+      }
+    } finally {
+      if (prewarmStream) {
+        prewarmStream.getTracks().forEach((t) => t.stop());
+        prewarmStream = null;
+      }
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 120));
+
+    try {
+      const scanner = new Html5Qrcode(scannerId, {
         formatsToSupport: BARCODE_FORMATS,
         useBarCodeDetectorIfSupported: false,
         verbose: false,
@@ -239,16 +267,22 @@ export const HalalScanner = () => {
         await scanner.start(IOS_CAMERA_CONSTRAINTS, getScannerConfig(), onScanSuccess, () => {});
       } catch {
         const cameras = await Html5Qrcode.getCameras().catch(() => []);
-        const rearCamera = cameras.find((camera) => /back|rear|environment/i.test(camera.label)) || cameras[cameras.length - 1];
-        if (!rearCamera?.id) throw new Error('No camera available');
+        const rearCamera =
+          cameras.find((camera) => /back|rear|environment/i.test(camera.label)) ||
+          cameras[cameras.length - 1];
+        if (!rearCamera?.id) throw new Error('No camera found. Please check camera access in Settings.');
         await scanner.start(rearCamera.id, getScannerConfig(), onScanSuccess, () => {});
       }
       prepareScannerVideo();
       if (mountedRef.current) setScanning(true);
-    } catch (scanError) {
+    } catch (scanError: any) {
       console.error('Unable to start barcode scanner', scanError);
       if (mountedRef.current) {
-        setError('Camera scan could not start. Allow camera access and try again.');
+        const msg =
+          (scanError as DOMException)?.name === 'NotAllowedError'
+            ? 'Camera access was denied. Please allow camera access in Settings and try again.'
+            : scanError?.message || 'Camera scan could not start. Please try again.';
+        setError(msg);
         setScanning(false);
       }
     }
