@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeScannerState, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { ArrowLeft, Flashlight, ScanLine, Check, Shield, Sparkles, ChevronLeft, ChevronRight, ExternalLink, X, Keyboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,36 @@ const BROWN_BTN = '#6B3520';
 const MUTED = '#8A6A55';
 
 const SERIF = "'Plus Jakarta Sans', sans-serif";
+
+const BARCODE_FORMATS = [
+  Html5QrcodeSupportedFormats.EAN_13,
+  Html5QrcodeSupportedFormats.EAN_8,
+  Html5QrcodeSupportedFormats.UPC_A,
+  Html5QrcodeSupportedFormats.UPC_E,
+  Html5QrcodeSupportedFormats.UPC_EAN_EXTENSION,
+  Html5QrcodeSupportedFormats.CODE_128,
+  Html5QrcodeSupportedFormats.CODE_39,
+  Html5QrcodeSupportedFormats.CODE_93,
+  Html5QrcodeSupportedFormats.ITF,
+  Html5QrcodeSupportedFormats.CODABAR,
+  Html5QrcodeSupportedFormats.QR_CODE,
+];
+
+const SCANNER_CONFIG = {
+  fps: 15,
+  qrbox: (viewfinderWidth: number, viewfinderHeight: number) => ({
+    width: Math.floor(viewfinderWidth * 0.9),
+    height: Math.floor(Math.min(viewfinderHeight * 0.36, 220)),
+  }),
+  aspectRatio: 1,
+  disableFlip: true,
+};
+
+const IOS_CAMERA_CONSTRAINTS: MediaTrackConstraints = {
+  facingMode: { ideal: 'environment' },
+  width: { ideal: 1280 },
+  height: { ideal: 720 },
+};
 
 type Ingredient = { name: string; ok: boolean };
 
@@ -87,6 +117,17 @@ export const HalalScanner = () => {
 
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     return canvas.toDataURL('image/jpeg', 0.82);
+  }, []);
+
+  const prepareScannerVideo = useCallback(() => {
+    requestAnimationFrame(() => {
+      const video = scannerDivRef.current?.querySelector('video') as HTMLVideoElement | null;
+      if (!video) return;
+      video.setAttribute('playsinline', 'true');
+      video.setAttribute('webkit-playsinline', 'true');
+      video.muted = true;
+      video.autoplay = true;
+    });
   }, []);
 
   const cleanupScanner = useCallback(async () => {
@@ -171,21 +212,32 @@ export const HalalScanner = () => {
     container.style.height = '100%';
     el.appendChild(container);
     try {
-      const scanner = new Html5Qrcode(scannerIdRef.current);
+      const scanner = new Html5Qrcode(scannerIdRef.current, {
+        formatsToSupport: BARCODE_FORMATS,
+        useBarCodeDetectorIfSupported: true,
+        verbose: false,
+      });
       scannerRef.current = scanner;
+
+      const cameras = await Html5Qrcode.getCameras().catch(() => []);
+      const rearCamera = cameras.find((camera) => /back|rear|environment/i.test(camera.label)) || cameras[cameras.length - 1];
+      const cameraIdOrConfig = rearCamera?.id || IOS_CAMERA_CONSTRAINTS;
+
       await scanner.start(
-        { facingMode: 'environment' },
-        { fps: 10, qrbox: { width: 260, height: 180 } },
+        cameraIdOrConfig,
+        SCANNER_CONFIG,
         (decodedText) => {
           if (!mountedRef.current) return;
           analyzeBarcode(decodedText);
         },
         () => {}
       );
+      prepareScannerVideo();
       if (mountedRef.current) setScanning(true);
-    } catch {
+    } catch (scanError) {
+      console.error('Unable to start barcode scanner', scanError);
       if (mountedRef.current) {
-        setError('Camera access denied. Please allow camera permissions.');
+        setError('Camera scan could not start. Allow camera access and try again.');
         setScanning(false);
       }
     }
