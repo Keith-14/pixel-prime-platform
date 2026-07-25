@@ -13,11 +13,14 @@ import { LanguageSelector } from '@/components/LanguageSelector';
 import { useLanguage } from '@/contexts/LanguageContext';
 import loginFullBg from '@/assets/login-full-bg.png.asset.json';
 import { assetUrl } from '@/lib/assetUrl';
+import { Capacitor } from '@capacitor/core';
 
 type UserRole = 'normal_user' | 'seller' | 'travel_partner';
 
 const errorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
+
+const isNative = () => Capacitor.isNativePlatform();
 
 export const Register = () => {
   const [view, setView] = useState<'welcome' | 'profile' | 'details' | 'otp'>('welcome');
@@ -90,6 +93,10 @@ export const Register = () => {
       setLoading(false);
       return;
     }
+    if (isNative() && role === undefined) {
+      setLoading(false);
+      return;
+    }
     const resolvedRole = role ?? await resolveCurrentAccountRole();
     if (resolvedRole === null) {
       toast.message('Finish setup', { description: 'Please choose your account type to continue.' });
@@ -111,6 +118,10 @@ export const Register = () => {
     const { error, role } = await signInWithApple();
     if (error) {
       toast.error(error.message);
+      setLoading(false);
+      return;
+    }
+    if (isNative() && role === undefined) {
       setLoading(false);
       return;
     }

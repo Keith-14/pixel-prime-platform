@@ -87,11 +87,39 @@ const getUserRoleFromDatabase = async (userId: string): Promise<UserRole> => {
   return sellerProfile ? 'seller' : null;
 };
 
+const getSellerDestination = async (userId: string) => {
+  const { data: sellerProfile } = await supabase
+    .from('seller_profiles')
+    .select('onboarding_completed')
+    .eq('user_id', userId)
+    .limit(1)
+    .maybeSingle();
+
+  return sellerProfile?.onboarding_completed ? '/seller-dashboard' : '/seller-onboarding';
+};
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<AppUser | null>(null);
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  const routeAuthenticatedUser = async (authedUser: SupabaseUser) => {
+    const role = await getUserRoleFromDatabase(authedUser.id);
+    setUserRole(role);
+
+    if (role === 'seller') {
+      navigate(await getSellerDestination(authedUser.id), { replace: true });
+    } else if (role === 'travel_partner') {
+      navigate('/business-account', { replace: true });
+    } else if (role === 'normal_user') {
+      navigate('/', { replace: true });
+    } else {
+      navigate('/login', { replace: true });
+    }
+
+    return role;
+  };
 
   useEffect(() => {
     // Set up auth listener FIRST, then check for existing session.
@@ -127,7 +155,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           if (error) {
             console.error('OAuth callback error:', error);
           } else if (access_token && refresh_token) {
-            await supabase.auth.setSession({ access_token, refresh_token });
+            const { data, error: sessionError } = await supabase.auth.setSession({ access_token, refresh_token });
+            if (sessionError) throw sessionError;
+            if (data.user) {
+              await routeAuthenticatedUser(data.user);
+            }
           }
         } catch (e) {
           console.error('appUrlOpen handler failed:', e);
@@ -205,7 +237,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (data?.url) {
           await Browser.open({ url: data.url, presentationStyle: 'popover' });
         }
-        return { error: null, role: null };
+        return { error: null, role: undefined };
       }
       const result: any = await lovable.auth.signInWithOAuth('google', {
         redirect_uri: `${window.location.origin}/`,
@@ -235,7 +267,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (data?.url) {
           await Browser.open({ url: data.url, presentationStyle: 'popover' });
         }
-        return { error: null, role: null };
+        return { error: null, role: undefined };
       }
       const result: any = await lovable.auth.signInWithOAuth('apple', {
         redirect_uri: `${window.location.origin}/`,

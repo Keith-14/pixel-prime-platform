@@ -32,21 +32,26 @@ const BARCODE_FORMATS = [
   Html5QrcodeSupportedFormats.QR_CODE,
 ];
 
-const SCANNER_CONFIG = {
+const getScannerConfig = () => ({
   fps: 15,
   qrbox: (viewfinderWidth: number, viewfinderHeight: number) => ({
     width: Math.floor(viewfinderWidth * 0.9),
     height: Math.floor(Math.min(viewfinderHeight * 0.36, 220)),
   }),
-  aspectRatio: 1,
+  aspectRatio: 4 / 5,
   disableFlip: true,
-};
+});
 
 const IOS_CAMERA_CONSTRAINTS: MediaTrackConstraints = {
   facingMode: { ideal: 'environment' },
   width: { ideal: 1280 },
   height: { ideal: 720 },
 };
+
+const timeoutAfter = (ms: number) =>
+  new Promise<never>((_, reject) => {
+    window.setTimeout(() => reject(new Error('Timed out while stopping scanner')), ms);
+  });
 
 type Ingredient = { name: string; ok: boolean };
 
@@ -130,13 +135,13 @@ export const HalalScanner = () => {
     });
   }, []);
 
-  const cleanupScanner = useCallback(async () => {
+  const cleanupScanner = useCallback(async (timeoutMs = 2500) => {
     const scanner = scannerRef.current;
     if (!scanner) return;
     try {
       const state = scanner.getState();
       if (state === Html5QrcodeScannerState.SCANNING || state === Html5QrcodeScannerState.PAUSED) {
-        await scanner.stop();
+        await Promise.race([scanner.stop(), timeoutAfter(timeoutMs)]);
       }
       scanner.clear();
     } catch {
@@ -145,7 +150,7 @@ export const HalalScanner = () => {
     scannerRef.current = null;
   }, []);
 
-  const analyzeBarcode = useCallback(async (barcode: string) => {
+  const analyzeBarcode = useCallback(async (barcode: string, options: { includeFrame?: boolean; stopScanner?: boolean } = {}) => {
     if (!barcode || handlingScanRef.current) return;
 
     handlingScanRef.current = true;
@@ -153,9 +158,12 @@ export const HalalScanner = () => {
     setAnalyzing(true);
     setLastBarcode(barcode);
     setScanResult(null);
-    const imageBase64 = captureScannerFrame();
-    await cleanupScanner();
-    setScanning(false);
+    const imageBase64 = options.includeFrame ? captureScannerFrame() : null;
+
+    if (options.stopScanner) {
+      await cleanupScanner();
+      setScanning(false);
+    }
 
     try {
       const { data, error: invokeError } = await supabase.functions.invoke('scan-halal', {
@@ -214,24 +222,27 @@ export const HalalScanner = () => {
     try {
       const scanner = new Html5Qrcode(scannerIdRef.current, {
         formatsToSupport: BARCODE_FORMATS,
-        useBarCodeDetectorIfSupported: true,
+        useBarCodeDetectorIfSupported: false,
         verbose: false,
       });
       scannerRef.current = scanner;
 
-      const cameras = await Html5Qrcode.getCameras().catch(() => []);
-      const rearCamera = cameras.find((camera) => /back|rear|environment/i.test(camera.label)) || cameras[cameras.length - 1];
-      const cameraIdOrConfig = rearCamera?.id || IOS_CAMERA_CONSTRAINTS;
+      const onScanSuccess = (decodedText: string) => {
+        if (!mountedRef.current) return;
+        analyzeBarcode(decodedText.replace(/\D/g, '').trim() || decodedText.trim(), {
+          includeFrame: true,
+          stopScanner: true,
+        });
+      };
 
-      await scanner.start(
-        cameraIdOrConfig,
-        SCANNER_CONFIG,
-        (decodedText) => {
-          if (!mountedRef.current) return;
-          analyzeBarcode(decodedText);
-        },
-        () => {}
-      );
+      try {
+        await scanner.start(IOS_CAMERA_CONSTRAINTS, getScannerConfig(), onScanSuccess, () => {});
+      } catch {
+        const cameras = await Html5Qrcode.getCameras().catch(() => []);
+        const rearCamera = cameras.find((camera) => /back|rear|environment/i.test(camera.label)) || cameras[cameras.length - 1];
+        if (!rearCamera?.id) throw new Error('No camera available');
+        await scanner.start(rearCamera.id, getScannerConfig(), onScanSuccess, () => {});
+      }
       prepareScannerVideo();
       if (mountedRef.current) setScanning(true);
     } catch (scanError) {
@@ -271,7 +282,7 @@ export const HalalScanner = () => {
     }
     setManualOpen(false);
     setManualBarcode('');
-    analyzeBarcode(barcode);
+    analyzeBarcode(barcode, { includeFrame: false, stopScanner: false });
   };
 
   return (
