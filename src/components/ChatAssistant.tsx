@@ -28,6 +28,15 @@ const SUGGESTIONS = [
 ];
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
+const SpeechRecognitionConstructor = () =>
+  (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+const requestMicrophoneAccess = async () => {
+  if (!navigator.mediaDevices?.getUserMedia) return;
+
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  stream.getTracks().forEach((track) => track.stop());
+};
 
 async function streamChat({
   messages,
@@ -402,14 +411,16 @@ const ChatView = ({
   const empty = messages.length === 0;
 
   const [isListening, setIsListening] = useState(false);
+  const [voiceError, setVoiceError] = useState('');
   const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition = SpeechRecognitionConstructor();
     if (SpeechRecognition) {
       recognitionRef.current = new SpeechRecognition();
       recognitionRef.current.continuous = false;
       recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = navigator.language || 'en-US';
       
       recognitionRef.current.onresult = (event: any) => {
         let finalTranscript = '';
@@ -420,6 +431,7 @@ const ChatView = ({
         }
         if (finalTranscript) {
           setInput(prev => (prev ? prev + ' ' : '') + finalTranscript);
+          setVoiceError('');
         }
       };
 
@@ -429,21 +441,35 @@ const ChatView = ({
 
       recognitionRef.current.onerror = (event: any) => {
         console.error('Speech recognition error', event.error);
+        const message =
+          event.error === 'not-allowed'
+            ? 'Microphone permission is blocked. Enable it in iOS Settings and try again.'
+            : 'Voice input stopped. Please try again.';
+        setVoiceError(message);
         setIsListening(false);
       };
     }
   }, [setInput]);
 
-  const toggleListen = () => {
+  const toggleListen = async () => {
     if (isListening) {
-      recognitionRef.current?.stop();
+      recognitionRef.current?.abort?.();
       setIsListening(false);
+      setVoiceError('');
     } else {
       if (recognitionRef.current) {
-        recognitionRef.current.start();
-        setIsListening(true);
+        try {
+          setVoiceError('');
+          await requestMicrophoneAccess();
+          recognitionRef.current.start();
+          setIsListening(true);
+        } catch (error) {
+          console.error('Unable to start speech recognition', error);
+          setIsListening(false);
+          setVoiceError('Allow microphone access to use voice input.');
+        }
       } else {
-        alert("Speech recognition is not supported in this browser.");
+        setVoiceError('Voice input is not supported in this browser.');
       }
     }
   };
@@ -607,6 +633,11 @@ const ChatView = ({
             <Mic className="h-5 w-5" style={{ color: isListening ? '#EF4444' : '#7A6B5E' }} strokeWidth={1.75} />
           </button>
         </div>
+        {voiceError && (
+          <span className="sr-only" role="alert">
+            {voiceError}
+          </span>
+        )}
         <button
           onClick={send}
           disabled={!input.trim() || isLoading}

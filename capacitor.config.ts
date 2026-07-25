@@ -21,11 +21,15 @@ const config: CapacitorConfig = {
 
   ios: {
     scheme: 'com.barakah.services',
-    contentInset: 'never',
+    contentInset: 'always',
     backgroundColor: '#FFF5E5',
     infoPlist: {
       NSCameraUsageDescription:
         'Barakah uses the camera to scan barcodes for halal product verification.',
+      NSMicrophoneUsageDescription:
+        'Barakah uses the microphone so you can ask the AI assistant questions by voice.',
+      NSSpeechRecognitionUsageDescription:
+        'Barakah uses speech recognition to turn your voice questions into text for the AI assistant.',
       NSLocationWhenInUseUsageDescription:
         'Barakah uses your location to provide prayer times and nearby place recommendations.',
     },
