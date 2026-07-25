@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Html5Qrcode, Html5QrcodeScannerState, Html5QrcodeSupportedFormats } from 'html5-qrcode';
-import { ArrowLeft, Flashlight, ScanLine, Check, Shield, Sparkles, ChevronLeft, ChevronRight, ExternalLink, X, Keyboard } from 'lucide-react';
+import { ArrowLeft, Flashlight, ScanLine, Check, Shield, Sparkles, ChevronLeft, ChevronRight, ExternalLink, X, Keyboard, AlertTriangle, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useGlobalLocation } from '@/contexts/LocationContext';
@@ -18,40 +17,7 @@ const MUTED = '#8A6A55';
 
 const SERIF = "'Plus Jakarta Sans', sans-serif";
 
-const BARCODE_FORMATS = [
-  Html5QrcodeSupportedFormats.EAN_13,
-  Html5QrcodeSupportedFormats.EAN_8,
-  Html5QrcodeSupportedFormats.UPC_A,
-  Html5QrcodeSupportedFormats.UPC_E,
-  Html5QrcodeSupportedFormats.UPC_EAN_EXTENSION,
-  Html5QrcodeSupportedFormats.CODE_128,
-  Html5QrcodeSupportedFormats.CODE_39,
-  Html5QrcodeSupportedFormats.CODE_93,
-  Html5QrcodeSupportedFormats.ITF,
-  Html5QrcodeSupportedFormats.CODABAR,
-  Html5QrcodeSupportedFormats.QR_CODE,
-];
-
-const getScannerConfig = () => ({
-  fps: 15,
-  qrbox: (viewfinderWidth: number, viewfinderHeight: number) => ({
-    width: Math.floor(viewfinderWidth * 0.9),
-    height: Math.floor(Math.min(viewfinderHeight * 0.36, 220)),
-  }),
-  aspectRatio: 4 / 5,
-  disableFlip: true,
-});
-
-const IOS_CAMERA_CONSTRAINTS: MediaTrackConstraints = {
-  facingMode: { ideal: 'environment' },
-  width: { ideal: 1280 },
-  height: { ideal: 720 },
-};
-
-const timeoutAfter = (ms: number) =>
-  new Promise<never>((_, reject) => {
-    window.setTimeout(() => reject(new Error('Timed out while stopping scanner')), ms);
-  });
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 type Ingredient = { name: string; ok: boolean };
 
@@ -72,17 +38,9 @@ type ScanResult = {
 const PRODUCT = {
   name: 'Golden Saffron Tea Biscuits',
   image: scannerProduct,
-  keyIngredient: 'Pure Iranian Saffron',
-  totalScanned: 12,
   ingredients: [
     { name: 'Organic Wheat Flour', ok: true },
     { name: 'Cane Sugar', ok: true },
-    { name: 'Vegetable Shortening', ok: true },
-    { name: 'Whole Milk Powder', ok: true },
-    { name: 'Pure Vanilla Extract', ok: true },
-    { name: 'Sea Salt', ok: true },
-    { name: 'Baking Soda', ok: true },
-    { name: 'Lecithin', ok: true },
   ] as Ingredient[],
 };
 
@@ -90,6 +48,51 @@ const ALTERNATIVES = [
   { brand: 'MEDINA ORGANICS', name: 'Medina Date Crisps', price: '$12.50', rating: '4.9', image: scannerAlt1 },
   { brand: 'PERSIAN HOUSE', name: 'Saffron Shortbread', price: '$14.00', rating: '4.8', image: scannerAlt2 },
 ];
+
+// ─── BarcodeDetector shim ────────────────────────────────────────────────────
+
+// Native BarcodeDetector (iOS 17.4+, Chrome, Edge). We check at runtime.
+declare class BarcodeDetector {
+  constructor(options?: { formats?: string[] });
+  detect(source: ImageBitmapSource): Promise<Array<{ rawValue: string; format: string }>>;
+  static getSupportedFormats(): Promise<string[]>;
+}
+
+const BARCODE_FORMATS = [
+  'ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'code_93',
+  'itf', 'codabar', 'qr_code', 'data_matrix', 'pdf417',
+];
+
+function hasBarcodeDetector(): boolean {
+  return typeof window !== 'undefined' && 'BarcodeDetector' in window;
+}
+
+// ─── Camera utilities ────────────────────────────────────────────────────────
+
+async function openCameraStream(): Promise<MediaStream> {
+  // Strategy 1: ideal environment camera with reasonable resolution
+  const strategies: MediaStreamConstraints[] = [
+    { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } },
+    { video: { facingMode: 'environment' } },
+    { video: { facingMode: { ideal: 'environment' } } },
+    { video: true },
+  ];
+
+  let lastError: unknown;
+  for (const constraints of strategies) {
+    try {
+      return await navigator.mediaDevices.getUserMedia(constraints);
+    } catch (err) {
+      lastError = err;
+      const name = (err as DOMException)?.name;
+      // If denied, bubble up immediately — no point trying other constraints
+      if (name === 'NotAllowedError' || name === 'PermissionDeniedError') throw err;
+    }
+  }
+  throw lastError;
+}
+
+// ─── Main component ──────────────────────────────────────────────────────────
 
 export const HalalScanner = () => {
   const navigate = useNavigate();
@@ -102,69 +105,84 @@ export const HalalScanner = () => {
   const [lastBarcode, setLastBarcode] = useState<string | null>(null);
   const [manualOpen, setManualOpen] = useState(false);
   const [manualBarcode, setManualBarcode] = useState('');
-  const scannerRef = useRef<Html5Qrcode | null>(null);
-  const scannerDivRef = useRef<HTMLDivElement>(null);
-  const scannerIdRef = useRef(`halal-scanner-${Date.now()}`);
-  const scanStartCountRef = useRef(0);
+
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const detectorRef = useRef<BarcodeDetector | null>(null);
+  const rafRef = useRef<number | null>(null);
   const mountedRef = useRef(true);
   const handlingScanRef = useRef(false);
 
-  const captureScannerFrame = useCallback(() => {
-    const video = scannerDivRef.current?.querySelector('video') as HTMLVideoElement | null;
-    if (!video || video.readyState < 2 || video.videoWidth === 0 || video.videoHeight === 0) {
-      return null;
-    }
-
-    const canvas = document.createElement('canvas');
+  // ── Capture current video frame as base64 ──
+  const captureFrame = useCallback((): string | null => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas || video.readyState < 2 || video.videoWidth === 0) return null;
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-    const context = canvas.getContext('2d');
-    if (!context) return null;
-
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    ctx.drawImage(video, 0, 0);
     return canvas.toDataURL('image/jpeg', 0.82);
   }, []);
 
-  const prepareScannerVideo = useCallback(() => {
-    requestAnimationFrame(() => {
-      const video = scannerDivRef.current?.querySelector('video') as HTMLVideoElement | null;
-      if (!video) return;
-      video.setAttribute('playsinline', 'true');
-      video.setAttribute('webkit-playsinline', 'true');
-      video.muted = true;
-      video.autoplay = true;
-    });
-  }, []);
-
-  const cleanupScanner = useCallback(async (timeoutMs = 2500) => {
-    const scanner = scannerRef.current;
-    if (!scanner) return;
-    try {
-      const state = scanner.getState();
-      if (state === Html5QrcodeScannerState.SCANNING || state === Html5QrcodeScannerState.PAUSED) {
-        await Promise.race([scanner.stop(), timeoutAfter(timeoutMs)]);
-      }
-      scanner.clear();
-    } catch {
-      // ignore
+  // ── Stop everything ──
+  const stopCamera = useCallback(() => {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
     }
-    scannerRef.current = null;
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
   }, []);
 
-  const analyzeBarcode = useCallback(async (barcode: string, options: { includeFrame?: boolean; stopScanner?: boolean } = {}) => {
-    if (!barcode || handlingScanRef.current) return;
+  // ── Barcode scan loop using BarcodeDetector ──
+  const scanLoop = useCallback(() => {
+    const video = videoRef.current;
+    const detector = detectorRef.current;
+    if (!video || !detector || !mountedRef.current) return;
 
+    if (video.readyState >= 2 && video.videoWidth > 0) {
+      detector.detect(video).then((results) => {
+        if (!mountedRef.current || handlingScanRef.current) return;
+        if (results.length > 0) {
+          const raw = results[0].rawValue;
+          if (raw) {
+            const barcode = raw.replace(/\D/g, '').trim() || raw.trim();
+            analyzeBarcode(barcode);
+            return; // Don't schedule next frame — analysis will stop scanning
+          }
+        }
+        rafRef.current = requestAnimationFrame(scanLoop);
+      }).catch(() => {
+        if (mountedRef.current) {
+          rafRef.current = requestAnimationFrame(scanLoop);
+        }
+      });
+    } else {
+      rafRef.current = requestAnimationFrame(scanLoop);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── analyzeBarcode ──
+  const analyzeBarcode = useCallback(async (barcode: string) => {
+    if (!barcode || handlingScanRef.current) return;
     handlingScanRef.current = true;
+    stopCamera();
+    setScanning(false);
     setError(null);
     setAnalyzing(true);
     setLastBarcode(barcode);
     setScanResult(null);
-    const imageBase64 = options.includeFrame ? captureScannerFrame() : null;
 
-    if (options.stopScanner) {
-      await cleanupScanner();
-      setScanning(false);
-    }
+    const imageBase64 = captureFrame();
 
     try {
       const { data, error: invokeError } = await supabase.functions.invoke('scan-halal', {
@@ -173,9 +191,7 @@ export const HalalScanner = () => {
           ...(location
             ? { region: [location.city, location.country].filter(Boolean).join(', ') }
             : {}),
-          ...(imageBase64
-            ? { imageBase64, imageMimeType: 'image/jpeg' }
-            : {}),
+          ...(imageBase64 ? { imageBase64, imageMimeType: 'image/jpeg' } : {}),
         },
       });
 
@@ -183,7 +199,7 @@ export const HalalScanner = () => {
       const result = data?.result;
       if (!result) throw new Error('No scan result returned');
       if (result.source === 'barcode_lookup_miss') {
-        throw new Error('This barcode was scanned, but no product details were found. Please scan the ingredient label or try another barcode.');
+        throw new Error('This barcode was scanned, but no product details were found. Try scanning the ingredient label or enter the barcode manually.');
       }
 
       if (!mountedRef.current) return;
@@ -199,107 +215,96 @@ export const HalalScanner = () => {
         source: result.source ?? null,
       });
       setView('result');
-    } catch (scanError: any) {
+    } catch (err: any) {
       if (!mountedRef.current) return;
-      setError(scanError?.message || 'Could not analyze this barcode. Please try again.');
+      setError(err?.message || 'Could not analyze this barcode. Please try again.');
       setView('scan');
     } finally {
       handlingScanRef.current = false;
       if (mountedRef.current) setAnalyzing(false);
     }
-  }, [captureScannerFrame, cleanupScanner, location]);
+  }, [captureFrame, location, stopCamera]);
 
-  const startScanning = async () => {
+  // ── Start camera + scan loop ──
+  const startScanning = useCallback(async () => {
     setError(null);
-    await cleanupScanner();
-    const el = scannerDivRef.current;
-    if (!el) return;
+    stopCamera();
 
-    scanStartCountRef.current += 1;
-    const scannerId = `halal-scanner-${Date.now()}-${scanStartCountRef.current}`;
-    scannerIdRef.current = scannerId;
-
-    el.innerHTML = '';
-    const container = document.createElement('div');
-    container.id = scannerId;
-    container.style.width = '100%';
-    container.style.height = '100%';
-    el.appendChild(container);
-
-    let prewarmStream: MediaStream | null = null;
     try {
-      prewarmStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } });
-    } catch (prewarmError: any) {
-      const name = (prewarmError as DOMException)?.name;
-      if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
-        if (mountedRef.current) {
-          setError('Camera access was denied. Please allow camera access in Settings and try again.');
-          setScanning(false);
-        }
+      // Open camera stream
+      const stream = await openCameraStream();
+      streamRef.current = stream;
+
+      if (!mountedRef.current) {
+        stream.getTracks().forEach((t) => t.stop());
         return;
       }
-    } finally {
-      if (prewarmStream) {
-        prewarmStream.getTracks().forEach((t) => t.stop());
-        prewarmStream = null;
-      }
-    }
 
-    await new Promise((resolve) => setTimeout(resolve, 120));
+      // Attach to video element
+      const video = videoRef.current;
+      if (!video) { stream.getTracks().forEach((t) => t.stop()); return; }
 
-    try {
-      const scanner = new Html5Qrcode(scannerId, {
-        formatsToSupport: BARCODE_FORMATS,
-        useBarCodeDetectorIfSupported: false,
-        verbose: false,
+      video.srcObject = stream;
+      video.setAttribute('playsinline', 'true');
+      video.setAttribute('webkit-playsinline', 'true');
+      video.muted = true;
+      video.autoplay = true;
+
+      await video.play().catch(() => {/* autoplay may be blocked; try anyway */});
+
+      // Wait for video to be ready
+      await new Promise<void>((resolve) => {
+        if (video.readyState >= 2) { resolve(); return; }
+        const onReady = () => { video.removeEventListener('canplay', onReady); resolve(); };
+        video.addEventListener('canplay', onReady);
+        // Timeout fallback
+        setTimeout(resolve, 3000);
       });
-      scannerRef.current = scanner;
 
-      const onScanSuccess = (decodedText: string) => {
-        if (!mountedRef.current) return;
-        analyzeBarcode(decodedText.replace(/\D/g, '').trim() || decodedText.trim(), {
-          includeFrame: true,
-          stopScanner: true,
-        });
-      };
+      if (!mountedRef.current) return;
 
-      try {
-        await scanner.start(IOS_CAMERA_CONSTRAINTS, getScannerConfig(), onScanSuccess, () => {});
-      } catch {
-        const cameras = await Html5Qrcode.getCameras().catch(() => []);
-        const rearCamera =
-          cameras.find((camera) => /back|rear|environment/i.test(camera.label)) ||
-          cameras[cameras.length - 1];
-        if (!rearCamera?.id) throw new Error('No camera found. Please check camera access in Settings.');
-        await scanner.start(rearCamera.id, getScannerConfig(), onScanSuccess, () => {});
+      // Set up BarcodeDetector
+      if (!hasBarcodeDetector()) {
+        setError('Barcode scanning is not supported on this device/browser. Please enter the barcode manually.');
+        stopCamera();
+        return;
       }
-      prepareScannerVideo();
-      if (mountedRef.current) setScanning(true);
-    } catch (scanError: any) {
-      console.error('Unable to start barcode scanner', scanError);
-      if (mountedRef.current) {
-        const msg =
-          (scanError as DOMException)?.name === 'NotAllowedError'
-            ? 'Camera access was denied. Please allow camera access in Settings and try again.'
-            : scanError?.message || 'Camera scan could not start. Please try again.';
-        setError(msg);
-        setScanning(false);
+
+      detectorRef.current = new BarcodeDetector({ formats: BARCODE_FORMATS });
+      setScanning(true);
+
+      // Start scan loop
+      rafRef.current = requestAnimationFrame(scanLoop);
+
+    } catch (err: any) {
+      if (!mountedRef.current) return;
+      const name = (err as DOMException)?.name;
+      if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+        setError('Camera access was denied. Please go to Settings → Privacy → Camera and allow access, then try again.');
+      } else if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+        setError('No camera was found on this device. Please enter the barcode manually.');
+      } else if (name === 'NotReadableError' || name === 'TrackStartError') {
+        setError('Camera is in use by another app. Close other apps and try again.');
+      } else {
+        setError('Camera could not start. Please try again or enter the barcode manually.');
       }
+      setScanning(false);
     }
-  };
+  }, [scanLoop, stopCamera]);
 
-  const stopScanning = async () => {
-    await cleanupScanner();
+  const stopScanning = useCallback(() => {
+    stopCamera();
     setScanning(false);
-  };
+  }, [stopCamera]);
 
+  // Cleanup on unmount
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
-      cleanupScanner();
+      stopCamera();
     };
-  }, [cleanupScanner]);
+  }, [stopCamera]);
 
   const handleScanAnother = () => {
     setScanResult(null);
@@ -316,15 +321,18 @@ export const HalalScanner = () => {
     }
     setManualOpen(false);
     setManualBarcode('');
-    analyzeBarcode(barcode, { includeFrame: false, stopScanner: false });
+    analyzeBarcode(barcode);
   };
 
   return (
     <div className="min-h-screen max-w-md mx-auto font-arabic" style={{ backgroundColor: CREAM_BG, color: BROWN }}>
+      {/* Hidden canvas for frame capture */}
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
+
       {view === 'scan' ? (
         <ScanView
           onBack={() => navigate('/')}
-          scannerDivRef={scannerDivRef}
+          videoRef={videoRef}
           scanning={scanning}
           error={error}
           analyzing={analyzing}
@@ -344,33 +352,15 @@ export const HalalScanner = () => {
           barcode={lastBarcode}
         />
       )}
-
-      <style>{`
-        #${scannerIdRef.current},
-        #${scannerIdRef.current} > div {
-          width: 100% !important;
-          height: 100% !important;
-          border: none !important;
-          padding: 0 !important;
-        }
-        #${scannerIdRef.current} video {
-          object-fit: cover !important;
-          width: 100% !important;
-          height: 100% !important;
-          border-radius: 0 !important;
-        }
-        #${scannerIdRef.current} img { display: none !important; }
-        #${scannerIdRef.current} #qr-shaded-region { display: none !important; }
-      `}</style>
     </div>
   );
 };
 
-/* ---------------- Scan View ---------------- */
+/* ─── Scan View ─────────────────────────────────────────────────────────────── */
 
 const ScanView = ({
   onBack,
-  scannerDivRef,
+  videoRef,
   scanning,
   error,
   analyzing,
@@ -383,7 +373,7 @@ const ScanView = ({
   onManualSubmit,
 }: {
   onBack: () => void;
-  scannerDivRef: React.RefObject<HTMLDivElement>;
+  videoRef: React.RefObject<HTMLVideoElement>;
   scanning: boolean;
   error: string | null;
   analyzing: boolean;
@@ -397,6 +387,7 @@ const ScanView = ({
 }) => {
   useEffect(() => {
     startScanning();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -425,15 +416,42 @@ const ScanView = ({
         <Corner pos="bl" />
         <Corner pos="br" />
 
-        {/* Camera feed */}
-        <div ref={scannerDivRef} className="absolute inset-0" />
+        {/* Video element — always rendered so ref is stable */}
+        <video
+          ref={videoRef}
+          playsInline
+          muted
+          autoPlay
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ borderRadius: 0 }}
+        />
 
-        {/* Scanning line */}
+        {/* Scanning line overlay */}
         {scanning && (
           <div
             className="absolute left-6 right-6 h-[2px] z-10 animate-[scanline_2s_ease-in-out_infinite]"
             style={{ background: 'rgba(220,38,38,0.9)' }}
           />
+        )}
+
+        {/* Placeholder when not scanning */}
+        {!scanning && !analyzing && (
+          <div className="absolute inset-0 flex items-center justify-center z-10">
+            <div className="flex flex-col items-center gap-3 opacity-60">
+              <ScanLine className="h-12 w-12" style={{ color: BROWN }} strokeWidth={1.2} />
+              <span className="text-[13px]" style={{ color: BROWN }}>Tap the button below to scan</span>
+            </div>
+          </div>
+        )}
+
+        {/* Analyzing overlay */}
+        {analyzing && (
+          <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/20">
+            <div className="flex flex-col items-center gap-3">
+              <Sparkles className="h-10 w-10 text-white animate-pulse" strokeWidth={1.5} />
+              <span className="text-[13px] text-white font-medium">Analyzing with AI…</span>
+            </div>
+          </div>
         )}
       </div>
 
@@ -473,7 +491,7 @@ const ScanView = ({
       </button>
 
       {error && (
-        <p className="text-center text-sm mt-3" style={{ color: '#B22' }}>{error}</p>
+        <p className="text-center text-sm mt-3 px-4 leading-snug" style={{ color: '#B22' }}>{error}</p>
       )}
 
       {/* How it works */}
@@ -581,6 +599,8 @@ const ScanView = ({
   );
 };
 
+/* ─── Small UI pieces ────────────────────────────────────────────────────────── */
+
 const Corner = ({ pos }: { pos: 'tl' | 'tr' | 'bl' | 'br' }) => {
   const base = 'absolute w-6 h-6 z-20 border-[#B5662C]';
   const map = {
@@ -620,28 +640,62 @@ const Dashes = () => (
   <div className="flex-1 mt-6 border-t border-dashed" style={{ borderColor: '#C9A77A' }} />
 );
 
-/* ---------------- Result View ---------------- */
+/* ─── Result View ────────────────────────────────────────────────────────────── */
 
-const statusCopy: Record<HalalStatus, { title: string; subtitle: string; color: string }> = {
+const statusConfig: Record<HalalStatus, {
+  label: string;
+  title: string;
+  subtitle: string;
+  textColor: string;
+  bgColor: string;
+  badgeBg: string;
+  badgeText: string;
+  iconBg: string;
+  icon: 'check' | 'x' | 'alert' | 'help';
+}> = {
   halal: {
+    label: 'HALAL',
     title: 'Halal Verified',
-    subtitle: 'COMPLIANT WITH ISLAMIC STANDARDS',
-    color: '#2A8049',
+    subtitle: 'This product is permissible under Islamic dietary law.',
+    textColor: '#FFFFFF',
+    bgColor: '#1A6B3A',
+    badgeBg: 'rgba(255,255,255,0.18)',
+    badgeText: '#FFFFFF',
+    iconBg: 'rgba(255,255,255,0.25)',
+    icon: 'check',
   },
   haram: {
-    title: 'Not Halal',
-    subtitle: 'CONTAINS PROHIBITED OR HIGH-RISK INGREDIENTS',
-    color: '#B3261E',
+    label: 'HARAM',
+    title: 'Not Permissible',
+    subtitle: 'This product contains prohibited or high-risk ingredients.',
+    textColor: '#FFFFFF',
+    bgColor: '#991B1B',
+    badgeBg: 'rgba(255,255,255,0.18)',
+    badgeText: '#FFFFFF',
+    iconBg: 'rgba(255,255,255,0.25)',
+    icon: 'x',
   },
   mushbooh: {
-    title: 'Needs Review',
-    subtitle: 'SOME INGREDIENTS REQUIRE VERIFICATION',
-    color: '#B07A00',
+    label: 'MUSHBOOH',
+    title: 'Doubtful — Verify',
+    subtitle: 'Some ingredients require further verification.',
+    textColor: '#FFFFFF',
+    bgColor: '#92400E',
+    badgeBg: 'rgba(255,255,255,0.18)',
+    badgeText: '#FFFFFF',
+    iconBg: 'rgba(255,255,255,0.25)',
+    icon: 'alert',
   },
   unknown: {
-    title: 'Unknown Status',
-    subtitle: 'BARAKAH AI COULD NOT VERIFY THIS PRODUCT',
-    color: '#7C6A4F',
+    label: 'UNKNOWN',
+    title: 'Status Unknown',
+    subtitle: 'Barakah AI could not determine the halal status of this product.',
+    textColor: '#FFFFFF',
+    bgColor: '#4B3B2F',
+    badgeBg: 'rgba(255,255,255,0.18)',
+    badgeText: '#FFFFFF',
+    iconBg: 'rgba(255,255,255,0.25)',
+    icon: 'help',
   },
 };
 
@@ -657,7 +711,7 @@ const ResultView = ({
   barcode: string | null;
 }) => {
   const status = result?.status || 'unknown';
-  const copy = statusCopy[status] || statusCopy.unknown;
+  const cfg = statusConfig[status] || statusConfig.unknown;
   const ingredients = result?.ingredients ?? [];
 
   return (
@@ -675,26 +729,75 @@ const ResultView = ({
         </div>
       </div>
 
-      {/* Halal verified card */}
+      {/* ── VERDICT BANNER ─────────────────────────────────────────────── */}
       <div className="px-5">
         <div
-          className="rounded-2xl px-6 py-5 flex flex-col items-center text-center"
-          style={{ backgroundColor: '#F5E6D0' }}
+          className="rounded-3xl px-6 py-7 flex flex-col items-center text-center relative overflow-hidden"
+          style={{ backgroundColor: cfg.bgColor }}
         >
-          <div className="h-12 w-12 rounded-full flex items-center justify-center mb-2" style={{ backgroundColor: '#A35233' }}>
-            <Check className="h-6 w-6 text-white" strokeWidth={2.5} />
+          {/* Decorative circle */}
+          <div
+            className="absolute -top-8 -right-8 w-36 h-36 rounded-full opacity-20"
+            style={{ backgroundColor: '#FFFFFF' }}
+          />
+          <div
+            className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full opacity-10"
+            style={{ backgroundColor: '#FFFFFF' }}
+          />
+
+          {/* Icon */}
+          <div
+            className="relative z-10 h-16 w-16 rounded-full flex items-center justify-center mb-4 shadow-lg"
+            style={{ backgroundColor: cfg.iconBg }}
+          >
+            {cfg.icon === 'check' && <Check className="h-8 w-8 text-white" strokeWidth={3} />}
+            {cfg.icon === 'x' && <X className="h-8 w-8 text-white" strokeWidth={3} />}
+            {cfg.icon === 'alert' && <AlertTriangle className="h-8 w-8 text-white" strokeWidth={2.5} />}
+            {cfg.icon === 'help' && <HelpCircle className="h-8 w-8 text-white" strokeWidth={2} />}
           </div>
-          <div className="text-[19px] font-semibold" style={{ color: copy.color, fontFamily: SERIF }}>
-            {copy.title}
+
+          {/* Big verdict label */}
+          <div
+            className="relative z-10 text-[42px] font-black tracking-[0.12em] leading-none"
+            style={{ color: cfg.textColor, fontFamily: SERIF }}
+          >
+            {cfg.label}
           </div>
-          <div className="text-[10px] tracking-[0.18em] mt-1" style={{ color: '#8B6E4A' }}>
-            {copy.subtitle}
+
+          {/* Title */}
+          <div
+            className="relative z-10 text-[16px] font-semibold mt-2"
+            style={{ color: 'rgba(255,255,255,0.9)', fontFamily: SERIF }}
+          >
+            {cfg.title}
           </div>
-          {typeof result?.confidence === 'number' && (
-            <div className="text-[12px] mt-2" style={{ color: MUTED }}>
-              Confidence {result.confidence}%
+
+          {/* Subtitle */}
+          <div
+            className="relative z-10 text-[12px] mt-1 leading-snug max-w-[240px]"
+            style={{ color: 'rgba(255,255,255,0.75)' }}
+          >
+            {cfg.subtitle}
+          </div>
+
+          {/* Confidence + Verified pill row */}
+          <div className="relative z-10 flex items-center gap-2 mt-4 flex-wrap justify-center">
+            <div
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold"
+              style={{ backgroundColor: cfg.badgeBg, color: cfg.badgeText }}
+            >
+              <Shield className="h-3 w-3" strokeWidth={2} />
+              Verified by Barakah AI
             </div>
-          )}
+            {typeof result?.confidence === 'number' && (
+              <div
+                className="inline-flex items-center px-3 py-1.5 rounded-full text-[11px] font-semibold"
+                style={{ backgroundColor: cfg.badgeBg, color: cfg.badgeText }}
+              >
+                {result.confidence}% confidence
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -856,9 +959,8 @@ const ResultView = ({
   );
 };
 
-// scanline keyframes
-const styleTag = document.getElementById('halal-scanner-keyframes');
-if (!styleTag && typeof document !== 'undefined') {
+// Inject scanline keyframe once
+if (typeof document !== 'undefined' && !document.getElementById('halal-scanner-keyframes')) {
   const s = document.createElement('style');
   s.id = 'halal-scanner-keyframes';
   s.innerHTML = `@keyframes scanline { 0%,100% { top: 18%; } 50% { top: 78%; } }`;
