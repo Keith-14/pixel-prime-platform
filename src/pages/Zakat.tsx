@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Layout } from '@/components/Layout';
 import { ArrowLeft, ArrowRight, ChevronDown, Info, Lightbulb } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -10,18 +10,31 @@ const BROWN = '#A35233';
 const BROWN_DEEP = '#78351A';
 const ORANGE = '#CE5728';
 
-type CurrencyCode = 'GBP' | 'USD' | 'EUR';
+type CurrencyCode = string;
+type CountryCurrency = { code: CurrencyCode; country: string; flag: string };
 
-const CURRENCIES: { code: CurrencyCode; label: string; symbol: string; flag: string; country: string; nisab: number }[] = [
-  { code: 'GBP', label: 'GBP (£)', symbol: '£', flag: '🇬🇧', country: 'UK', nisab: 3842.15 },
-  { code: 'USD', label: 'USD ($)', symbol: '$', flag: '🇺🇸', country: 'US', nisab: 4850.0 },
-  { code: 'EUR', label: 'EUR (€)', symbol: '€', flag: '🇪🇺', country: 'EU', nisab: 4490.5 },
+const DEFAULT_COUNTRIES: CountryCurrency[] = [
+  { code: 'GBP', flag: '🇬🇧', country: 'United Kingdom' },
+  { code: 'USD', flag: '🇺🇸', country: 'United States' },
+  { code: 'EUR', flag: '🇪🇺', country: 'European Union' },
 ];
+const QUICK_CURRENCIES = ['GBP', 'USD', 'EUR'];
+const USD_NISAB = 4850;
+const USD_GOLD_PRICE_PER_GRAM = 79;
+const FALLBACK_RATES: Record<string, number> = { GBP: 3842.15 / USD_NISAB, USD: 1, EUR: 4490.5 / USD_NISAB };
 
 const fmt = (n: number, symbol: string) =>
   `${symbol}${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-const GOLD_PRICE_PER_GRAM: Record<CurrencyCode, number> = { GBP: 62.5, USD: 79.0, EUR: 73.0 };
+const currencySymbol = (code: string) => {
+  try {
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency: code, currencyDisplay: 'narrowSymbol' })
+      .formatToParts(0)
+      .find((part) => part.type === 'currency')?.value || code;
+  } catch {
+    return code;
+  }
+};
 
 type GoldMode = 'GRAMS' | 'VALUE';
 
@@ -68,6 +81,10 @@ export const Zakat = () => {
   const navigate = useNavigate();
   const [currency, setCurrency] = useState<CurrencyCode>('GBP');
   const [showCountry, setShowCountry] = useState(false);
+  const [countrySearch, setCountrySearch] = useState('');
+  const [countries, setCountries] = useState<CountryCurrency[]>(DEFAULT_COUNTRIES);
+  const [selectedCountry, setSelectedCountry] = useState<CountryCurrency>(DEFAULT_COUNTRIES[0]);
+  const [rates, setRates] = useState<Record<string, number>>(FALLBACK_RATES);
 
   const [cash, setCash] = useState('');
   const [goldMode, setGoldMode] = useState<GoldMode>('GRAMS');
@@ -77,13 +94,51 @@ export const Zakat = () => {
   const [moneyOwed, setMoneyOwed] = useState('');
   const [investments, setInvestments] = useState('');
 
-  const active = CURRENCIES.find((c) => c.code === currency)!;
+  useEffect(() => {
+    const loadCountryCurrencies = async () => {
+      try {
+        const [countriesResponse, ratesResponse] = await Promise.all([
+          fetch('https://restcountries.com/v3.1/all?fields=name,cca2,currencies,flag'),
+          fetch('https://open.er-api.com/v6/latest/USD'),
+        ]);
+        if (!countriesResponse.ok || !ratesResponse.ok) return;
+        const countryData = await countriesResponse.json() as Array<{
+          name: { common: string };
+          cca2: string;
+          currencies?: Record<string, unknown>;
+          flag: string;
+        }>;
+        const rateData = await ratesResponse.json() as { rates?: Record<string, number> };
+        const options = countryData.flatMap((country) => Object.keys(country.currencies || {}).map((code) => ({
+          code,
+          country: country.name.common,
+          flag: country.flag || String.fromCodePoint(...[...country.cca2].map((letter) => 127397 + letter.charCodeAt(0))),
+        }))).sort((a, b) => a.country.localeCompare(b.country) || a.code.localeCompare(b.code));
+        if (options.length) setCountries(options);
+        if (rateData.rates) setRates((current) => ({ ...current, ...rateData.rates }));
+      } catch {
+        // The default currencies remain available if the country or rate service is unavailable.
+      }
+    };
+    void loadCountryCurrencies();
+  }, []);
+
+  const rate = rates[currency] || FALLBACK_RATES[currency] || 1;
+  const active = {
+    ...selectedCountry,
+    symbol: currencySymbol(currency),
+    nisab: USD_NISAB * rate,
+  };
+  const goldPricePerGram = USD_GOLD_PRICE_PER_GRAM * rate;
+  const filteredCountries = countries.filter(({ country, code }) =>
+    `${country} ${code}`.toLowerCase().includes(countrySearch.trim().toLowerCase())
+  );
 
   const goldValue = useMemo(() => {
     const n = parseFloat(gold || '0');
-    if (goldMode === 'GRAMS') return n * GOLD_PRICE_PER_GRAM[currency];
+    if (goldMode === 'GRAMS') return n * goldPricePerGram;
     return n;
-  }, [gold, goldMode, currency]);
+  }, [gold, goldMode, goldPricePerGram]);
 
   const total = useMemo(() => {
     return (
@@ -120,7 +175,7 @@ export const Zakat = () => {
         <div className="flex-1 px-5 pb-40 overflow-y-auto">
           {/* Nisab Card */}
           <div
-            className="rounded-[28px] p-6 text-center relative overflow-hidden"
+            className="rounded-[28px] p-6 text-center relative z-10"
             style={{ background: `linear-gradient(160deg, ${BROWN_DEEP} 0%, ${ORANGE} 100%)` }}
           >
             <button
@@ -131,6 +186,37 @@ export const Zakat = () => {
               {active.country} <span>{active.flag}</span>
               <ChevronDown className="h-3.5 w-3.5" />
             </button>
+            {showCountry && (
+              <div className="absolute z-20 left-4 right-4 top-20 rounded-2xl p-3 text-left shadow-xl" style={{ backgroundColor: CARD_CREAM }}>
+                <input
+                  autoFocus
+                  type="search"
+                  value={countrySearch}
+                  onChange={(event) => setCountrySearch(event.target.value)}
+                  placeholder="Search country or currency"
+                  className="w-full rounded-xl px-3 py-2 text-sm outline-none mb-2"
+                  style={{ backgroundColor: '#fff', color: BROWN_DARK }}
+                />
+                <div className="max-h-64 overflow-y-auto">
+                  {filteredCountries.map((option) => (
+                    <button
+                      key={`${option.country}-${option.code}`}
+                      onClick={() => {
+                        setCurrency(option.code);
+                        setSelectedCountry(option);
+                        setShowCountry(false);
+                        setCountrySearch('');
+                      }}
+                      className="w-full flex items-center gap-2 rounded-lg px-2 py-2 text-sm text-left"
+                      style={{ color: BROWN_DARK }}
+                    >
+                      <span>{option.flag}</span>
+                      <span>{option.country} [{option.code}]</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <p className="mt-5 text-white/85 text-xs tracking-[0.18em] font-semibold">CURRENT NISAB VALUE</p>
             <p
               className="mt-2 text-white text-5xl font-bold italic"
@@ -143,19 +229,22 @@ export const Zakat = () => {
 
           {/* Currency switch */}
           <div className="mt-5 rounded-full p-1.5 flex" style={{ backgroundColor: CARD_CREAM }}>
-            {CURRENCIES.map((c) => {
-              const selected = currency === c.code;
+            {QUICK_CURRENCIES.map((code) => {
+              const selected = currency === code;
               return (
                 <button
-                  key={c.code}
-                  onClick={() => setCurrency(c.code)}
+                  key={code}
+                  onClick={() => {
+                    setCurrency(code);
+                    setSelectedCountry(DEFAULT_COUNTRIES.find((option) => option.code === code) || countries.find((option) => option.code === code) || selectedCountry);
+                  }}
                   className="flex-1 py-2.5 rounded-full text-sm font-bold transition-colors"
                   style={{
                     backgroundColor: selected ? BROWN_DEEP : 'transparent',
                     color: selected ? '#fff' : BROWN_DARK,
                   }}
                 >
-                  {c.label}
+                  {code} ({currencySymbol(code)})
                 </button>
               );
             })}
@@ -256,7 +345,7 @@ export const Zakat = () => {
                 currency: active.code,
                 goldMode,
                 goldRaw: gold,
-                goldPricePerGram: GOLD_PRICE_PER_GRAM[currency],
+                goldPricePerGram,
               }
             })}
             className="w-full h-14 rounded-full text-white font-bold tracking-wider flex items-center justify-center gap-3"
