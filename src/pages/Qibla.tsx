@@ -1,6 +1,6 @@
 import { Layout } from '@/components/Layout';
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { ArrowLeft, MapPin, Loader2 } from 'lucide-react';
+import { ArrowLeft, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useGlobalLocation } from '@/contexts/LocationContext';
 import { toast } from 'sonner';
@@ -43,10 +43,9 @@ function cardinal(deg: number) {
 
 export const Qibla = () => {
   const navigate = useNavigate();
-  const { location, loading: locLoading, refresh } = useGlobalLocation();
+  const { location, loading: locLoading } = useGlobalLocation();
   const [heading, setHeading] = useState<number | null>(null);
   const [orientationGranted, setOrientationGranted] = useState(false);
-  const [calibrating, setCalibrating] = useState(false);
 
   const qibla = useMemo(
     () => (location ? qiblaBearing(location.latitude, location.longitude) : 0),
@@ -108,13 +107,6 @@ export const Qibla = () => {
     } catch {
       toast.error('Compass unavailable on this device');
     }
-  };
-
-  const calibrate = async () => {
-    setCalibrating(true);
-    if (!orientationGranted) await requestOrientation();
-    refresh();
-    setTimeout(() => setCalibrating(false), 900);
   };
 
   const card = cardinal(qibla);
@@ -277,26 +269,6 @@ export const Qibla = () => {
               </span>
             </div>
           </div>
-
-          {/* Calibrate */}
-          <button
-            onClick={calibrate}
-            disabled={calibrating}
-            className="mt-8 px-10 py-3 rounded-full text-base transition active:scale-95 disabled:opacity-60"
-            style={{
-              background: 'transparent',
-              border: `1.5px solid ${RING}`,
-              color: BROWN_DEEP,
-            }}
-          >
-            {calibrating ? (
-              <span className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" /> Calibrating
-              </span>
-            ) : (
-              'Calibrate'
-            )}
-          </button>
 
           {!orientationGranted && (
             <button
