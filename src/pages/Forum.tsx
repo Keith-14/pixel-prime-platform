@@ -728,6 +728,10 @@ export const Forum = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [newPostContent, setNewPostContent] = useState('');
   const [newPostCategory, setNewPostCategory] = useState('general');
+  const [newPostImage, setNewPostImage] = useState<File | null>(null);
+  const [newPostImagePreview, setNewPostImagePreview] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
@@ -1171,16 +1175,39 @@ export const Forum = () => {
     };
   }, [selectedPost?.id]);
 
+  const uploadPostImage = async (file: File): Promise<string | null> => {
+    try {
+      setUploadingImage(true);
+      const path = `${user?.uid}/posts/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+      const { error } = await supabase.storage.from('post-images').upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data } = supabase.storage.from('post-images').getPublicUrl(path);
+      return data.publicUrl;
+    } catch (err) {
+      console.error('Image upload failed:', err);
+      toast.error('Image upload failed. The post will be shared without it.');
+      return null;
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const handleCreatePost = async () => {
     if (!newPostContent.trim() || !user) return;
 
     setSubmitting(true);
     try {
+      let imageUrl: string | null = null;
+      if (newPostImage) {
+        imageUrl = await uploadPostImage(newPostImage);
+      }
+
       const { data, error } = await supabase.from('guftagu_posts').insert({
         user_id: user.uid,
         user_name: currentUserName,
         content: newPostContent.trim(),
         category: newPostCategory,
+        ...(imageUrl ? { image_url: imageUrl } : {}),
       }).select('*').single();
 
       if (error) throw error;
@@ -1200,6 +1227,8 @@ export const Forum = () => {
 
       setNewPostContent('');
       setNewPostCategory('general');
+      setNewPostImage(null);
+      setNewPostImagePreview(null);
       setIsCreateDialogOpen(false);
       toast.success('Post shared!');
     } catch (error) {
@@ -2194,7 +2223,13 @@ export const Forum = () => {
         </div>
 
         {/* Create Post Dialog - triggered from inline composer above */}
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
+          if (!open) {
+            setNewPostImage(null);
+            setNewPostImagePreview(null);
+          }
+          setIsCreateDialogOpen(open);
+        }}>
           <DialogContent className="sm:max-w-md border-0"
             style={{ background: '#FFF8EA' }}
           >
@@ -2256,18 +2291,66 @@ export const Forum = () => {
                   )}
                 </div>
               </div>
+
+              {/* Image Preview */}
+              {newPostImagePreview && (
+                <div className="relative rounded-xl overflow-hidden border" style={{ borderColor: '#E8D9C0' }}>
+                  <img src={newPostImagePreview} alt="Attachment preview" className="w-full max-h-48 object-cover" />
+                  <button
+                    onClick={() => { setNewPostImage(null); setNewPostImagePreview(null); }}
+                    className="absolute top-2 right-2 rounded-full p-1 bg-black/50 text-white hover:bg-black/70 transition-colors"
+                    aria-label="Remove image"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+
+              {/* Hidden file input */}
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  if (file.size > 10 * 1024 * 1024) {
+                    toast.error('Image must be smaller than 10 MB');
+                    return;
+                  }
+                  setNewPostImage(file);
+                  const reader = new FileReader();
+                  reader.onloadend = () => setNewPostImagePreview(reader.result as string);
+                  reader.readAsDataURL(file);
+                  e.target.value = '';
+                }}
+              />
+
               <div className="flex items-center justify-between">
-                <span className="text-xs tabular-nums" style={{ color: '#9C8569' }}>
-                  {newPostContent.length}/500
-                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => imageInputRef.current?.click()}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors hover:bg-amber-100"
+                    style={{ color: '#9C8569', border: '1px solid #E8D9C0' }}
+                    title="Attach an image"
+                  >
+                    <ImagePlus className="h-4 w-4" />
+                    <span>Photo</span>
+                  </button>
+                  <span className="text-xs tabular-nums" style={{ color: '#9C8569' }}>
+                    {newPostContent.length}/500
+                  </span>
+                </div>
                 <Button
                   onClick={handleCreatePost}
-                  disabled={!newPostContent.trim() || submitting}
+                  disabled={!newPostContent.trim() || submitting || uploadingImage}
                   className="rounded-full px-6 border-0 text-white"
                   style={{ background: BROWN }}
                 >
-                  {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
-                  Post
+                  {(submitting || uploadingImage) ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+                  {uploadingImage ? 'Uploading…' : 'Post'}
                 </Button>
               </div>
             </div>
