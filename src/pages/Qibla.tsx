@@ -1,11 +1,13 @@
 import { Layout } from '@/components/Layout';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { ArrowLeft, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
 import { useGlobalLocation } from '@/contexts/LocationContext';
 import { toast } from 'sonner';
 import mosqueIcon from '@/assets/qibla-mosque-icon.png.asset.json';
 import { assetUrl } from '@/lib/assetUrl';
+import { NativeCompass } from '@/plugins/nativeCompass';
 
 // Theme tokens
 const CREAM = '#FFF5E5';
@@ -16,6 +18,7 @@ const BROWN = '#A35233';
 const ORANGE = '#CE5728';
 
 const MECCA = { lat: 21.4225, lng: 39.8262 };
+const HEADING_SMOOTHING = 0.18;
 
 function qiblaBearing(lat: number, lng: number) {
   const φ1 = (lat * Math.PI) / 180;
@@ -41,11 +44,23 @@ function cardinal(deg: number) {
   return dirs[Math.round(deg / 45) % 8];
 }
 
+function normalizeAngle(degrees: number) {
+  return ((degrees % 360) + 360) % 360;
+}
+
+// Interpolate along the shortest path, including across the 0°/360° boundary.
+function smoothAngle(current: number, target: number, amount: number) {
+  const difference = ((target - current + 540) % 360) - 180;
+  return normalizeAngle(current + difference * amount);
+}
+
 export const Qibla = () => {
   const navigate = useNavigate();
   const { location, loading: locLoading } = useGlobalLocation();
   const [heading, setHeading] = useState<number | null>(null);
   const [orientationGranted, setOrientationGranted] = useState(false);
+  const [needsCalibration, setNeedsCalibration] = useState(false);
+  const smoothedHeading = useRef<number | null>(null);
 
   const qibla = useMemo(
     () => (location ? qiblaBearing(location.latitude, location.longitude) : 0),
@@ -59,51 +74,53 @@ export const Qibla = () => {
   // Bearing of mosque icon on dial: qibla relative to device north
   const dialAngle = heading !== null ? qibla - heading : qibla;
 
-  const attachOrientation = useCallback(() => {
-    const handler = (e: DeviceOrientationEvent) => {
-      // webkitCompassHeading on iOS gives true compass heading (clockwise from N)
-      const anyE = e as any;
-      let h: number | null = null;
-      if (typeof anyE.webkitCompassHeading === 'number') {
-        h = anyE.webkitCompassHeading;
-      } else if (e.alpha !== null) {
-        // alpha: 0 when facing N if absolute; convert (counter-clockwise) to clockwise heading
-        h = 360 - e.alpha;
-      }
-      if (h !== null) setHeading(((h % 360) + 360) % 360);
-    };
-    window.addEventListener('deviceorientationabsolute' as any, handler, true);
-    window.addEventListener('deviceorientation', handler, true);
-    return () => {
-      window.removeEventListener('deviceorientationabsolute' as any, handler, true);
-      window.removeEventListener('deviceorientation', handler, true);
-    };
-  }, []);
-
   useEffect(() => {
-    const DOE: any = (window as any).DeviceOrientationEvent;
-    if (DOE && typeof DOE.requestPermission === 'function') {
-      // iOS – wait for user gesture
-      return;
-    }
-    setOrientationGranted(true);
-    const cleanup = attachOrientation();
-    return cleanup;
-  }, [attachOrientation]);
+    if (!Capacitor.isNativePlatform()) return;
+
+    let active = true;
+    let removeListener: (() => Promise<void>) | undefined;
+    const start = async () => {
+      try {
+        const listener = await NativeCompass.addListener('heading', ({ heading: rawHeading, needsCalibration: lowAccuracy }) => {
+          if (!active) return;
+          const nextHeading = normalizeAngle(rawHeading);
+          const previousHeading = smoothedHeading.current;
+          const filteredHeading = previousHeading === null
+            ? nextHeading
+            : smoothAngle(previousHeading, nextHeading, HEADING_SMOOTHING);
+          smoothedHeading.current = filteredHeading;
+          setHeading(filteredHeading);
+          setNeedsCalibration(lowAccuracy);
+        });
+        removeListener = () => listener.remove();
+        await NativeCompass.start(location
+          ? { latitude: location.latitude, longitude: location.longitude }
+          : undefined);
+        if (active) setOrientationGranted(true);
+      } catch {
+        if (active) setOrientationGranted(false);
+      }
+    };
+
+    void start();
+    return () => {
+      active = false;
+      void removeListener?.();
+      void NativeCompass.stop();
+    };
+  }, [location?.latitude, location?.longitude]);
 
   const requestOrientation = async () => {
-    const DOE: any = (window as any).DeviceOrientationEvent;
+    if (!Capacitor.isNativePlatform()) {
+      toast.error('The compass is available in the Barakah mobile app.');
+      return;
+    }
     try {
-      if (DOE && typeof DOE.requestPermission === 'function') {
-        const res = await DOE.requestPermission();
-        if (res === 'granted') {
-          setOrientationGranted(true);
-          attachOrientation();
-          toast.success('Compass enabled');
-        } else {
-          toast.error('Motion access denied');
-        }
-      }
+      await NativeCompass.start(location
+        ? { latitude: location.latitude, longitude: location.longitude }
+        : undefined);
+      setOrientationGranted(true);
+      toast.success('Compass enabled');
     } catch {
       toast.error('Compass unavailable on this device');
     }
@@ -132,13 +149,7 @@ export const Qibla = () => {
           >
             Qibla Finder
           </h1>
-          <div className="h-10 w-10 flex items-center justify-center">
-            <div className="flex flex-col gap-1">
-              <span className="block w-1 h-1 rounded-full" style={{ background: BROWN }} />
-              <span className="block w-1 h-1 rounded-full" style={{ background: BROWN }} />
-              <span className="block w-1 h-1 rounded-full" style={{ background: BROWN }} />
-            </div>
-          </div>
+          <div className="h-10 w-10" aria-hidden="true" />
         </div>
 
         {/* Compass dial */}
@@ -278,6 +289,12 @@ export const Qibla = () => {
             >
               Enable compass sensor
             </button>
+          )}
+
+          {needsCalibration && (
+            <p className="mt-3 text-xs text-center px-8" style={{ color: BROWN }}>
+              Compass accuracy is low. Move your phone in a figure-eight motion to calibrate it.
+            </p>
           )}
 
           <p className="mt-4 mb-10 text-xs text-center px-8" style={{ color: '#9a7c63' }}>
