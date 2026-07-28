@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { Share } from '@capacitor/share';
 
 // Post categories (limited to mockup set)
 const CATEGORIES = [
@@ -1346,17 +1347,29 @@ export const Forum = () => {
 
   const handleShare = async (post: Post) => {
     try {
-      if (navigator.share) {
-        await navigator.share({
-          title: `Post by ${post.user_name}`,
-          text: post.content,
-        });
+      const shareData = {
+        title: `Post by ${post.user_name} on Guftagu`,
+        text: post.content.length > 100 ? `${post.content.slice(0, 100)}...` : post.content,
+        url: `${window.location.origin}/guftagu?post=${post.id}`,
+        dialogTitle: 'Share this post'
+      };
+
+      const canShare = await Share.canShare();
+      if (canShare.value) {
+        await Share.share(shareData);
+      } else if (navigator.share) {
+        await navigator.share(shareData);
       } else {
-        await navigator.clipboard.writeText(post.content);
-        toast.success('Copied to clipboard');
+        await navigator.clipboard.writeText(`${shareData.title}\n${shareData.text}\n${shareData.url}`);
+        toast.success('Link copied to clipboard');
       }
-    } catch {
-      // User cancelled share
+    } catch (error: any) {
+      const errorMessage = error?.message?.toLowerCase() || '';
+      if (errorMessage.includes('cancel') || errorMessage.includes('abort') || errorMessage.includes('dismissed')) {
+        return; // User cancelled share
+      }
+      console.error('Error sharing post:', error);
+      toast.error('Unable to share at this time. Please try again.');
     }
   };
 
