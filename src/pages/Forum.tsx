@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   MessageCircle, Plus, Send, ArrowLeft, Loader2, Trash2, Heart, RefreshCw, 
-  Sparkles, Users, TrendingUp, Hash, AtSign, Search, X, Flag, Share2, User, ChevronRight, Pin, ImagePlus, Compass, Info, BookOpen, Check, Camera, Globe, Lock, ArrowRight
+  Sparkles, Users, TrendingUp, Hash, AtSign, Search, X, Bookmark, Share2, User, ChevronRight, Pin, ImagePlus, Compass, Info, BookOpen, Check, Camera, Globe, Lock, ArrowRight
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -741,7 +741,7 @@ export const Forum = () => {
   const [mentionSearch, setMentionSearch] = useState('');
   const [mentionTarget, setMentionTarget] = useState<'post' | 'reply'>('post');
   const [profileName, setProfileName] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'feed' | 'explore' | 'communities'>('feed');
+  const [activeTab, setActiveTab] = useState<'feed' | 'explore' | 'communities' | 'bookmarks'>('feed');
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<string>>(new Set());
@@ -775,6 +775,18 @@ export const Forum = () => {
   // Persist joined communities per user in localStorage
   const joinedStorageKey = `guftagu_joined_${user?.uid || 'guest'}`;
   const createdStorageKey = `guftagu_created_${user?.uid || 'guest'}`;
+  const bookmarkedStorageKey = `guftagu_bookmarked_${user?.uid || 'guest'}`;
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(bookmarkedStorageKey);
+      if (raw) setBookmarkedPosts(new Set(JSON.parse(raw)));
+      else setBookmarkedPosts(new Set());
+    } catch {
+      setBookmarkedPosts(new Set());
+    }
+  }, [bookmarkedStorageKey]);
+
   useEffect(() => {
     try {
       const raw = localStorage.getItem(joinedStorageKey);
@@ -1327,6 +1339,7 @@ export const Forum = () => {
         next.add(postId);
         toast.success('Saved to bookmarks');
       }
+      try { localStorage.setItem(`guftagu_bookmarked_${user?.uid || 'guest'}`, JSON.stringify(Array.from(next))); } catch {}
       return next;
     });
   };
@@ -1496,7 +1509,7 @@ export const Forum = () => {
                 className="transition-colors"
                 style={{ color: isBookmarked ? BROWN : '#9C8569' }}
               >
-                <Flag className={cn("h-4 w-4", isBookmarked && "fill-current")} />
+                <Bookmark className={cn("h-4 w-4", isBookmarked && "fill-current")} />
               </button>
               <button
                 onClick={() => handleShare(post)}
@@ -1994,11 +2007,12 @@ export const Forum = () => {
           )}
 
           {/* Tabs */}
-          <div className="flex items-center mb-4 gap-6">
+          <div className="flex items-center mb-4 gap-6 overflow-x-auto no-scrollbar whitespace-nowrap pb-1">
             {([
               { id: 'feed', label: 'My feed' },
               { id: 'explore', label: 'Explore' },
               { id: 'communities', label: 'My Communities' },
+              { id: 'bookmarks', label: 'Bookmarks' },
             ] as const).map((tab) => (
               <button
                 key={tab.id}
@@ -2044,6 +2058,20 @@ export const Forum = () => {
               onToggle={toggleJoinCommunity}
               onOpen={(c) => setSelectedCommunity(c)}
             />
+          ) : activeTab === 'bookmarks' ? (
+            <div className="space-y-4 pb-24">
+              {posts.filter(p => bookmarkedPosts.has(p.id)).length === 0 ? (
+                <div className="text-center py-16 rounded-2xl" style={{ background: '#FFFFFF' }}>
+                  <Bookmark className="h-10 w-10 mx-auto mb-4" style={{ color: '#C4A98A' }} />
+                  <p className="font-medium" style={{ color: BROWN_DARK }}>No saved posts</p>
+                  <p className="text-sm mt-1" style={{ color: '#9C8569' }}>Posts you bookmark will appear here.</p>
+                </div>
+              ) : (
+                posts.filter(p => bookmarkedPosts.has(p.id)).map((post, i) => (
+                  <PostCard key={post.id} post={post} index={i} />
+                ))
+              )}
+            </div>
           ) : (
             <>
               {/* Category Filter Pills - hidden on My feed per redesign */}
