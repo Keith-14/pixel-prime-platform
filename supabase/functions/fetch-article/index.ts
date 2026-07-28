@@ -1,205 +1,207 @@
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
-import { z } from 'npm:zod@3.23.8'
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const RequestSchema = z.object({
-  url: z.string().url().min(1).max(2048),
-})
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
-function normalizeText(s: string): string {
-  return s
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&apos;/g, "'")
-    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
+// ─── HTML sanitizer ───────────────────────────────────────────────────────────
+
+function sanitizeHtml(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, "")
+    .replace(/<iframe[\s\S]*?<\/iframe>/gi, "")
+    .replace(/<form[\s\S]*?<\/form>/gi, "")
+    .replace(/<svg[\s\S]*?<\/svg>/gi, "")
+    .replace(/<\/?(?:div|span|section|aside|header|footer|nav|figure|figcaption|table|thead|tbody|tr|td|th|article|main)[^>]*>/gi, " ")
+    .replace(/<img([^>]*)>/gi, (_: string, attrs: string) => {
+      const src = attrs.match(/\bsrc=["']([^"']+)["']/i)?.[1];
+      const alt = attrs.match(/\balt=["']([^"']+)["']/i)?.[1] ?? "";
+      return src ? `<img src="${src}" alt="${alt}">` : "";
+    })
+    .replace(/<a([^>]*)>([\s\S]*?)<\/a>/gi, (_: string, attrs: string, content: string) => {
+      const href = attrs.match(/\bhref=["']([^"']+)["']/i)?.[1];
+      return href ? `<a href="${href}" target="_blank" rel="noopener noreferrer">${content}</a>` : content;
+    })
+    .replace(/<(\/?(?:p|h[1-6]|ul|ol|li|blockquote|strong|em|b|i|br))[^>]*>/gi, "<$1>")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/ {2,}/g, " ")
+    .trim();
 }
 
-function decodeEntities(s: string): string {
-  return s
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&apos;/g, "'")
+// ─── OG meta extraction ──────────────────────────────────────────────────────
+
+interface OGMeta {
+  description: string | null;
+  image: string | null;
+  author: string | null;
+  publishedTime: string | null;
 }
 
-function pickTag(html: string, tag: string): string | null {
-  const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i')
-  const m = html.match(re)
-  return m ? normalizeText(m[1]) : null
-}
-
-function pickMeta(html: string, property: string): string | null {
-  const re = new RegExp(`<meta[^>]*\\b(?:property|name)=["']${property}["'][^>]*\\bcontent=["']([^"']+)["']`, 'i')
-  const m = html.match(re)
-  return m ? decodeEntities(m[1]) : null
-}
-
-function pickLink(html: string, rel: string): string | null {
-  const re = new RegExp(`<link[^>]*\\brel=["']${rel}["'][^>]*\\bhref=["']([^"']+)["']`, 'i')
-  const m = html.match(re)
-  return m ? decodeEntities(m[1]) : null
-}
-
-function toAbsoluteUrl(base: string, url: string | null): string | null {
-  if (!url) return null
-  try {
-    return new URL(url, base).href
-  } catch {
-    return url
+function extractOGMeta(html: string): OGMeta {
+  const metaRe = /<meta\s+([^>]+)>/gi;
+  const metas: Record<string, string> = {};
+  let m: RegExpExecArray | null;
+  while ((m = metaRe.exec(html)) !== null) {
+    const attrs = m[1];
+    const prop =
+      attrs.match(/\bproperty=["']([^"']+)["']/i)?.[1] ||
+      attrs.match(/\bname=["']([^"']+)["']/i)?.[1];
+    const content = attrs.match(/\bcontent=["']([^"']+)["']/i)?.[1];
+    if (prop && content) metas[prop.toLowerCase()] = content;
   }
+  const linkImage = html.match(/<link[^>]+rel=["']image_src["'][^>]+href=["']([^"']+)["']/i)?.[1];
+  return {
+    description: metas["og:description"] || metas["twitter:description"] || metas["description"] || null,
+    image: metas["og:image"] || metas["og:image:url"] || metas["twitter:image"] || metas["twitter:image:src"] || linkImage || null,
+    author: metas["article:author"] || metas["author"] || null,
+    publishedTime: metas["article:published_time"] || metas["article:modified_time"] || null,
+  };
 }
 
-function extractImage(html: string, baseUrl: string): string | null {
-  return (
-    toAbsoluteUrl(baseUrl, pickMeta(html, 'og:image')) ??
-    toAbsoluteUrl(baseUrl, pickMeta(html, 'twitter:image')) ??
-    toAbsoluteUrl(baseUrl, pickMeta(html, 'image')) ??
-    null
-  )
-}
+// ─── Article body extraction ──────────────────────────────────────────────────
 
-function extractTitle(html: string): string | null {
-  return (
-    pickMeta(html, 'og:title') ??
-    pickMeta(html, 'twitter:title') ??
-    pickTag(html, 'title') ??
-    null
-  )
-}
+const NOISE_PATTERNS = /^(advertisement|subscribe|follow us|read more|sign up for|newsletter|cookie policy|copyright|all rights reserved|terms of|privacy policy|share this|related articles|you may also like)/i;
 
-function extractDescription(html: string): string | null {
-  return (
-    pickMeta(html, 'og:description') ??
-    pickMeta(html, 'twitter:description') ??
-    pickMeta(html, 'description') ??
-    null
-  )
-}
-
-function extractAuthor(html: string): string | null {
-  return (
-    pickMeta(html, 'author') ??
-    pickMeta(html, 'article:author') ??
-    null
-  )
-}
-
-function extractPublishedAt(html: string): string | null {
-  const raw =
-    pickMeta(html, 'article:published_time') ??
-    pickMeta(html, 'published_time') ??
-    pickMeta(html, 'datePublished') ??
-    pickMeta(html, 'publish-date') ??
-    null
-  if (!raw) return null
-  try {
-    return new Date(raw).toISOString()
-  } catch {
-    return null
-  }
-}
-
-function extractArticleContent(html: string, baseUrl: string): string | null {
+function extractArticleHtml(html: string): string | null {
   const body =
-    html.match(/<article[\s\S]*?<\/article>/i)?.[0] ??
-    html.match(/<main[\s\S]*?<\/main>/i)?.[0] ??
-    html.match(/<div[^>]*class=["'][^"']*post-content[^"']*["'][^>]*>[\s\S]*?<\/div>/i)?.[0] ??
-    html.match(/<div[^>]*class=["'][^"']*entry-content[^"']*["'][^>]*>[\s\S]*?<\/div>/i)?.[0] ??
-    html.match(/<div[^>]*class=["'][^"']*content[^"']*["'][^>]*>[\s\S]*?<\/div>/i)?.[0] ??
-    html
+    html.match(/<article[^>]*>([\s\S]*?)<\/article>/i)?.[0] ||
+    html.match(/<div[^>]+class="[^"]*(?:article-body|post-content|entry-content|article-content|story-body|news-body|content-body)[^"]*"[^>]*>([\s\S]*?)<\/div>/i)?.[0] ||
+    html.match(/<div[^>]+(?:id|class)="[^"]*(?:content|article|post|story)[^"]*"[^>]*>([\s\S]*?)<\/div>/i)?.[0] ||
+    html.match(/<main[^>]*>([\s\S]*?)<\/main>/i)?.[0] ||
+    html;
 
-  const paragraphs = [...body.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)]
-    .map((m) => normalizeText(m[1]))
-    .filter(
-      (p) =>
-        p.length > 45 &&
-        !/^(advertisement|subscribe|follow us|read more|share this|related articles|comments|newsletter|sign up|login|register|privacy policy|terms of service)$/i.test(
-          p
-        )
-    )
-
-  if (!paragraphs.length) return null
-  return paragraphs.map((p) => `<p>${p.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}</p>`).join('')
+  const sanitized = sanitizeHtml(body);
+  const elements: string[] = [];
+  const elementRe = /<(p|h[1-6]|ul|ol|blockquote)([\s\S]*?)<\/\1>/gi;
+  let match: RegExpExecArray | null;
+  while ((match = elementRe.exec(sanitized)) !== null) {
+    const tag = match[1];
+    const full = match[0];
+    const text = full.replace(/<[^>]+>/g, "").trim();
+    if (tag === "p" && text.length < 25) continue;
+    if (NOISE_PATTERNS.test(text)) continue;
+    elements.push(full);
+    if (elements.length >= 50) break;
+  }
+  return elements.length > 0 ? elements.join("\n") : null;
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
+// ─── Core enrichment function ─────────────────────────────────────────────────
 
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
-  }
+interface EnrichedArticle {
+  content: string | null;
+  image_url: string | null;
+  author: string | null;
+  published_at: string | null;
+  og_description: string | null;
+}
 
-  const parsed = RequestSchema.safeParse(await req.json().catch(() => ({})))
-  if (!parsed.success) {
-    return new Response(JSON.stringify({ error: parsed.error.flatten() }), {
-      status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
-  }
-
-  const { url } = parsed.data
-
+async function fetchAndEnrichArticle(url: string, existingImage: string | null): Promise<EnrichedArticle> {
   try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 12000);
     const res = await fetch(url, {
       headers: {
-        'User-Agent': 'BarakahNewsBot/1.0 (+https://barakah.app)',
-        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        "User-Agent": "Mozilla/5.0 (compatible; BarakahNewsBot/2.0; +https://barakah.app)",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
       },
-      redirect: 'follow',
-    })
+      redirect: "follow",
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) return { content: null, image_url: existingImage, author: null, published_at: null, og_description: null };
+    const html = await res.text();
+    const og = extractOGMeta(html);
+    const articleHtml = extractArticleHtml(html);
+    return {
+      content: articleHtml,
+      image_url: og.image || existingImage,
+      author: og.author || null,
+      published_at: og.publishedTime ? new Date(og.publishedTime).toISOString() : null,
+      og_description: og.description || null,
+    };
+  } catch {
+    return { content: null, image_url: existingImage, author: null, published_at: null, og_description: null };
+  }
+}
 
-    if (!res.ok) {
+// ─── Handler ──────────────────────────────────────────────────────────────────
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  try {
+    const { articleId } = await req.json().catch(() => ({}));
+    if (!articleId) {
       return new Response(
-        JSON.stringify({ error: `Failed to fetch article: HTTP ${res.status}` }),
-        { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+        JSON.stringify({ error: "articleId is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
-    const html = await res.text()
-    const content = extractArticleContent(html, url)
-    const title = extractTitle(html)
-    const description = extractDescription(html)
-    const imageUrl = extractImage(html, url)
-    const author = extractAuthor(html)
-    const publishedAt = extractPublishedAt(html)
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
 
-    if (!content && !title && !description) {
+    // Load the article record
+    const { data: article, error: fetchErr } = await supabase
+      .from("news_articles")
+      .select("id, article_url, image_url, content, description, author, published_at")
+      .eq("id", articleId)
+      .maybeSingle();
+
+    if (fetchErr || !article) {
       return new Response(
-        JSON.stringify({ error: 'Unable to extract article content from the provided URL' }),
-        { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+        JSON.stringify({ error: "Article not found" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
+
+    // Fetch and enrich from the original page
+    const enriched = await fetchAndEnrichArticle(article.article_url, article.image_url);
+
+    // Only update fields that were improved
+    const updates: Record<string, string | null> = {};
+    if (enriched.content && (!article.content || article.content.replace(/<[^>]+>/g, "").length < 300)) {
+      updates.content = enriched.content;
+    }
+    if (enriched.image_url && enriched.image_url !== article.image_url) {
+      updates.image_url = enriched.image_url;
+    }
+    if (enriched.author && !article.author) {
+      updates.author = enriched.author;
+    }
+    if (enriched.og_description && !article.description) {
+      updates.description = enriched.og_description;
+    }
+    if (enriched.published_at && !article.published_at) {
+      updates.published_at = enriched.published_at;
+    }
+
+    if (Object.keys(updates).length > 0) {
+      await supabase.from("news_articles").update(updates).eq("id", articleId);
+    }
+
+    // Return the freshest available data
+    const { data: fresh } = await supabase
+      .from("news_articles")
+      .select("id, title, description, content, image_url, article_url, source_name, published_at, author, category")
+      .eq("id", articleId)
+      .maybeSingle();
 
     return new Response(
-      JSON.stringify({
-        url,
-        title,
-        description,
-        author,
-        published_at: publishedAt,
-        image_url: imageUrl,
-        content,
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+      JSON.stringify({ success: true, article: fresh }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   } catch (e) {
     return new Response(
-      JSON.stringify({ error: (e as Error).message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+      JSON.stringify({ success: false, error: (e as Error).message }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   }
-})
+});
