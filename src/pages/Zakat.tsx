@@ -240,7 +240,7 @@ export const Zakat = () => {
             >
               {fmt(nisab, activeSymbol)}
             </p>
-            <p className="mt-3 text-white/80 text-sm">Based on gold price today</p>
+            <p className="mt-3 text-white/80 text-sm">Based on Today's Gold Price</p>
           </div>
 
           {/* Quick Currency Selector */}
