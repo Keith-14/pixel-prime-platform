@@ -31,6 +31,7 @@ public class NativeCompassPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationManager
             call.reject("A compass sensor is not available on this device.")
             return
         }
+
         locationManager.startUpdatingHeading()
         startFusedMotionUpdates()
         call.resolve()
@@ -49,11 +50,20 @@ public class NativeCompassPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationManager
     }
 
     private func startFusedMotionUpdates() {
-        guard motionManager.isDeviceMotionAvailable else { usesDeviceMotion = false; return }
+        guard motionManager.isDeviceMotionAvailable else {
+            usesDeviceMotion = false
+            return
+        }
+
         let frames = CMMotionManager.availableAttitudeReferenceFrames()
         let frame: CMAttitudeReferenceFrame = frames.contains(.xTrueNorthZVertical)
-            ? .xTrueNorthZVertical : .xMagneticNorthZVertical
-        guard frames.contains(frame) else { usesDeviceMotion = false; return }
+            ? .xTrueNorthZVertical
+            : .xMagneticNorthZVertical
+        guard frames.contains(frame) else {
+            usesDeviceMotion = false
+            return
+        }
+
         usesDeviceMotion = true
         motionManager.deviceMotionUpdateInterval = 1.0 / 30.0
         motionManager.startDeviceMotionUpdates(using: frame, to: .main) { [weak self] motion, _ in
@@ -64,8 +74,11 @@ public class NativeCompassPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationManager
 
     public func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
         headingAccuracy = newHeading.headingAccuracy
+        // Fall back to the native Core Location compass only on older devices
+        // where fused Core Motion device motion is not available.
         if !usesDeviceMotion {
-            emit(heading: newHeading.trueHeading >= 0 ? newHeading.trueHeading : newHeading.magneticHeading)
+            let heading = newHeading.trueHeading >= 0 ? newHeading.trueHeading : newHeading.magneticHeading
+            emit(heading: heading)
         }
     }
 
@@ -77,7 +90,11 @@ public class NativeCompassPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationManager
         let normalizedHeading = ((heading.truncatingRemainder(dividingBy: 360)) + 360)
             .truncatingRemainder(dividingBy: 360)
         let needsCalibration = headingAccuracy < 0 || headingAccuracy > lowAccuracyDegrees
-        notifyListeners("heading", data: ["heading": normalizedHeading, "accuracy": headingAccuracy, "needsCalibration": needsCalibration])
+        notifyListeners("heading", data: [
+            "heading": normalizedHeading,
+            "accuracy": headingAccuracy,
+            "needsCalibration": needsCalibration,
+        ])
     }
 }
 

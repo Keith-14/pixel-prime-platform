@@ -14,22 +14,33 @@ import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
-/** Uses Android's fused rotation-vector sensor and corrects it to true north. */
+/**
+ * Uses Android's rotation-vector sensor, which is fused by the device from the
+ * accelerometer, gyroscope (when available), and magnetometer. The rotation
+ * vector is magnetic-north based, so we apply local magnetic declination to
+ * deliver a true-north heading to the web layer.
+ */
 @CapacitorPlugin(name = "NativeCompass")
 public class NativeCompassPlugin extends Plugin implements SensorEventListener {
   private static final double LOW_ACCURACY_DEGREES = 20.0;
+
   private SensorManager sensorManager;
   private Sensor rotationVectorSensor;
   @Nullable private Double latitude;
   @Nullable private Double longitude;
 
-  @Override public void load() {
+  @Override
+  public void load() {
     sensorManager = (SensorManager) getContext().getSystemService(Context.SENSOR_SERVICE);
     rotationVectorSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
   }
 
   public void start(PluginCall call) {
-    if (rotationVectorSensor == null) { call.reject("A fused compass sensor is not available on this device."); return; }
+    if (rotationVectorSensor == null) {
+      call.reject("A fused compass sensor is not available on this device.");
+      return;
+    }
+
     latitude = call.getDouble("latitude");
     longitude = call.getDouble("longitude");
     sensorManager.unregisterListener(this);
@@ -37,23 +48,44 @@ public class NativeCompassPlugin extends Plugin implements SensorEventListener {
     call.resolve();
   }
 
-  public void stop(PluginCall call) { sensorManager.unregisterListener(this); call.resolve(); }
-  @Override public void handleOnDestroy() { sensorManager.unregisterListener(this); }
+  public void stop(PluginCall call) {
+    sensorManager.unregisterListener(this);
+    call.resolve();
+  }
 
-  @Override public void onSensorChanged(SensorEvent event) {
+  @Override
+  public void handleOnDestroy() {
+    sensorManager.unregisterListener(this);
+  }
+
+  @Override
+  public void onSensorChanged(SensorEvent event) {
     if (event.sensor.getType() != Sensor.TYPE_ROTATION_VECTOR) return;
+
     float[] rotationMatrix = new float[9];
     float[] orientation = new float[3];
     SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values);
     SensorManager.getOrientation(rotationMatrix, orientation);
+
     double heading = Math.toDegrees(orientation[0]);
     if (heading < 0) heading += 360.0;
+
     if (latitude != null && longitude != null) {
-      GeomagneticField field = new GeomagneticField(latitude.floatValue(), longitude.floatValue(), 0f, System.currentTimeMillis());
+      GeomagneticField field = new GeomagneticField(
+        latitude.floatValue(),
+        longitude.floatValue(),
+        0f,
+        System.currentTimeMillis()
+      );
       heading = normalize(heading + field.getDeclination());
     }
-    double accuracy = event.values.length > 4 && event.values[4] >= 0 ? Math.toDegrees(event.values[4]) : accuracyFromStatus(event.accuracy);
-    boolean needsCalibration = event.accuracy <= SensorManager.SENSOR_STATUS_ACCURACY_LOW || (accuracy >= 0 && accuracy > LOW_ACCURACY_DEGREES);
+
+    double accuracy = event.values.length > 4 && event.values[4] >= 0
+      ? Math.toDegrees(event.values[4])
+      : accuracyFromStatus(event.accuracy);
+    boolean needsCalibration = event.accuracy <= SensorManager.SENSOR_STATUS_ACCURACY_LOW
+      || (accuracy >= 0 && accuracy > LOW_ACCURACY_DEGREES);
+
     JSObject payload = new JSObject();
     payload.put("heading", heading);
     payload.put("accuracy", accuracy);
@@ -61,8 +93,15 @@ public class NativeCompassPlugin extends Plugin implements SensorEventListener {
     notifyListeners("heading", payload);
   }
 
-  @Override public void onAccuracyChanged(Sensor sensor, int accuracy) {}
-  private static double normalize(double degrees) { return ((degrees % 360.0) + 360.0) % 360.0; }
+  @Override
+  public void onAccuracyChanged(Sensor sensor, int accuracy) {
+    // Accuracy accompanies each rotation-vector event and is emitted above.
+  }
+
+  private static double normalize(double degrees) {
+    return ((degrees % 360.0) + 360.0) % 360.0;
+  }
+
   private static double accuracyFromStatus(int status) {
     switch (status) {
       case SensorManager.SENSOR_STATUS_ACCURACY_HIGH: return 5.0;

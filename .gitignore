@@ -21,4 +21,10 @@ dist-ssr
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
+# Environment
+.env
+.env.*
+
+# Temporary files
+vite.config.ts.timestamp*
+
