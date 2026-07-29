@@ -1,4 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { JSDOM } from "https://esm.sh/jsdom@20.0.3";
+import { Readability } from "https://esm.sh/@mozilla/readability@0.4.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -56,120 +58,159 @@ function sanitizeHtml(html: string): string {
     .replace(/<style[\s\S]*?<\/style>/gi, "")
     .replace(/<noscript[\s\S]*?<\/noscript>/gi, "")
     .replace(/<iframe[\s\S]*?<\/iframe>/gi, "")
-    .replace(/<form[\s\S]*?<\/form>/gi, "")
-    .replace(/<svg[\s\S]*?<\/svg>/gi, "")
-    .replace(/<\/?(?:div|span|section|aside|header|footer|nav|figure|figcaption|table|thead|tbody|tr|td|th|article|main)[^>]*>/gi, " ")
-    .replace(/<img([^>]*)>/gi, (_: string, attrs: string) => {
-      const src = attrs.match(/\bsrc=["']([^"']+)["']/i)?.[1];
-      const alt = attrs.match(/\balt=["']([^"']+)["']/i)?.[1] ?? "";
-      return src ? `<img src="${src}" alt="${alt}">` : "";
-    })
-    .replace(/<a([^>]*)>([\s\S]*?)<\/a>/gi, (_: string, attrs: string, content: string) => {
-      const href = attrs.match(/\bhref=["']([^"']+)["']/i)?.[1];
-      return href ? `<a href="${href}" target="_blank" rel="noopener noreferrer">${content}</a>` : content;
-    })
-    .replace(/<(\/?(?:p|h[1-6]|ul|ol|li|blockquote|strong|em|b|i|br))[^>]*>/gi, "<$1>")
-    .replace(/\n{3,}/g, "\n\n")
-    .replace(/ {2,}/g, " ")
-    .trim();
-}
+      const supabase = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      );
 
-// ─── OG meta extraction ──────────────────────────────────────────────────────
+      // NewsData.io integration
+      const NEWSDATA_KEY = Deno.env.get("NEWSDATA_API_KEY") || "pub_f22cee1671c5424491983937fbf02ebd";
 
-interface OGMeta {
-  title: string | null;
-  description: string | null;
-  image: string | null;
-  author: string | null;
-  publishedTime: string | null;
-  siteName: string | null;
-}
+      // Trusted publisher allowlist (case-insensitive match)
+      const TRUSTED_PUBLISHERS = [
+        'middle east eye',
+        'al jazeera',
+        'trt world',
+        'anadolu agency',
+        'arab news',
+        'the new arab',
+        'muslim news',
+        'iqna',
+        'islamic voice',
+        'gulf news',
+      ];
 
-function extractOGMeta(html: string): OGMeta {
-  const metaRe = /<meta\s+([^>]+)>/gi;
-  const metas: Record<string, string> = {};
-  let m: RegExpExecArray | null;
-  while ((m = metaRe.exec(html)) !== null) {
-    const attrs = m[1];
-    const prop =
-      attrs.match(/\bproperty=["']([^"']+)["']/i)?.[1] ||
-      attrs.match(/\bname=["']([^"']+)["']/i)?.[1];
-    const content = attrs.match(/\bcontent=["']([^"']+)["']/i)?.[1];
-    if (prop && content) metas[prop.toLowerCase()] = content;
-  }
-  // Also check <link rel="image_src">
-  const linkImage = html.match(/<link[^>]+rel=["']image_src["'][^>]+href=["']([^"']+)["']/i)?.[1];
-  return {
-    title: metas["og:title"] || metas["twitter:title"] || null,
-    description: metas["og:description"] || metas["twitter:description"] || metas["description"] || null,
-    image: metas["og:image"] || metas["og:image:url"] || metas["twitter:image"] || metas["twitter:image:src"] || linkImage || null,
-    author: metas["article:author"] || metas["author"] || null,
-    publishedTime: metas["article:published_time"] || metas["article:modified_time"] || null,
-    siteName: metas["og:site_name"] || null,
-  };
-}
-
-// ─── Utilities: URL normalization & image reachability ───────────────────────
-
-function toAbsoluteUrl(base: string, url: string | null): string | null {
-  if (!url) return null;
-  try {
-    return new URL(url, base).href;
-  } catch {
-    return null;
-  }
-}
-
-async function isImageReachable(url: string): Promise<boolean> {
-  // Try HEAD first; if not allowed, try GET with range. Retry up to 3 times with backoff.
-  const maxAttempts = 3;
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 8000 + attempt * 2000);
-      // Some servers block HEAD; use HEAD first, fallback to GET range if it fails.
-      let res = await fetch(url, { method: 'HEAD', signal: controller.signal });
-      clearTimeout(timer);
-      if (!res.ok) {
-        // Try a small GET
-        const controller2 = new AbortController();
-        const timer2 = setTimeout(() => controller2.abort(), 8000 + attempt * 2000);
-        res = await fetch(url, { method: 'GET', headers: { Range: 'bytes=0-0' }, signal: controller2.signal });
-        clearTimeout(timer2);
+      function isTrustedPublisher(name: string | undefined | null): boolean {
+        if (!name) return false;
+        const n = name.toLowerCase().trim();
+        return TRUSTED_PUBLISHERS.some((t) => n.includes(t));
       }
-      const ct = res.headers.get('content-type') || '';
-      if (res.ok && ct.startsWith('image')) return true;
-      // otherwise treat as unreachable and retry
-    } catch {
-      // swallow and retry
-    }
-    // exponential backoff
-    await new Promise((r) => setTimeout(r, 200 * Math.pow(2, attempt)));
-  }
-  return false;
-}
 
-// ─── Article body extraction ─────────────────────────────────────────────────
+      // Simple keyword-based fallback classifier; if OPENAI_API_KEY is provided this can be replaced by an AI call
+      function classifyIsIslamic(title: string | null, description: string | null, categories: string[] | null): { accept: boolean; category?: string } {
+        const acceptKeywords = [
+          'palestine','gaza','islam','muslim','hajj','umrah','ramadan','eid','quran','hadith','halal','mosque','islamic','ummah','muslim communities','islamic finance','islamic education'
+        ];
+        const rejectKeywords = ['gossip','entertainment','celebrity','sports','crime','accident'];
+        const text = `${title ?? ''} ${description ?? ''} ${(categories ?? []).join(' ')}`.toLowerCase();
+        for (const r of rejectKeywords) if (text.includes(r)) return { accept: false };
+        for (const k of acceptKeywords) if (text.includes(k)) return { accept: true, category: k };
+        // fallback false
+        return { accept: false };
+      }
 
-const NOISE_PATTERNS = /^(advertisement|subscribe|follow us|read more|sign up for|newsletter|cookie policy|copyright|all rights reserved|terms of|privacy policy|share this|related articles|you may also like)/i;
+      async function extractFullArticleWithReadability(url: string): Promise<{ content: string | null; title: string | null; firstImage: string | null }> {
+        try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 15000);
+          const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BarakahNewsBot/2.0)' }, signal: controller.signal });
+          clearTimeout(timer);
+          if (!res.ok) return { content: null, title: null, firstImage: null };
+          const html = await res.text();
+          const dom = new JSDOM(html, { url });
+          const reader = new Readability(dom.window.document);
+          const article = reader.parse();
+          if (!article) return { content: null, title: null, firstImage: null };
+          const content = sanitizeHtml(article.content || '');
+          const firstImg = (article.content || '').match(/<img[^>]+src=["']([^"']+)["']/i)?.[1] || null;
+          return { content, title: article.title || null, firstImage: firstImg ? toAbsoluteUrl(url, firstImg) : null };
+        } catch (e) {
+          console.warn('Readability failed for', url, (e as Error).message);
+          return { content: null, title: null, firstImage: null };
+        }
+      }
 
-function extractArticleHtml(html: string): string | null {
-  // Prefer <article>, then common content class patterns, then <main>
-  const body =
-    html.match(/<article[^>]*>([\s\S]*?)<\/article>/i)?.[0] ||
-    html.match(/<div[^>]+class="[^"]*(?:article-body|post-content|entry-content|article-content|story-body|news-body|content-body)[^"]*"[^>]*>([\s\S]*?)<\/div>/i)?.[0] ||
-    html.match(/<div[^>]+(?:id|class)="[^"]*(?:content|article|post|story)[^"]*"[^>]*>([\s\S]*?)<\/div>/i)?.[0] ||
-    html.match(/<main[^>]*>([\s\S]*?)<\/main>/i)?.[0] ||
-    html;
+      try {
+        let totalInserted = 0;
+        const results: Record<string, number | string> = {};
 
-  const sanitized = sanitizeHtml(body);
-  const elements: string[] = [];
-  const elementRe = /<(p|h[1-6]|ul|ol|blockquote)([\s\S]*?)<\/\1>/gi;
-  let match: RegExpExecArray | null;
-  while ((match = elementRe.exec(sanitized)) !== null) {
-    const tag = match[1];
-    const full = match[0];
-    const text = full.replace(/<[^>]+>/g, "").trim();
+        // Fetch pages from NewsData.io (respect rate limits) — fetch first 2 pages as a start
+        const pagesToFetch = 2;
+        const seenGuids = new Set<string>();
+
+        for (let p = 0; p < pagesToFetch; p++) {
+          const apiUrl = `https://newsdata.io/api/1/news?apikey=${NEWSDATA_KEY}&page=${p}`;
+          const res = await fetch(apiUrl, { headers: { 'User-Agent': 'BarakahNewsBot/2.0' } });
+          if (!res.ok) {
+            results[`newsdata_page_${p}`] = `HTTP ${res.status}`;
+            continue;
+          }
+          const json = await res.json().catch(() => ({}));
+          const articles = Array.isArray(json.results) ? json.results : [];
+          let pageInserted = 0;
+
+          for (const a of articles) {
+            const sourceName = (a.source_id || a.source || a.creator || '') as string;
+            if (!isTrustedPublisher(sourceName)) continue;
+
+            const guid = a.link || a.guid || a.id || `${a.title}-${a.pubDate}`;
+            if (seenGuids.has(guid)) continue;
+            seenGuids.add(guid);
+
+            // AI relevance classification (or fallback)
+            const cls = classifyIsIslamic(a.title || null, a.description || null, Array.isArray(a.category) ? a.category : (a.category ? [a.category] : null));
+            if (!cls.accept) continue;
+
+            // Extract full article with Readability
+            const extracted = await extractFullArticleWithReadability(a.link);
+
+            // OG metadata
+            const og = extractOGMeta(extracted.content || '');
+
+            // Resolve featured image priority
+            let candidateImages: Array<string | null> = [];
+            candidateImages.push(og.image || null);
+            candidateImages.push(a.image_url || a.image || null);
+            candidateImages.push(a.media_content || null);
+            candidateImages.push(a.media_thumbnail || null);
+            candidateImages.push(a.enclosure || null);
+            candidateImages.push(extracted.firstImage || null);
+
+            let chosenImage: string | null = null;
+            for (const img of candidateImages) {
+              if (!img) continue;
+              const abs = toAbsoluteUrl(a.link, img) || img;
+              if (await isImageReachable(abs)) {
+                chosenImage = abs;
+                break;
+              }
+            }
+
+            const row = {
+              guid,
+              title: a.title || extracted.title || 'Untitled',
+              description: a.description || null,
+              content: extracted.content || (a.description ? `<p>${a.description}</p>` : null),
+              image_url: chosenImage,
+              article_url: a.link,
+              published_at: a.pubDate ? new Date(a.pubDate).toISOString() : null,
+              author: a.creator || a.source || null,
+              tags: Array.isArray(a.category) ? a.category : (a.category ? [a.category] : []),
+              source_name: sourceName || 'newsdata',
+              category: cls.category || (Array.isArray(a.category) ? a.category[0] : a.category) || null,
+              language: a.language || null,
+              country: a.country || null,
+            };
+
+            // Upsert single row by guid
+            const { error: upErr } = await supabase.from('news_articles').upsert(row, { onConflict: 'guid' });
+            if (upErr) {
+              console.warn('DB upsert failed for', guid, upErr.message);
+              continue;
+            }
+            pageInserted += 1;
+          }
+
+          results[`page_${p}`] = pageInserted;
+          totalInserted += pageInserted;
+          // Respect a small delay to avoid rate limits
+          await new Promise((r) => setTimeout(r, 500));
+        }
+
+        return new Response(JSON.stringify({ success: true, totalProcessed: totalInserted, results }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      } catch (e) {
+        return new Response(JSON.stringify({ success: false, error: (e as Error).message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
     if (tag === "p" && text.length < 25) continue;
     if (NOISE_PATTERNS.test(text)) continue;
     elements.push(full);
