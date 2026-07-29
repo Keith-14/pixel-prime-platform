@@ -398,11 +398,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Deduplicate: keep newest by article_url
-    try {
-      await supabase.rpc("noop"); // no-op guard if RPC missing; deduplication done via SQL below
-    } catch { /* ignore */ }
-
     return new Response(
       JSON.stringify({ success: true, inserted, updated, skipped, rejected, results }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
