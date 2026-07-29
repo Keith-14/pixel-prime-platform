@@ -2,7 +2,7 @@
 // Trusted publishers → AI relevance → Readability extraction → clean HTML → featured image → Supabase
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { parseHTML } from "https://esm.sh/linkedom@0.16.11";
-import { Readability } from "https://esm.sh/@mozilla/readability@0.5.0";
+import { Readability } from "https://esm.sh/@mozilla/readability@0.4.4?deps=jsdom@22.1.0&no-check";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
