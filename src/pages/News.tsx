@@ -252,10 +252,21 @@ export const News = () => {
                               alt={item.title}
                               loading="lazy"
                               className="h-full w-full object-cover"
-                              onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
+                              onError={(e) => {
+                                const img = e.target as HTMLImageElement;
+                                img.onerror = null;
+                                img.style.display = 'none';
+                                img.dataset['errored'] = '1';
+                              }}
                             />
                           ) : (
                             <div className="h-full w-full flex items-center justify-center" style={{ color: BROWN }}>
+                              <Sparkles className="h-6 w-6 opacity-50" />
+                            </div>
+                          )}
+                          {/* Fallback placeholder shown when image fails to load */}
+                          {!item.image_url && (
+                            <div className="absolute inset-0 flex items-center justify-center" style={{ color: BROWN }}>
                               <Sparkles className="h-6 w-6 opacity-50" />
                             </div>
                           )}
@@ -313,10 +324,20 @@ export const News = () => {
                               alt={item.title}
                               loading="lazy"
                               className="h-full w-full object-cover"
-                              onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
+                              onError={(e) => {
+                                const img = e.target as HTMLImageElement;
+                                img.onerror = null;
+                                img.style.display = 'none';
+                                img.dataset['errored'] = '1';
+                              }}
                             />
                           ) : (
                             <div className="h-full w-full flex items-center justify-center" style={{ color: BROWN }}>
+                              <Sparkles className="h-5 w-5 opacity-50" />
+                            </div>
+                          )}
+                          {!item.image_url && (
+                            <div className="absolute inset-0 flex items-center justify-center" style={{ color: BROWN }}>
                               <Sparkles className="h-5 w-5 opacity-50" />
                             </div>
                           )}

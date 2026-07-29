@@ -61,6 +61,39 @@ function extractOGMeta(html: string): OGMeta {
   };
 }
 
+function toAbsoluteUrl(base: string, url: string | null): string | null {
+  if (!url) return null;
+  try {
+    return new URL(url, base).href;
+  } catch {
+    return null;
+  }
+}
+
+async function isImageReachable(url: string): Promise<boolean> {
+  const maxAttempts = 3;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 8000 + attempt * 2000);
+      let res = await fetch(url, { method: 'HEAD', signal: controller.signal });
+      clearTimeout(timer);
+      if (!res.ok) {
+        const controller2 = new AbortController();
+        const timer2 = setTimeout(() => controller2.abort(), 8000 + attempt * 2000);
+        res = await fetch(url, { method: 'GET', headers: { Range: 'bytes=0-0' }, signal: controller2.signal });
+        clearTimeout(timer2);
+      }
+      const ct = res.headers.get('content-type') || '';
+      if (res.ok && ct.startsWith('image')) return true;
+    } catch {
+      // retry
+    }
+    await new Promise((r) => setTimeout(r, 200 * Math.pow(2, attempt)));
+  }
+  return false;
+}
+
 // ─── Article body extraction ──────────────────────────────────────────────────
 
 const NOISE_PATTERNS = /^(advertisement|subscribe|follow us|read more|sign up for|newsletter|cookie policy|copyright|all rights reserved|terms of|privacy policy|share this|related articles|you may also like)/i;
@@ -116,7 +149,39 @@ async function fetchAndEnrichArticle(url: string, existingImage: string | null):
     if (!res.ok) return { content: null, image_url: existingImage, author: null, published_at: null, og_description: null };
     const html = await res.text();
     const og = extractOGMeta(html);
-    const articleHtml = extractArticleHtml(html);
+    let articleHtml = extractArticleHtml(html);
+
+    // Normalize image URLs in the article HTML and add lazy loading
+    if (articleHtml) {
+      articleHtml = articleHtml.replace(/<img([^>]+)>/gi, (full, attrs) => {
+        const src = attrs.match(/\bsrc=["']([^"']+)["']/i)?.[1];
+        const alt = attrs.match(/\balt=["']([^"']+)["']/i)?.[1] ?? "";
+        const resolved = toAbsoluteUrl(url, src) || src;
+        return src ? `<img src="${resolved}" alt="${alt}" loading="lazy" style="max-width:100%;height:auto;border-radius:8px;margin:8px 0;">` : "";
+      });
+    }
+
+    // Resolve image priority: OG/Twitter first, then existingImage, then first image in content
+    let resolvedImage = og.image || existingImage || null;
+    if (resolvedImage) resolvedImage = toAbsoluteUrl(url, resolvedImage) || resolvedImage;
+    if (resolvedImage && !(await isImageReachable(resolvedImage))) {
+      // try to find first image in articleHtml
+      const firstImg = articleHtml?.match(/<img[^>]+src=["']([^"']+)["']/i)?.[1];
+      if (firstImg) {
+        const abs = toAbsoluteUrl(url, firstImg) || firstImg;
+        resolvedImage = (await isImageReachable(abs)) ? abs : null;
+      } else {
+        resolvedImage = null;
+      }
+    }
+
+    return {
+      content: articleHtml,
+      image_url: resolvedImage,
+      author: og.author || null,
+      published_at: og.publishedTime ? new Date(og.publishedTime).toISOString() : null,
+      og_description: og.description || null,
+    };
     return {
       content: articleHtml,
       image_url: og.image || existingImage,

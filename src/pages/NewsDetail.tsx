@@ -25,7 +25,16 @@ const CREAM = '#FFF5E5';
 const BROWN_SOFT = '#F5D9C4';
 
 // Client-side HTML sanitiser — strips dangerous tags, keeps formatting
-function sanitizeForDisplay(html: string): string {
+function toAbsoluteUrl(base: string, url: string | null): string | null {
+  if (!url) return null;
+  try {
+    return new URL(url, base).href;
+  } catch {
+    return null;
+  }
+}
+
+function sanitizeForDisplay(html: string, baseUrl?: string): string {
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, '')
     .replace(/<style[\s\S]*?<\/style>/gi, '')
@@ -34,16 +43,18 @@ function sanitizeForDisplay(html: string): string {
     .replace(/<form[\s\S]*?<\/form>/gi, '')
     // Unwrap structural wrappers that mess up spacing
     .replace(/<\/?(?:div|span|section|figure|figcaption|aside|header|footer|nav)[^>]*>/gi, ' ')
-    // Sanitize img tags — only keep src and alt
+    // Sanitize img tags — only keep src and alt, normalize to absolute and add lazy loading
     .replace(/<img([^>]*)>/gi, (_, attrs) => {
       const src = attrs.match(/\bsrc=["']([^"']+)["']/i)?.[1];
       const alt = attrs.match(/\balt=["']([^"']+)["']/i)?.[1] ?? '';
-      return src ? `<img src="${src}" alt="${alt}" loading="lazy" style="max-width:100%;border-radius:8px;margin:8px 0;">` : '';
+      const resolved = baseUrl ? (toAbsoluteUrl(baseUrl, src) || src) : src;
+      return src ? `<img src="${resolved}" alt="${alt}" loading="lazy" style="max-width:100%;border-radius:8px;margin:8px 0;">` : '';
     })
     // Sanitize anchor tags
     .replace(/<a([^>]*)>([\s\S]*?)<\/a>/gi, (_, attrs, content) => {
       const href = attrs.match(/\bhref=["']([^"']+)["']/i)?.[1];
-      return href ? `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color:${BROWN};text-decoration:underline;">${content}</a>` : content;
+      const resolved = baseUrl ? (toAbsoluteUrl(baseUrl, href) || href) : href;
+      return href ? `<a href="${resolved}" target="_blank" rel="noopener noreferrer" style="color:${BROWN};text-decoration:underline;">${content}</a>` : content;
     })
     // Strip attributes from safe tags
     .replace(/<(\/?(?:p|h[1-6]|ul|ol|li|blockquote|strong|em|b|i|br))[^>]*>/gi, '<$1>')
@@ -165,8 +176,8 @@ export const NewsDetail = () => {
   };
 
   // ── Derived display values ────────────────────────────────────────────────────
-  const sanitizedContent = sanitizeForDisplay(article?.content ?? '');
-  const sanitizedDescription = sanitizeForDisplay(article?.description ?? '');
+  const sanitizedContent = sanitizeForDisplay(article?.content ?? '', article?.article_url);
+  const sanitizedDescription = sanitizeForDisplay(article?.description ?? '', article?.article_url);
   const contentText = plainText(sanitizedContent);
   const descriptionText = plainText(sanitizedDescription);
   const contentStartsWithDescription = Boolean(descriptionText) && contentText.startsWith(descriptionText);

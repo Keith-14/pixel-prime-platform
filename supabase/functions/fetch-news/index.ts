@@ -109,6 +109,46 @@ function extractOGMeta(html: string): OGMeta {
   };
 }
 
+// ─── Utilities: URL normalization & image reachability ───────────────────────
+
+function toAbsoluteUrl(base: string, url: string | null): string | null {
+  if (!url) return null;
+  try {
+    return new URL(url, base).href;
+  } catch {
+    return null;
+  }
+}
+
+async function isImageReachable(url: string): Promise<boolean> {
+  // Try HEAD first; if not allowed, try GET with range. Retry up to 3 times with backoff.
+  const maxAttempts = 3;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 8000 + attempt * 2000);
+      // Some servers block HEAD; use HEAD first, fallback to GET range if it fails.
+      let res = await fetch(url, { method: 'HEAD', signal: controller.signal });
+      clearTimeout(timer);
+      if (!res.ok) {
+        // Try a small GET
+        const controller2 = new AbortController();
+        const timer2 = setTimeout(() => controller2.abort(), 8000 + attempt * 2000);
+        res = await fetch(url, { method: 'GET', headers: { Range: 'bytes=0-0' }, signal: controller2.signal });
+        clearTimeout(timer2);
+      }
+      const ct = res.headers.get('content-type') || '';
+      if (res.ok && ct.startsWith('image')) return true;
+      // otherwise treat as unreachable and retry
+    } catch {
+      // swallow and retry
+    }
+    // exponential backoff
+    await new Promise((r) => setTimeout(r, 200 * Math.pow(2, attempt)));
+  }
+  return false;
+}
+
 // ─── Article body extraction ─────────────────────────────────────────────────
 
 const NOISE_PATTERNS = /^(advertisement|subscribe|follow us|read more|sign up for|newsletter|cookie policy|copyright|all rights reserved|terms of|privacy policy|share this|related articles|you may also like)/i;
@@ -183,12 +223,13 @@ export async function fetchAndEnrichArticle(url: string, existingImage: string |
 // ─── RSS image extraction ─────────────────────────────────────────────────────
 
 function extractImage(itemXml: string): string | null {
-  const enclosure = pickAttr(itemXml, "enclosure", "url");
-  if (enclosure) return enclosure;
+  // Prefer media:content, then media:thumbnail, then enclosure, then first img in content
   const mediaContent = pickAttr(itemXml, "media:content", "url");
   if (mediaContent) return mediaContent;
   const mediaThumb = pickAttr(itemXml, "media:thumbnail", "url");
   if (mediaThumb) return mediaThumb;
+  const enclosure = pickAttr(itemXml, "enclosure", "url");
+  if (enclosure) return enclosure;
   const html = pick(itemXml, "content:encoded") || pick(itemXml, "description") || "";
   const imgMatch = html.match(/<img[^>]+src=["']([^"']+)["']/i);
   return imgMatch ? imgMatch[1] : null;
@@ -277,24 +318,48 @@ Deno.serve(async (req) => {
 
         for (const it of items) {
           const rssTextLength = `${it.description ?? ""} ${it.content?.replace(/<[^>]+>/g, "") ?? ""}`.trim().length;
+          // Start with RSS-provided candidates
           let enriched: EnrichedArticle = {
             content: it.content,
             image_url: it.image_url,
             author: it.author,
-            published_at: null,
+            published_at: it.published_at,
             og_description: null,
           };
 
-          // Fetch full article page if: content is short OR image is missing
-          if (rssTextLength < 700 || !it.image_url) {
+          // Always try to enrich from the article page to prefer publisher's OG/twitter images
+          try {
             const fetched = await fetchAndEnrichArticle(it.article_url, it.image_url);
+
+            // Normalize image URLs and validate reachability
+            if (fetched.image_url) {
+              const abs = toAbsoluteUrl(it.article_url, fetched.image_url) || fetched.image_url;
+              if (await isImageReachable(abs)) {
+                fetched.image_url = abs;
+              } else {
+                // fallback to RSS candidate
+                const rssImg = it.image_url;
+                if (rssImg) {
+                  const absRss = toAbsoluteUrl(it.article_url, rssImg) || rssImg;
+                  fetched.image_url = (await isImageReachable(absRss)) ? absRss : null;
+                } else {
+                  fetched.image_url = null;
+                }
+              }
+            } else if (it.image_url) {
+              const absRss = toAbsoluteUrl(it.article_url, it.image_url) || it.image_url;
+              fetched.image_url = (await isImageReachable(absRss)) ? absRss : null;
+            }
+
             enriched = {
               content: fetched.content || it.content,
               image_url: fetched.image_url || it.image_url,
               author: it.author || fetched.author,
-              published_at: fetched.published_at,
+              published_at: fetched.published_at || it.published_at,
               og_description: fetched.og_description,
             };
+          } catch (e) {
+            console.warn('Enrichment error for', it.article_url, (e as Error).message);
           }
 
           rows.push({
