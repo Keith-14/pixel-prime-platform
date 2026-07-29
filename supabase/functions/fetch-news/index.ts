@@ -1,7 +1,7 @@
 // fetch-news: NewsData.io ingestion pipeline
 // Trusted publishers → AI relevance → Readability extraction → clean HTML → featured image → Supabase
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { JSDOM } from "https://esm.sh/jsdom@22.1.0";
+import { parseHTML } from "https://esm.sh/linkedom@0.16.11";
 import { Readability } from "https://esm.sh/@mozilla/readability@0.5.0";
 
 const corsHeaders = {
@@ -158,8 +158,10 @@ async function extractArticle(url: string): Promise<Extracted> {
     const ogImage = toAbsoluteUrl(url, extractOgImage(raw));
 
     try {
-      const dom = new JSDOM(raw, { url });
-      const reader = new Readability(dom.window.document);
+      const { document } = parseHTML(raw);
+      // Readability expects document.location.href in some paths
+      try { (document as any).documentURI = url; } catch { /* ignore */ }
+      const reader = new Readability(document as unknown as Document);
       const article = reader.parse();
       if (article && article.content) {
         const cleaned = cleanReadabilityHtml(article.content, url);
