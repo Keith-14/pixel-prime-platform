@@ -444,45 +444,57 @@ export type Database = {
       }
       news_articles: {
         Row: {
+          ai_category: string | null
           article_url: string
           author: string | null
           category: string | null
           content: string | null
+          country: string | null
           created_at: string
           description: string | null
           guid: string
           id: string
           image_url: string | null
+          is_islamic: boolean | null
+          language: string | null
           published_at: string | null
           source_name: string
           tags: string[] | null
           title: string
         }
         Insert: {
+          ai_category?: string | null
           article_url: string
           author?: string | null
           category?: string | null
           content?: string | null
+          country?: string | null
           created_at?: string
           description?: string | null
           guid: string
           id?: string
           image_url?: string | null
+          is_islamic?: boolean | null
+          language?: string | null
           published_at?: string | null
           source_name: string
           tags?: string[] | null
           title: string
         }
         Update: {
+          ai_category?: string | null
           article_url?: string
           author?: string | null
           category?: string | null
           content?: string | null
+          country?: string | null
           created_at?: string
           description?: string | null
           guid?: string
           id?: string
           image_url?: string | null
+          is_islamic?: boolean | null
+          language?: string | null
           published_at?: string | null
           source_name?: string
           tags?: string[] | null
