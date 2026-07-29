@@ -1,7 +1,8 @@
 // fetch-news: NewsData.io ingestion pipeline
 // Trusted publishers → AI relevance → Readability extraction → clean HTML → featured image → Supabase
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { parseHTML } from "https://esm.sh/linkedom@0.16.11";
+// linkedom/worker excludes optional `canvas` dep which breaks Deno bundling
+import { parseHTML } from "https://esm.sh/linkedom@0.16.11/worker";
 // @ts-ignore - jsdelivr ESM bundle
 import { Readability } from "https://cdn.jsdelivr.net/npm/@mozilla/readability@0.5.0/+esm";
 
