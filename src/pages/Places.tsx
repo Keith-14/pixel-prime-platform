@@ -31,8 +31,72 @@ L.Icon.Default.mergeOptions({
 
 const SEARCH_RADIUS_M = 15000; // 15km
 const SEARCH_RADIUS_LABEL = '15km';
+const ADDRESS_FALLBACK = 'Address not available';
+
+// Build the best possible display name from OSM tags
+const buildPlaceName = (tags: Record<string, string | undefined> = {}, type: PlaceTypeName) => {
+  const named =
+    tags.name ||
+    tags['name:en'] ||
+    tags['name:ur'] ||
+    tags['name:hi'] ||
+    tags['name:ar'] ||
+    tags.alt_name ||
+    tags.official_name ||
+    tags.brand ||
+    tags.operator;
+  if (named) return named;
+
+  const locality = tags['addr:suburb'] || tags['addr:neighbourhood'] || tags['addr:city'] || tags['addr:street'];
+  const base = type === 'mosque' ? 'Masjid' : 'Halal Restaurant';
+  return locality ? `${base} — ${locality}` : base;
+};
+
+// Build a complete street address from OSM addr:* tags
+const buildPlaceAddress = (tags: Record<string, string | undefined> = {}) => {
+  if (tags['addr:full']) return tags['addr:full'];
+  const street = [tags['addr:housenumber'], tags['addr:housename'], tags['addr:street']]
+    .filter(Boolean)
+    .join(' ');
+  const parts = [
+    street,
+    tags['addr:neighbourhood'],
+    tags['addr:suburb'],
+    tags['addr:city'] || tags['addr:town'] || tags['addr:village'],
+    tags['addr:district'],
+    tags['addr:state'],
+    tags['addr:postcode'],
+  ].filter((v, i, arr) => Boolean(v) && arr.indexOf(v) === i);
+  return parts.length ? parts.join(', ') : '';
+};
+
+// Reverse geocode a single point into a readable street address
+const reverseAddress = async (lat: number, lon: number, signal: AbortSignal): Promise<string> => {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=18&addressdetails=1&lat=${lat}&lon=${lon}`,
+      { headers: { 'Accept-Language': 'en' }, signal }
+    );
+    if (!res.ok) throw new Error('reverse failed');
+    const data = await res.json();
+    const a = data?.address || {};
+    const street = [a.house_number, a.road].filter(Boolean).join(' ');
+    const parts = [
+      street,
+      a.neighbourhood || a.suburb || a.quarter,
+      a.city || a.town || a.village || a.municipality,
+      a.state_district,
+      a.state,
+      a.postcode,
+    ].filter((v, i, arr) => Boolean(v) && arr.indexOf(v) === i);
+    return parts.length ? parts.join(', ') : (data?.display_name || '');
+  } catch {
+    return '';
+  }
+};
 
 type PlaceType = 'mosque' | 'restaurant';
+type PlaceTypeName = PlaceType;
 
 interface Place {
   id: string;
@@ -74,6 +138,7 @@ export const Places = () => {
   const [searchingCity, setSearchingCity] = useState(false);
   const [restaurantFilter, setRestaurantFilter] = useState<'Nearest' | 'Open Now' | 'Top Rated' | 'Turkish'>('Nearest');
   const placesRequestRef = useRef(0);
+  const addressCacheRef = useRef<Map<string, string>>(new Map());
   const userLatitude = userLocation?.latitude;
   const userLongitude = userLocation?.longitude;
   const locationKey = userLatitude !== undefined && userLongitude !== undefined
@@ -215,6 +280,40 @@ export const Places = () => {
     }
   };
 
+  // Fill in missing addresses via reverse geocoding, updating cards progressively
+  const enrichAddresses = async (list: Place[], requestId: number, signal?: AbortSignal) => {
+    const pending = list.filter((p) => p.address === ADDRESS_FALLBACK).slice(0, 40);
+    const abortSignal = signal || new AbortController().signal;
+
+    for (const place of pending) {
+      if (abortSignal.aborted || requestId !== placesRequestRef.current) return;
+
+      const cacheKey = `${place.lat.toFixed(5)},${place.lon.toFixed(5)}`;
+      let address = addressCacheRef.current.get(cacheKey);
+      if (address === undefined) {
+        address = await reverseAddress(place.lat, place.lon, abortSignal);
+        addressCacheRef.current.set(cacheKey, address);
+        // Respect Nominatim's usage policy between lookups
+        await new Promise((r) => setTimeout(r, 700));
+      }
+
+      if (!address || abortSignal.aborted || requestId !== placesRequestRef.current) continue;
+      const resolved = address;
+      setPlaces((prev) =>
+        prev.map((p) => {
+          if (p.id !== place.id) return p;
+          const isGeneric = p.name === 'Masjid' || p.name === 'Mosque' || p.name === 'Halal Restaurant';
+          const locality = resolved.split(',').map((s) => s.trim()).filter(Boolean)[0];
+          return {
+            ...p,
+            address: resolved,
+            name: isGeneric && locality ? `${p.name} — ${locality}` : p.name,
+          };
+        })
+      );
+    }
+  };
+
   // Find nearby places using Overpass API
   const findNearbyPlaces = async (lat: number, lon: number, type: PlaceType, signal?: AbortSignal) => {
     const requestId = placesRequestRef.current + 1;
@@ -245,15 +344,13 @@ export const Places = () => {
           
           const distance = calculateDistance(lat, lon, elLat, elLon);
           
-          const defaultName = type === 'mosque' ? 'Mosque' : 'Halal Restaurant';
-          
           return {
             id: `${element.type || 'place'}-${element.id}`,
-            name: element.tags?.name || element.tags?.['name:en'] || element.tags?.['name:ar'] || defaultName,
+            name: buildPlaceName(element.tags, type),
             lat: elLat,
             lon: elLon,
             distance,
-            address: element.tags?.['addr:full'] || element.tags?.['addr:street'] || element.tags?.['addr:city'] || 'Address not available',
+            address: buildPlaceAddress(element.tags) || ADDRESS_FALLBACK,
             type,
           };
         })
@@ -267,7 +364,10 @@ export const Places = () => {
         .sort((a: Place, b: Place) => (a.distance || 0) - (b.distance || 0));
 
       setPlaces(placesList);
-      
+
+      // Progressively fill in missing addresses via reverse geocoding
+      void enrichAddresses(placesList, requestId, signal);
+
       if (placesList.length > 0) {
         toast.success(`Found ${placesList.length} ${typeLabel} within ${SEARCH_RADIUS_LABEL}`);
       } else {
