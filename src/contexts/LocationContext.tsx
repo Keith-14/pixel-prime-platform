@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 interface LocationData {
   latitude: number;
   longitude: number;
+  area?: string;
   city: string;
   country: string;
   fullAddress: string;
@@ -43,6 +44,7 @@ const normalizeLocation = (value: unknown): LocationData | null => {
   return {
     latitude,
     longitude,
+    area: raw.area,
     city: raw.city || 'Unknown',
     country: raw.country || 'Unknown',
     fullAddress: raw.fullAddress || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
@@ -107,16 +109,25 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const data = await response.json();
-      
+
+      // Most precise administrative name available (neighbourhood/suburb level)
+      const info = data?.localityInfo?.administrative as Array<{ name?: string; adminLevel?: number }> | undefined;
+      const finest = Array.isArray(info)
+        ? [...info].sort((a, b) => (b.adminLevel ?? 0) - (a.adminLevel ?? 0))[0]?.name
+        : undefined;
+      const area = data.locality || finest || data.city || undefined;
+
       return {
+        area,
         city: data.city || data.locality || data.principalSubdivision || 'Unknown',
         country: data.countryName || 'Unknown',
         fullAddress: [
+          area,
           data.locality,
           data.city,
           data.principalSubdivision,
           data.countryName
-        ].filter(Boolean).join(', ')
+        ].filter((v, i, arr) => Boolean(v) && arr.indexOf(v) === i).join(', ')
       };
     } catch {
       return {
@@ -134,6 +145,7 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
     const locationData: LocationData = {
       latitude: lat,
       longitude: lon,
+      area: geoData.area,
       city: geoData.city || 'Unknown',
       country: geoData.country || 'Unknown',
       fullAddress: geoData.fullAddress || `${lat.toFixed(4)}, ${lon.toFixed(4)}`,
@@ -223,6 +235,7 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
       const locationData: LocationData = {
         latitude,
         longitude,
+        area: geoData.area,
         city: geoData.city || 'Unknown',
         country: geoData.country || 'Unknown',
         fullAddress: geoData.fullAddress || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,

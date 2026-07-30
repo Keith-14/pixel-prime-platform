@@ -29,6 +29,9 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+const SEARCH_RADIUS_M = 15000; // 15km
+const SEARCH_RADIUS_LABEL = '15km';
+
 type PlaceType = 'mosque' | 'restaurant';
 
 interface Place {
@@ -149,66 +152,67 @@ export const Places = () => {
   const buildOverpassQuery = (lat: number, lon: number, radius: number, type: PlaceType) => {
     if (type === 'mosque') {
       return `
-        [out:json][timeout:25];
+        [out:json][timeout:30];
         (
-          node["amenity"="place_of_worship"]["religion"="muslim"](around:${radius},${lat},${lon});
-          node["building"="mosque"](around:${radius},${lat},${lon});
-          way["amenity"="place_of_worship"]["religion"="muslim"](around:${radius},${lat},${lon});
-          way["building"="mosque"](around:${radius},${lat},${lon});
+          nwr["amenity"="place_of_worship"]["religion"="muslim"](around:${radius},${lat},${lon});
+          nwr["building"="mosque"](around:${radius},${lat},${lon});
         );
-        out center;
+        out center tags;
       `;
     } else {
-      // Simplified query for halal restaurants - search by cuisine and diet tags
       return `
-        [out:json][timeout:25];
+        [out:json][timeout:30];
         (
-          node["diet:halal"="yes"](around:${radius},${lat},${lon});
-          node["cuisine"~"halal|indian|pakistani|middle_eastern|arabic|turkish|kebab|afghan"](around:${radius},${lat},${lon});
-          way["diet:halal"="yes"](around:${radius},${lat},${lon});
+          nwr["diet:halal"~"yes|only"](around:${radius},${lat},${lon});
+          nwr["cuisine"~"halal|indian|pakistani|bangladeshi|middle_eastern|lebanese|arab|arabic|persian|turkish|kebab|afghan|malay|indonesian|somali|moroccan",i](around:${radius},${lat},${lon});
         );
-        out center;
+        out center tags;
       `;
     }
   };
 
-  // Fetch with retry across multiple servers
+  // Race all Overpass mirrors in parallel and use whichever answers first
   const fetchWithRetry = async (query: string, signal: AbortSignal): Promise<OverpassResponse> => {
-    let lastError: Error | null = null;
-    
-    for (const server of OVERPASS_SERVERS) {
-      if (signal.aborted) throw new DOMException('Request aborted', 'AbortError');
+    const controller = new AbortController();
+    const abortRequest = () => controller.abort();
+    const timeoutId = setTimeout(abortRequest, 25000);
+    signal.addEventListener('abort', abortRequest, { once: true });
 
-      try {
-        const controller = new AbortController();
-        const abortRequest = () => controller.abort();
-        const timeoutId = setTimeout(abortRequest, 20000);
-        signal.addEventListener('abort', abortRequest, { once: true });
-        
-        const response = await fetch(server, {
-          method: 'POST',
-          body: `data=${encodeURIComponent(query)}`,
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          signal: controller.signal,
+    const attempts = OVERPASS_SERVERS.map(async (server) => {
+      const response = await fetch(server, {
+        method: 'POST',
+        body: `data=${encodeURIComponent(query)}`,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        signal: controller.signal,
+      });
+      if (!response.ok) throw new Error(`Server ${server} returned ${response.status}`);
+      const json = (await response.json()) as OverpassResponse;
+      if (!json || !Array.isArray(json.elements)) throw new Error('Malformed response');
+      return json;
+    });
+
+    // Resolve on the first successful mirror; reject only when all fail.
+    const race = new Promise<OverpassResponse>((resolve, reject) => {
+      let failures = 0;
+      attempts.forEach((p) => {
+        p.then(resolve).catch(() => {
+          failures += 1;
+          if (failures === attempts.length) reject(new Error('All servers failed'));
         });
-        
-        clearTimeout(timeoutId);
-        signal.removeEventListener('abort', abortRequest);
-        
-        if (response.ok) {
-          return await response.json();
-        }
-        lastError = new Error(`Server ${server} returned ${response.status}`);
-      } catch (err) {
-        if (signal.aborted) throw new DOMException('Request aborted', 'AbortError');
-        lastError = err as Error;
-        // Silent fallback to next Overpass mirror — noise-free.
-      }
+      });
+    });
+
+    try {
+      return await race;
+    } catch {
+      if (signal.aborted) throw new DOMException('Request aborted', 'AbortError');
+      throw new Error('All servers failed');
+    } finally {
+      clearTimeout(timeoutId);
+      signal.removeEventListener('abort', abortRequest);
+      // Cancel the slower in-flight mirrors once we have a winner.
+      controller.abort();
     }
-    
-    throw lastError || new Error('All servers failed');
   };
 
   // Find nearby places using Overpass API
@@ -217,7 +221,7 @@ export const Places = () => {
     placesRequestRef.current = requestId;
     setLoading(true);
     try {
-      const radius = 5000; // 5km radius
+      const radius = SEARCH_RADIUS_M;
       const overpassQuery = buildOverpassQuery(lat, lon, radius, type);
 
       const data = await fetchWithRetry(overpassQuery, signal || new AbortController().signal);
@@ -227,10 +231,11 @@ export const Places = () => {
       
       if (!data.elements || data.elements.length === 0) {
         setPlaces([]);
-        toast.info(`No ${typeLabel} found within 5km. Try changing your location.`);
+        toast.info(`No ${typeLabel} found within ${SEARCH_RADIUS_LABEL}. Try changing your location.`);
         return;
       }
-      
+
+      const seen = new Set<string>();
       const placesList: Place[] = data.elements
         .map((element: OverpassElement) => {
           const elLat = Number(element.lat ?? element.center?.lat);
@@ -253,14 +258,20 @@ export const Places = () => {
           };
         })
         .filter((place: Place | null): place is Place => place !== null)
+        .filter((place: Place) => {
+          const key = `${place.name}-${place.lat.toFixed(4)},${place.lon.toFixed(4)}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        })
         .sort((a: Place, b: Place) => (a.distance || 0) - (b.distance || 0));
 
       setPlaces(placesList);
       
       if (placesList.length > 0) {
-        toast.success(`Found ${placesList.length} ${typeLabel} within 5km`);
+        toast.success(`Found ${placesList.length} ${typeLabel} within ${SEARCH_RADIUS_LABEL}`);
       } else {
-        toast.info(`No ${typeLabel} found within 5km.`);
+        toast.info(`No ${typeLabel} found within ${SEARCH_RADIUS_LABEL}.`);
       }
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return;
@@ -324,7 +335,11 @@ export const Places = () => {
   const cuisines = ['Indian Cuisine', 'Turkish Cuisine', 'Middle Eastern', 'Pakistani Cuisine', 'Arabic Cuisine'];
   const mockCuisine = (id: string) => cuisines[hashNum(id, cuisines.length)];
 
-  const cityLabel = userLocation ? `${userLocation.city || 'Your area'}${userLocation.country ? ', ' + userLocation.country : ''}` : 'Set your location';
+  const cityLabel = userLocation
+    ? [userLocation.area, userLocation.city, userLocation.country]
+        .filter((part, i, arr) => Boolean(part) && part !== 'Unknown' && arr.indexOf(part) === i)
+        .join(', ') || 'Your area'
+    : 'Set your location';
 
   // Filter restaurants by chip
   const chippedPlaces = filteredPlaces.filter((p) => {
