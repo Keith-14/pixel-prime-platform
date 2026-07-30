@@ -172,43 +172,38 @@ export const Places = () => {
     }
   };
 
-  // Fetch with retry across multiple servers
+  // Race all Overpass mirrors in parallel and use whichever answers first
   const fetchWithRetry = async (query: string, signal: AbortSignal): Promise<OverpassResponse> => {
-    let lastError: Error | null = null;
-    
-    for (const server of OVERPASS_SERVERS) {
-      if (signal.aborted) throw new DOMException('Request aborted', 'AbortError');
+    const controller = new AbortController();
+    const abortRequest = () => controller.abort();
+    const timeoutId = setTimeout(abortRequest, 25000);
+    signal.addEventListener('abort', abortRequest, { once: true });
 
-      try {
-        const controller = new AbortController();
-        const abortRequest = () => controller.abort();
-        const timeoutId = setTimeout(abortRequest, 20000);
-        signal.addEventListener('abort', abortRequest, { once: true });
-        
-        const response = await fetch(server, {
-          method: 'POST',
-          body: `data=${encodeURIComponent(query)}`,
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          signal: controller.signal,
-        });
-        
-        clearTimeout(timeoutId);
-        signal.removeEventListener('abort', abortRequest);
-        
-        if (response.ok) {
-          return await response.json();
-        }
-        lastError = new Error(`Server ${server} returned ${response.status}`);
-      } catch (err) {
-        if (signal.aborted) throw new DOMException('Request aborted', 'AbortError');
-        lastError = err as Error;
-        // Silent fallback to next Overpass mirror — noise-free.
-      }
+    const attempts = OVERPASS_SERVERS.map(async (server) => {
+      const response = await fetch(server, {
+        method: 'POST',
+        body: `data=${encodeURIComponent(query)}`,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        signal: controller.signal,
+      });
+      if (!response.ok) throw new Error(`Server ${server} returned ${response.status}`);
+      const json = (await response.json()) as OverpassResponse;
+      if (!json || !Array.isArray(json.elements)) throw new Error('Malformed response');
+      return json;
+    });
+
+    try {
+      const winner = await Promise.any(attempts);
+      return winner;
+    } catch {
+      if (signal.aborted) throw new DOMException('Request aborted', 'AbortError');
+      throw new Error('All servers failed');
+    } finally {
+      clearTimeout(timeoutId);
+      signal.removeEventListener('abort', abortRequest);
+      // Cancel the slower in-flight mirrors once we have a winner.
+      controller.abort();
     }
-    
-    throw lastError || new Error('All servers failed');
   };
 
   // Find nearby places using Overpass API
