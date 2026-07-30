@@ -138,6 +138,7 @@ export const Places = () => {
   const [searchingCity, setSearchingCity] = useState(false);
   const [restaurantFilter, setRestaurantFilter] = useState<'Nearest' | 'Open Now' | 'Top Rated' | 'Turkish'>('Nearest');
   const placesRequestRef = useRef(0);
+  const addressCacheRef = useRef<Map<string, string>>(new Map());
   const userLatitude = userLocation?.latitude;
   const userLongitude = userLocation?.longitude;
   const locationKey = userLatitude !== undefined && userLongitude !== undefined
@@ -276,6 +277,28 @@ export const Places = () => {
       signal.removeEventListener('abort', abortRequest);
       // Cancel the slower in-flight mirrors once we have a winner.
       controller.abort();
+    }
+  };
+
+  // Fill in missing addresses via reverse geocoding, updating cards progressively
+  const enrichAddresses = async (list: Place[], requestId: number, signal?: AbortSignal) => {
+    const pending = list.filter((p) => p.address === ADDRESS_FALLBACK).slice(0, 40);
+    const abortSignal = signal || new AbortController().signal;
+
+    for (const place of pending) {
+      if (abortSignal.aborted || requestId !== placesRequestRef.current) return;
+
+      const cacheKey = `${place.lat.toFixed(5)},${place.lon.toFixed(5)}`;
+      let address = addressCacheRef.current.get(cacheKey);
+      if (address === undefined) {
+        address = await reverseAddress(place.lat, place.lon, abortSignal);
+        addressCacheRef.current.set(cacheKey, address);
+        // Respect Nominatim's usage policy between lookups
+        await new Promise((r) => setTimeout(r, 700));
+      }
+
+      if (!address || abortSignal.aborted || requestId !== placesRequestRef.current) continue;
+      setPlaces((prev) => prev.map((p) => (p.id === place.id ? { ...p, address } : p)));
     }
   };
 
