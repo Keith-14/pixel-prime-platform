@@ -298,7 +298,19 @@ export const Places = () => {
       }
 
       if (!address || abortSignal.aborted || requestId !== placesRequestRef.current) continue;
-      setPlaces((prev) => prev.map((p) => (p.id === place.id ? { ...p, address } : p)));
+      const resolved = address;
+      setPlaces((prev) =>
+        prev.map((p) => {
+          if (p.id !== place.id) return p;
+          const isGeneric = p.name === 'Masjid' || p.name === 'Mosque' || p.name === 'Halal Restaurant';
+          const locality = resolved.split(',').map((s) => s.trim()).filter(Boolean)[0];
+          return {
+            ...p,
+            address: resolved,
+            name: isGeneric && locality ? `${p.name} — ${locality}` : p.name,
+          };
+        })
+      );
     }
   };
 
