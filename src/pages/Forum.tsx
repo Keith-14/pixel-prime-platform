@@ -91,6 +91,20 @@ interface Post {
   isLiked?: boolean;
 }
 
+interface CommunityMember {
+  id: string;
+  community_id: string;
+  user_id: string;
+  role: string;
+  joined_at: string;
+  is_online: boolean;
+  profile?: {
+    full_name: string | null;
+    avatar_url: string | null;
+    verified_at?: string | null;
+  };
+}
+
 const formatTimeAgo = (dateStr: string): string => {
   const date = new Date(dateStr);
   const now = new Date();
@@ -756,6 +770,12 @@ export const Forum = () => {
   const [createCommunityOpen, setCreateCommunityOpen] = useState(false);
   const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(null);
   const [communityTab, setCommunityTab] = useState<'posts' | 'members' | 'settings'>('posts');
+  const [communityMembers, setCommunityMembers] = useState<CommunityMember[]>([]);
+  const [memberCount, setMemberCount] = useState(0);
+  const [memberLoading, setMemberLoading] = useState(false);
+  const membersChannelRef = useRef<any>(null);
+  const [membershipChanging, setMembershipChanging] = useState(false);
+  const [membershipStatus, setMembershipStatus] = useState<'joined' | 'not_joined'>('not_joined');
   const [communityOverrides, setCommunityOverrides] = useState<Record<string, { banner?: string; iconUrl?: string }>>(() => {
     try {
       const raw = localStorage.getItem('guftagu_community_overrides');
@@ -811,6 +831,154 @@ export const Forum = () => {
     }
   }, [createdStorageKey]);
 
+  const fetchCommunityMembers = async (communityId: string) => {
+    setMemberLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('community_members')
+        .select('*, profile:profiles(full_name, avatar_url, verified_at)')
+        .eq('community_id', communityId)
+        .order('role', { ascending: true })
+        .order('joined_at', { ascending: true });
+
+      if (error) throw error;
+      const members = (data || []) as CommunityMember[];
+      members.sort((a, b) => {
+        const roleWeight = (role: string) => {
+          if (role === 'Admin') return 0;
+          if (role === 'Moderator') return 1;
+          return 2;
+        };
+        return roleWeight(a.role) - roleWeight(b.role) || new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime();
+      });
+      setCommunityMembers(members);
+      setMemberCount(members.length);
+      setMembershipStatus(members.some((member) => member.user_id === user?.uid) ? 'joined' : 'not_joined');
+    } catch (error) {
+      console.error('Error fetching community members:', error);
+      toast.error('Unable to load members');
+    } finally {
+      setMemberLoading(false);
+    }
+  };
+
+  const subscribeToCommunityMembers = (communityId: string) => {
+    if (membersChannelRef.current) {
+      supabase.removeChannel(membersChannelRef.current);
+    }
+
+    const channel = supabase
+      .channel(`community-members-${communityId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'community_members', filter: `community_id=eq.${communityId}` },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const newMember = payload.new as CommunityMember;
+            setCommunityMembers((prev) => {
+              if (prev.some((member) => member.id === newMember.id)) return prev;
+              return [newMember, ...prev].sort((a, b) => {
+                const roleWeight = (role: string) => (role === 'Admin' ? 0 : role === 'Moderator' ? 1 : 2);
+                return roleWeight(a.role) - roleWeight(b.role) || new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime();
+              });
+            });
+            setMemberCount((prev) => prev + 1);
+            if (newMember.user_id === user?.uid) setMembershipStatus('joined');
+          }
+
+          if (payload.eventType === 'UPDATE') {
+            const updatedMember = payload.new as CommunityMember;
+            setCommunityMembers((prev) => prev.map((member) => (member.id === updatedMember.id ? updatedMember : member)).sort((a, b) => {
+              const roleWeight = (role: string) => (role === 'Admin' ? 0 : role === 'Moderator' ? 1 : 2);
+              return roleWeight(a.role) - roleWeight(b.role) || new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime();
+            }));
+          }
+
+          if (payload.eventType === 'DELETE') {
+            const oldMember = payload.old as CommunityMember;
+            setCommunityMembers((prev) => prev.filter((member) => member.id !== oldMember.id));
+            setMemberCount((prev) => Math.max(0, prev - 1));
+            if (oldMember.user_id === user?.uid) setMembershipStatus('not_joined');
+          }
+        }
+      )
+      .subscribe();
+
+    membersChannelRef.current = channel;
+  };
+
+  const clearMemberSubscription = () => {
+    if (membersChannelRef.current) {
+      supabase.removeChannel(membersChannelRef.current);
+      membersChannelRef.current = null;
+    }
+  };
+
+  const joinCommunity = async (communityId: string) => {
+    if (!user) {
+      toast.error('Please sign in to join communities');
+      return;
+    }
+    setMembershipChanging(true);
+    try {
+      const { error } = await supabase.from('community_members').insert({ community_id: communityId, user_id: user.uid, role: 'Member' });
+      if (error) throw error;
+      setJoinedCommunities((prev) => {
+        const next = new Set(prev);
+        next.add(communityId);
+        try { localStorage.setItem(joinedStorageKey, JSON.stringify(Array.from(next))); } catch {}
+        return next;
+      });
+      if (selectedCommunity?.id === communityId) setMembershipStatus('joined');
+      toast.success('Joined community');
+    } catch (error: any) {
+      if (error?.code === '23505') {
+        toast('You are already a community member');
+      } else {
+        console.error('Join community failed', error);
+        toast.error('Could not join community');
+      }
+    } finally {
+      setMembershipChanging(false);
+    }
+  };
+
+  const leaveCommunity = async (communityId: string) => {
+    if (!user) return;
+    setMembershipChanging(true);
+    try {
+      const { error } = await supabase
+        .from('community_members')
+        .delete()
+        .eq('community_id', communityId)
+        .eq('user_id', user.uid);
+      if (error) throw error;
+      setJoinedCommunities((prev) => {
+        const next = new Set(prev);
+        next.delete(communityId);
+        try { localStorage.setItem(joinedStorageKey, JSON.stringify(Array.from(next))); } catch {}
+        return next;
+      });
+      if (selectedCommunity?.id === communityId) setMembershipStatus('not_joined');
+      toast.success('Left community');
+    } catch (error) {
+      console.error('Leave community failed', error);
+      toast.error('Could not leave community');
+    } finally {
+      setMembershipChanging(false);
+    }
+  };
+
+  const toggleJoinCommunity = (id: string) => {
+    if (membershipStatus === 'joined') {
+      leaveCommunity(id);
+    } else {
+      joinCommunity(id);
+    }
+  };
+
+  const isJoined = (communityId: string) => membershipStatus === 'joined' || joinedCommunities.has(communityId);
+
   const handleCreateCommunity = (data: {
     name: string;
     description: string;
@@ -839,23 +1007,23 @@ export const Forum = () => {
     setActiveTab('communities');
   };
 
-  const toggleJoinCommunity = (id: string) => {
-    setJoinedCommunities((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-        toast.success('Left community');
-      } else {
-        next.add(id);
-        toast.success('Joined community');
-      }
-      try {
-        localStorage.setItem(joinedStorageKey, JSON.stringify(Array.from(next)));
-      } catch {}
-      return next;
-    });
-  };
-  
+  useEffect(() => {
+    if (!selectedCommunity) {
+      clearMemberSubscription();
+      setCommunityMembers([]);
+      setMemberCount(0);
+      setMembershipStatus('not_joined');
+      return;
+    }
+
+    fetchCommunityMembers(selectedCommunity.id);
+    subscribeToCommunityMembers(selectedCommunity.id);
+
+    return () => {
+      clearMemberSubscription();
+    };
+  }, [selectedCommunity?.id, user?.uid]);
+
   // Pull to refresh state
   const [pullDistance, setPullDistance] = useState(0);
   const [isPulling, setIsPulling] = useState(false);
@@ -1736,14 +1904,14 @@ export const Forum = () => {
   // Community detail view
   if (selectedCommunity) {
     const c = selectedCommunity;
-    const isJoined = joinedCommunities.has(c.id) || c.isAdmin;
+    const isJoined = membershipStatus === 'joined' || joinedCommunities.has(c.id) || c.isAdmin;
     const override = communityOverrides[c.id] || {};
     const banner = override.banner || c.banner;
     const iconUrl = override.iconUrl || c.iconUrl;
     const isAdmin = !!c.isAdmin;
     const TABS: Array<{ id: 'posts' | 'members' | 'settings'; label: string }> = [
       { id: 'posts', label: 'Posts' },
-      { id: 'members', label: 'Members' },
+      { id: 'members', label: `Members (${memberCount})` },
       ...(isAdmin ? [{ id: 'settings' as const, label: 'Settings' }] : []),
     ];
     const MOCK_MEMBERS = [
@@ -1816,7 +1984,7 @@ export const Forum = () => {
               {c.name}
             </h1>
             <p className="text-sm mt-1" style={{ color: '#9C8569' }}>
-              {c.members} · {c.type}
+              {memberCount} members · {c.type}
             </p>
             <p className="text-[15px] mt-4 leading-relaxed" style={{ color: '#3D2A1E' }}>
               {c.description}
