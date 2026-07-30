@@ -834,7 +834,7 @@ export const Forum = () => {
   const fetchCommunityMembers = async (communityId: string) => {
     setMemberLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('community_members')
         .select('*, profile:profiles(full_name, avatar_url, verified_at)')
         .eq('community_id', communityId)
@@ -842,7 +842,7 @@ export const Forum = () => {
         .order('joined_at', { ascending: true });
 
       if (error) throw error;
-      const members = (data || []) as CommunityMember[];
+      const members = (data || []) as unknown as CommunityMember[];
       members.sort((a, b) => {
         const roleWeight = (role: string) => {
           if (role === 'Admin') return 0;
@@ -921,7 +921,7 @@ export const Forum = () => {
     }
     setMembershipChanging(true);
     try {
-      const { error } = await supabase.from('community_members').insert({ community_id: communityId, user_id: user.uid, role: 'Member' });
+      const { error } = await (supabase as any).from('community_members').insert({ community_id: communityId, user_id: user.uid, role: 'Member' });
       if (error) throw error;
       setJoinedCommunities((prev) => {
         const next = new Set(prev);
@@ -947,7 +947,7 @@ export const Forum = () => {
     if (!user) return;
     setMembershipChanging(true);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('community_members')
         .delete()
         .eq('community_id', communityId)
