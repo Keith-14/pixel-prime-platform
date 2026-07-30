@@ -31,8 +31,72 @@ L.Icon.Default.mergeOptions({
 
 const SEARCH_RADIUS_M = 15000; // 15km
 const SEARCH_RADIUS_LABEL = '15km';
+const ADDRESS_FALLBACK = 'Address not available';
+
+// Build the best possible display name from OSM tags
+const buildPlaceName = (tags: Record<string, string | undefined> = {}, type: PlaceTypeName) => {
+  const named =
+    tags.name ||
+    tags['name:en'] ||
+    tags['name:ur'] ||
+    tags['name:hi'] ||
+    tags['name:ar'] ||
+    tags.alt_name ||
+    tags.official_name ||
+    tags.brand ||
+    tags.operator;
+  if (named) return named;
+
+  const locality = tags['addr:suburb'] || tags['addr:neighbourhood'] || tags['addr:city'] || tags['addr:street'];
+  const base = type === 'mosque' ? 'Masjid' : 'Halal Restaurant';
+  return locality ? `${base} — ${locality}` : base;
+};
+
+// Build a complete street address from OSM addr:* tags
+const buildPlaceAddress = (tags: Record<string, string | undefined> = {}) => {
+  if (tags['addr:full']) return tags['addr:full'];
+  const street = [tags['addr:housenumber'], tags['addr:housename'], tags['addr:street']]
+    .filter(Boolean)
+    .join(' ');
+  const parts = [
+    street,
+    tags['addr:neighbourhood'],
+    tags['addr:suburb'],
+    tags['addr:city'] || tags['addr:town'] || tags['addr:village'],
+    tags['addr:district'],
+    tags['addr:state'],
+    tags['addr:postcode'],
+  ].filter((v, i, arr) => Boolean(v) && arr.indexOf(v) === i);
+  return parts.length ? parts.join(', ') : '';
+};
+
+// Reverse geocode a single point into a readable street address
+const reverseAddress = async (lat: number, lon: number, signal: AbortSignal): Promise<string> => {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=18&addressdetails=1&lat=${lat}&lon=${lon}`,
+      { headers: { 'Accept-Language': 'en' }, signal }
+    );
+    if (!res.ok) throw new Error('reverse failed');
+    const data = await res.json();
+    const a = data?.address || {};
+    const street = [a.house_number, a.road].filter(Boolean).join(' ');
+    const parts = [
+      street,
+      a.neighbourhood || a.suburb || a.quarter,
+      a.city || a.town || a.village || a.municipality,
+      a.state_district,
+      a.state,
+      a.postcode,
+    ].filter((v, i, arr) => Boolean(v) && arr.indexOf(v) === i);
+    return parts.length ? parts.join(', ') : (data?.display_name || '');
+  } catch {
+    return '';
+  }
+};
 
 type PlaceType = 'mosque' | 'restaurant';
+type PlaceTypeName = PlaceType;
 
 interface Place {
   id: string;
@@ -245,15 +309,13 @@ export const Places = () => {
           
           const distance = calculateDistance(lat, lon, elLat, elLon);
           
-          const defaultName = type === 'mosque' ? 'Mosque' : 'Halal Restaurant';
-          
           return {
             id: `${element.type || 'place'}-${element.id}`,
-            name: element.tags?.name || element.tags?.['name:en'] || element.tags?.['name:ar'] || defaultName,
+            name: buildPlaceName(element.tags, type),
             lat: elLat,
             lon: elLon,
             distance,
-            address: element.tags?.['addr:full'] || element.tags?.['addr:street'] || element.tags?.['addr:city'] || 'Address not available',
+            address: buildPlaceAddress(element.tags) || ADDRESS_FALLBACK,
             type,
           };
         })
@@ -267,7 +329,10 @@ export const Places = () => {
         .sort((a: Place, b: Place) => (a.distance || 0) - (b.distance || 0));
 
       setPlaces(placesList);
-      
+
+      // Progressively fill in missing addresses via reverse geocoding
+      void enrichAddresses(placesList, requestId, signal);
+
       if (placesList.length > 0) {
         toast.success(`Found ${placesList.length} ${typeLabel} within ${SEARCH_RADIUS_LABEL}`);
       } else {
