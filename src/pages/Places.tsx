@@ -192,9 +192,19 @@ export const Places = () => {
       return json;
     });
 
+    // Resolve on the first successful mirror; reject only when all fail.
+    const race = new Promise<OverpassResponse>((resolve, reject) => {
+      let failures = 0;
+      attempts.forEach((p) => {
+        p.then(resolve).catch(() => {
+          failures += 1;
+          if (failures === attempts.length) reject(new Error('All servers failed'));
+        });
+      });
+    });
+
     try {
-      const winner = await Promise.any(attempts);
-      return winner;
+      return await race;
     } catch {
       if (signal.aborted) throw new DOMException('Request aborted', 'AbortError');
       throw new Error('All servers failed');
