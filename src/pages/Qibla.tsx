@@ -108,7 +108,7 @@ export const Qibla = () => {
       void removeListener?.();
       void NativeCompass.stop();
     };
-  }, [location?.latitude, location?.longitude]);
+  }, [location]);
 
   const requestOrientation = async () => {
     if (!Capacitor.isNativePlatform()) {

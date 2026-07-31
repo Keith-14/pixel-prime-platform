@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { CATEGORIES } from './ShopCategories';
+import { CATEGORIES } from '@/data/shopCategories';
 import { SideMenu } from '@/components/SideMenu';
 
 interface Product {
@@ -34,30 +34,31 @@ export const Shop = () => {
   const [destinationLoading, setDestinationLoading] = useState(false);
 
   useEffect(() => {
+    const resolveSellerDestination = async () => {
+      if (userRole !== 'seller' || !user?.uid) {
+        setSellerDestination('/seller-onboarding');
+        return;
+      }
+
+      setDestinationLoading(true);
+      try {
+        const { data } = await supabase
+          .from('seller_profiles')
+          .select('onboarding_completed')
+          .eq('user_id', user.uid)
+          .maybeSingle();
+
+        setSellerDestination(data?.onboarding_completed ? '/seller-dashboard' : '/seller-onboarding');
+      } catch (error) {
+        console.error('Failed to resolve seller destination', error);
+        setSellerDestination('/seller-onboarding');
+      } finally {
+        setDestinationLoading(false);
+      }
+    };
+
     resolveSellerDestination();
   }, [userRole, user?.uid]);
-
-  const resolveSellerDestination = async () => {
-    if (userRole !== 'seller' || !user?.uid) {
-      setSellerDestination('/seller-onboarding');
-      return;
-    }
-
-    setDestinationLoading(true);
-    const { data, error } = await supabase
-      .from('seller_profiles')
-      .select('onboarding_completed')
-      .eq('user_id', user.uid)
-      .limit(1)
-      .maybeSingle();
-
-    if (error || !data) {
-      setSellerDestination('/seller-onboarding');
-    } else {
-      setSellerDestination(data.onboarding_completed ? '/seller-dashboard' : '/seller-onboarding');
-    }
-    setDestinationLoading(false);
-  };
 
   const handleSellerCTA = () => {
     navigate(sellerDestination);

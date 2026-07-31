@@ -196,7 +196,7 @@ export const useSalahTracker = () => {
         currentStreak = 1;
         
         // Count backwards from yesterday
-        let checkDate = new Date(today);
+        const checkDate = new Date(today);
         checkDate.setDate(checkDate.getDate() - 1);
         
         while (true) {
@@ -216,7 +216,7 @@ export const useSalahTracker = () => {
         currentStreak = 1;
         
         // Count backwards from day before yesterday
-        let checkDate = new Date(yesterday);
+        const checkDate = new Date(yesterday);
         checkDate.setDate(checkDate.getDate() - 1);
         
         while (true) {

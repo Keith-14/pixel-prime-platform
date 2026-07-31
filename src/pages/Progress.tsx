@@ -30,7 +30,9 @@ const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 function timeToMinutes(t: string) {
   const [hm, ap] = t.split(' ');
-  let [h, m] = hm.split(':').map(Number);
+  const parts = hm.split(':');
+  let h = Number(parts[0]);
+  const m = Number(parts[1]);
   if (ap === 'PM' && h !== 12) h += 12;
   if (ap === 'AM' && h === 12) h = 0;
   return h * 60 + m;

@@ -10,16 +10,18 @@ export const SellerOrderDetail = () => {
   const [order, setOrder] = useState<any>(null);
   const [tracking, setTracking] = useState('');
 
-  const load = async () => {
-    const { data } = await supabase
-      .from('orders')
-      .select('*, order_items(*, products(name, image_url))')
-      .eq('id', id)
-      .maybeSingle();
-    setOrder(data);
-    setTracking(data?.tracking_id || '');
-  };
-  useEffect(() => { load(); }, [id]);
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await supabase
+        .from('orders')
+        .select('*, order_items(*, products(name, image_url))')
+        .eq('id', id)
+        .maybeSingle();
+      setOrder(data);
+      setTracking(data?.tracking_id || '');
+    };
+    load();
+  }, [id]);
 
   if (!order) return <div className="min-h-screen flex items-center justify-center" style={{ background: '#FFF1DD' }}>Loading...</div>;
 

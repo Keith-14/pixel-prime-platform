@@ -22,16 +22,18 @@ export const SellerOrdersPage = () => {
   const [tab, setTab] = useState<Tab>('new');
   const [query, setQuery] = useState('');
 
-  const load = async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from('orders')
-      .select('*, order_items(*, products(name, image_url))')
-      .eq('seller_id', user.uid)
-      .order('created_at', { ascending: false });
-    setOrders(data || []);
-  };
-  useEffect(() => { load(); }, [user]);
+  useEffect(() => {
+    const load = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('orders')
+        .select('*, order_items(*, products(name, image_url))')
+        .eq('seller_id', user.uid)
+        .order('created_at', { ascending: false });
+      setOrders(data || []);
+    };
+    load();
+  }, [user]);
 
   const counts = {
     new: orders.filter((o) => o.status === 'new' || o.status === 'pending').length,
