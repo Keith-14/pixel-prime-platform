@@ -436,7 +436,7 @@ const ScanView = ({
         >
           {analyzing
             ? <Sparkles className="h-6 w-6 text-white animate-pulse" strokeWidth={1.75} />
-            : <Flashlight className="h-6 w-6 text-white" strokeWidth={1.75} />}
+            : <ScanLine className="h-6 w-6 text-white" strokeWidth={1.75} />}
         </button>
       </div>
 
