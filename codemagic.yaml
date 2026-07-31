@@ -1,0 +1,45 @@
+workflows:
+  ios-workflow:
+    name: Barakah iOS
+
+    integrations:
+      app_store_connect: Barakah App
+
+    environment:
+      xcode: latest
+      node: 22
+
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.barakah.services
+
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm ci
+
+      - name: Build web
+        script: |
+          npm run build
+
+      - name: Sync Capacitor
+        script: |
+          npx cap sync ios
+
+      - name: Configure code signing
+        script: |
+          xcode-project use-profiles
+
+      - name: Build IPA
+        script: |
+          xcode-project build-ipa \
+            --project ios/App/App.xcodeproj \
+            --scheme App
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
