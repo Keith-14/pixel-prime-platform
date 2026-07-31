@@ -136,7 +136,7 @@ export const Places = () => {
   const [manualLon, setManualLon] = useState('');
   const [citySearch, setCitySearch] = useState('');
   const [searchingCity, setSearchingCity] = useState(false);
-  const [restaurantFilter, setRestaurantFilter] = useState<'Nearest' | 'Open Now' | 'Top Rated' | 'Turkish'>('Nearest');
+  const [restaurantFilter, setRestaurantFilter] = useState<'Nearest' | 'Top Rated'>('Nearest');
   const placesRequestRef = useRef(0);
   const addressCacheRef = useRef<Map<string, string>>(new Map());
   const userLatitude = userLocation?.latitude;
@@ -430,10 +430,7 @@ export const Places = () => {
   };
   const mockRating = (id: string) => (40 + hashNum(id, 10)) / 10; // 4.0 - 4.9
   const mockReviews = (id: string) => 50 + hashNum(id, 250);
-  const mockOpen = (id: string) => hashNum(id, 4) !== 0; // ~75% open
   const mockPrice = (id: string) => ['£', '££', '£££'][hashNum(id, 3)];
-  const cuisines = ['Indian Cuisine', 'Turkish Cuisine', 'Middle Eastern', 'Pakistani Cuisine', 'Arabic Cuisine'];
-  const mockCuisine = (id: string) => cuisines[hashNum(id, cuisines.length)];
 
   const cityLabel = userLocation
     ? [userLocation.area, userLocation.city, userLocation.country]
@@ -444,9 +441,7 @@ export const Places = () => {
   // Filter restaurants by chip
   const chippedPlaces = filteredPlaces.filter((p) => {
     if (placeType !== 'restaurant') return true;
-    if (restaurantFilter === 'Open Now') return mockOpen(p.id);
     if (restaurantFilter === 'Top Rated') return mockRating(p.id) >= 4.5;
-    if (restaurantFilter === 'Turkish') return mockCuisine(p.id) === 'Turkish Cuisine';
     return true; // Nearest – already sorted
   });
 
@@ -594,7 +589,7 @@ export const Places = () => {
           {/* Filter chips (restaurants only) */}
           {placeType === 'restaurant' && (
             <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 no-scrollbar">
-              {(['Nearest', 'Open Now', 'Top Rated', 'Turkish'] as const).map((c) => {
+              {(['Nearest', 'Top Rated'] as const).map((c) => {
                 const active = restaurantFilter === c;
                 return (
                   <button
@@ -709,10 +704,8 @@ export const Places = () => {
                     <RestaurantCard
                       key={place.id}
                       place={place}
-                      open={mockOpen(place.id)}
                       rating={mockRating(place.id)}
                       reviews={mockReviews(place.id)}
-                      cuisine={mockCuisine(place.id)}
                       price={mockPrice(place.id)}
                       onDirections={() => openDirections(place)}
                     />
@@ -737,15 +730,13 @@ export const Places = () => {
 
 interface RestaurantCardProps {
   place: Place;
-  open: boolean;
   rating: number;
   reviews: number;
-  cuisine: string;
   price: string;
   onDirections: () => void;
 }
 
-const RestaurantCard = ({ place, open, rating, reviews, cuisine, price, onDirections }: RestaurantCardProps) => {
+const RestaurantCard = ({ place, rating, reviews, price, onDirections }: RestaurantCardProps) => {
   const miles = place.distance ? (place.distance * 0.621371).toFixed(1) : '—';
   return (
     <div
@@ -761,12 +752,6 @@ const RestaurantCard = ({ place, open, rating, reviews, cuisine, price, onDirect
           loading="lazy"
           className="w-full h-48 object-cover"
         />
-        <span
-          className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold text-white"
-          style={{ backgroundColor: open ? '#1F7A3D' : '#C0392B' }}
-        >
-          {open ? 'OPEN' : 'Closed'}
-        </span>
       </div>
       <div className="p-5">
         <h3 className="text-2xl italic mb-3" style={{ color: HEADER_TEXT, fontFamily: 'Georgia, serif' }}>
@@ -781,8 +766,6 @@ const RestaurantCard = ({ place, open, rating, reviews, cuisine, price, onDirect
             {rating.toFixed(1)}
           </span>
           <span style={{ color: MUTED_TEXT }}>({reviews} reviews)</span>
-          <span style={{ color: MUTED_TEXT }}>•</span>
-          <span style={{ color: HEADER_TEXT }}>{cuisine}</span>
         </div>
         <div className="flex items-center gap-3 text-sm mb-4">
           <span className="flex items-center gap-1 font-semibold" style={{ color: BROWN }}>
