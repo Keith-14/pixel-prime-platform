@@ -620,9 +620,7 @@ const ResultView = ({
           <ArrowLeft className="h-5 w-5" style={{ color: BROWN }} strokeWidth={1.75} />
         </button>
         <h1 className="italic text-[17px]" style={{ fontFamily: SERIF, color: BROWN }}>Barakah</h1>
-        <div className="h-9 w-9 rounded-full border flex items-center justify-center" style={{ borderColor: '#C9A77A' }}>
-          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: BROWN }} />
-        </div>
+        <div className="h-9 w-9" />
       </div>
 
       {/* ── VERDICT BANNER ── */}
