@@ -287,14 +287,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       if (!user) return { error: { message: 'You must be signed in to complete setup.' }, role: undefined };
 
-      // Ensure role row exists
-      const { error: roleError } = await supabase
+      // Ensure role row exists (roles can only be claimed once, server-side enforced)
+      const { data: existingRole } = await supabase
         .from('user_roles')
-        .insert({ user_id: user.id, role });
+        .select('role')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      // If role already exists, ignore the unique error
-      if (roleError && roleError.code !== '23505') {
-        return { error: roleError, role: undefined };
+      if (!existingRole) {
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .insert({ user_id: user.id, role });
+
+        // If role already exists, ignore the unique error
+        if (roleError && roleError.code !== '23505') {
+          return { error: roleError, role: undefined };
+        }
       }
 
       // Upsert profile (profiles.user_id is unique)
