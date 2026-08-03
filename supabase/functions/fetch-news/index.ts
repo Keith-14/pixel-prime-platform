@@ -23,54 +23,20 @@ const DEFAULT_SOURCES: NewsSource[] = [
   { name: "Middle East Eye", rss_url: "https://www.middleeasteye.net/rss", category: "world" },
   { name: "TRT World", rss_url: "https://www.trtworld.com/rss", category: "world" },
   { name: "BBC World", rss_url: "https://feeds.bbci.co.uk/news/world/rss.xml", category: "world" },
-  {
-    name: "Google News Ummah",
-    rss_url: "https://news.google.com/rss/search?q=Muslim%20Islamic%20Ummah%20world&hl=en-US&gl=US&ceid=US:en",
-    category: "world",
-  },
   { name: "Islamic Relief Worldwide", rss_url: "https://islamic-relief.org/feed/", category: "charity" },
   {
     name: "Islamic Relief Press Releases",
     rss_url: "https://islamic-relief.org/news_category/press-releases/feed/",
     category: "charity",
   },
-  {
-    name: "Google News Charity",
-    rss_url:
-      "https://news.google.com/rss/search?q=Muslim%20charity%20Islamic%20Relief%20zakat%20sadaqah&hl=en-US&gl=US&ceid=US:en",
-    category: "charity",
-  },
   { name: "Muslim Matters", rss_url: "https://muslimmatters.org/feed/", category: "education" },
   { name: "BBC Education", rss_url: "https://feeds.bbci.co.uk/news/education/rss.xml", category: "education" },
-  {
-    name: "Google News Heritage",
-    rss_url:
-      "https://news.google.com/rss/search?q=Islamic%20heritage%20Muslim%20history%20Quran%20Hadith&hl=en-US&gl=US&ceid=US:en",
-    category: "education",
-  },
   { name: "About Islam", rss_url: "https://aboutislam.net/feed/", category: "community" },
   { name: "The Muslim Vibe", rss_url: "https://themuslimvibe.com/feed/", category: "community" },
-  {
-    name: "Google News Lifestyle",
-    rss_url:
-      "https://news.google.com/rss/search?q=Muslim%20lifestyle%20Islamic%20family%20halal%20living&hl=en-US&gl=US&ceid=US:en",
-    category: "community",
-  },
   { name: "Islamic Finance Guru", rss_url: "https://www.islamicfinanceguru.com/feed/", category: "business" },
   { name: "BBC Business", rss_url: "https://feeds.bbci.co.uk/news/business/rss.xml", category: "business" },
-  {
-    name: "Google News Business",
-    rss_url:
-      "https://news.google.com/rss/search?q=Islamic%20finance%20halal%20business%20sukuk&hl=en-US&gl=US&ceid=US:en",
-    category: "business",
-  },
   { name: "BBC Politics", rss_url: "https://feeds.bbci.co.uk/news/politics/rss.xml", category: "politics" },
-  {
-    name: "Google News Politics",
-    rss_url:
-      "https://news.google.com/rss/search?q=Muslim%20politics%20Islamic%20policy%20government&hl=en-US&gl=US&ceid=US:en",
-    category: "politics",
-  },
+  { name: "Middle East Eye Politics", rss_url: "https://www.middleeasteye.net/rss", category: "politics" },
 ];
 
 const NEWS_CATEGORIES = new Set<NewsCategory>(["world", "education", "community", "charity", "business", "politics"]);
@@ -80,13 +46,28 @@ function normalizeCategory(value: unknown): NewsCategory {
   return typeof value === "string" && NEWS_CATEGORIES.has(value as NewsCategory) ? (value as NewsCategory) : "world";
 }
 
+function isRateLimitedSearchFeed(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.hostname === "news.google.com" && parsed.pathname.startsWith("/rss/search");
+  } catch {
+    return false;
+  }
+}
+
+function isUsableSource(source: NewsSource): boolean {
+  return Boolean(source.name?.trim()) && Boolean(source.rss_url?.trim()) && !isRateLimitedSearchFeed(source.rss_url);
+}
+
 function mergeSources(sources: NewsSource[]): NewsSource[] {
   const merged = new Map<string, NewsSource>();
-  for (const source of [...DEFAULT_SOURCES, ...sources]) {
-    if (!source.rss_url || merged.has(source.rss_url)) continue;
-    merged.set(source.rss_url, {
+  for (const source of [...DEFAULT_SOURCES, ...sources].filter(isUsableSource)) {
+    const category = normalizeCategory(source.category);
+    const key = `${category}:${source.rss_url}`;
+    if (merged.has(key)) continue;
+    merged.set(key, {
       ...source,
-      category: normalizeCategory(source.category),
+      category,
     });
   }
   return [...merged.values()];
