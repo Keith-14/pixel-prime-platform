@@ -13,6 +13,11 @@ interface NewsSource {
   category: NewsCategory;
 }
 
+interface NewsArticleRow extends ParsedItem {
+  source_name: string;
+  category: NewsCategory;
+}
+
 const DEFAULT_SOURCES: NewsSource[] = [
   { name: "Al Jazeera", rss_url: "https://www.aljazeera.com/xml/rss/all.xml", category: "world" },
   { name: "Middle East Eye", rss_url: "https://www.middleeasteye.net/rss", category: "world" },
@@ -56,6 +61,18 @@ function itemCategory(sourceCategory: NewsCategory): NewsCategory {
   // Feeds are intentionally assigned to app sections, so keep articles in the
   // source's configured section instead of letting keyword matching empty a tab.
   return sourceCategory;
+}
+
+async function requestedCategory(req: Request): Promise<NewsCategory | null> {
+  try {
+    const body = await req.json();
+    const category = body?.category;
+    return typeof category === "string" && NEWS_CATEGORIES.has(category as NewsCategory)
+      ? (category as NewsCategory)
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 async function fetchWithTimeout(url: string, timeoutMs = 9000): Promise<Response> {
@@ -214,6 +231,7 @@ Deno.serve(async (req) => {
   const supabase = createClient(supabaseUrl, serviceKey);
 
   try {
+    const categoryFilter = await requestedCategory(req);
     const { data: sources, error: srcErr } = await supabase
       .from("news_sources")
       .select("name, rss_url, category")
@@ -227,9 +245,13 @@ Deno.serve(async (req) => {
         category: normalizeCategory(source.category),
       })),
     );
+    const filteredSources = categoryFilter
+      ? activeSources.filter((source) => source.category === categoryFilter)
+      : activeSources;
 
     let totalProcessed = 0;
     const results: Record<string, number | string> = {};
+    const articles: NewsArticleRow[] = [];
     const categories: Record<NewsCategory, number> = {
       world: 0,
       education: 0,
@@ -246,7 +268,7 @@ Deno.serve(async (req) => {
         }
         const xml = await res.text();
         const items = parseRss(xml).slice(0, MAX_ITEMS_PER_SOURCE);
-        const rows = [];
+        const rows: NewsArticleRow[] = [];
         const rowCategories: NewsCategory[] = [];
         for (const it of items) {
           const category = itemCategory(src.category);
@@ -255,27 +277,29 @@ Deno.serve(async (req) => {
             content: it.content || (it.description ? textToParagraphHtml(it.description) : null),
             source_name: src.name,
             category,
+            published_at: it.published_at || new Date().toISOString(),
           });
           rowCategories.push(category);
         }
         if (rows.length) {
           const { error } = await supabase.from("news_articles").upsert(rows, { onConflict: "guid" });
           if (error) {
-            return { source: src.name, result: `DB: ${error.message}`, total: 0, rowCategories: [] as NewsCategory[] };
+            return { source: src.name, result: `DB: ${error.message}`, total: rows.length, rowCategories, rows };
           }
         }
-        return { source: src.name, result: rows.length, total: rows.length, rowCategories };
+        return { source: src.name, result: rows.length, total: rows.length, rowCategories, rows };
       } catch (e) {
         return {
           source: src.name,
           result: `ERR: ${(e as Error).message}`,
           total: 0,
           rowCategories: [] as NewsCategory[],
+          rows: [],
         };
       }
     };
 
-    const settledSources = await Promise.allSettled(activeSources.map(processSource));
+    const settledSources = await Promise.allSettled(filteredSources.map(processSource));
     for (const settled of settledSources) {
       if (settled.status === "rejected") {
         results.unknown = `ERR: ${settled.reason?.message ?? "Unknown source error"}`;
@@ -286,9 +310,12 @@ Deno.serve(async (req) => {
       settled.value.rowCategories.forEach((category) => {
         categories[category] += 1;
       });
+      articles.push(...settled.value.rows);
     }
 
-    return new Response(JSON.stringify({ success: true, totalProcessed, categories, results }), {
+    articles.sort((a, b) => new Date(b.published_at || 0).getTime() - new Date(a.published_at || 0).getTime());
+
+    return new Response(JSON.stringify({ success: true, totalProcessed, categories, results, articles }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
