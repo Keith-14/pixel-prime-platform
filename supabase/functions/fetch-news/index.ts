@@ -13,7 +13,7 @@ interface NewsSource {
   category: NewsCategory;
 }
 
-interface NewsArticleRow extends ParsedItem {
+interface NewsArticleRow extends Omit<ParsedItem, "source"> {
   source_name: string;
   category: NewsCategory;
 }
@@ -23,19 +23,54 @@ const DEFAULT_SOURCES: NewsSource[] = [
   { name: "Middle East Eye", rss_url: "https://www.middleeasteye.net/rss", category: "world" },
   { name: "TRT World", rss_url: "https://www.trtworld.com/rss", category: "world" },
   { name: "BBC World", rss_url: "https://feeds.bbci.co.uk/news/world/rss.xml", category: "world" },
+  {
+    name: "Google News Ummah",
+    rss_url: "https://news.google.com/rss/search?q=Muslim%20Islamic%20Ummah%20world&hl=en-US&gl=US&ceid=US:en",
+    category: "world",
+  },
   { name: "Islamic Relief Worldwide", rss_url: "https://islamic-relief.org/feed/", category: "charity" },
   {
     name: "Islamic Relief Press Releases",
     rss_url: "https://islamic-relief.org/news_category/press-releases/feed/",
     category: "charity",
   },
+  {
+    name: "Google News Charity",
+    rss_url:
+      "https://news.google.com/rss/search?q=Muslim%20charity%20Islamic%20Relief%20zakat%20sadaqah&hl=en-US&gl=US&ceid=US:en",
+    category: "charity",
+  },
   { name: "Muslim Matters", rss_url: "https://muslimmatters.org/feed/", category: "education" },
   { name: "BBC Education", rss_url: "https://feeds.bbci.co.uk/news/education/rss.xml", category: "education" },
+  {
+    name: "Google News Heritage",
+    rss_url:
+      "https://news.google.com/rss/search?q=Islamic%20heritage%20Muslim%20history%20Quran%20Hadith&hl=en-US&gl=US&ceid=US:en",
+    category: "education",
+  },
   { name: "About Islam", rss_url: "https://aboutislam.net/feed/", category: "community" },
   { name: "The Muslim Vibe", rss_url: "https://themuslimvibe.com/feed/", category: "community" },
+  {
+    name: "Google News Lifestyle",
+    rss_url:
+      "https://news.google.com/rss/search?q=Muslim%20lifestyle%20Islamic%20family%20halal%20living&hl=en-US&gl=US&ceid=US:en",
+    category: "community",
+  },
   { name: "Islamic Finance Guru", rss_url: "https://www.islamicfinanceguru.com/feed/", category: "business" },
   { name: "BBC Business", rss_url: "https://feeds.bbci.co.uk/news/business/rss.xml", category: "business" },
+  {
+    name: "Google News Business",
+    rss_url:
+      "https://news.google.com/rss/search?q=Islamic%20finance%20halal%20business%20sukuk&hl=en-US&gl=US&ceid=US:en",
+    category: "business",
+  },
   { name: "BBC Politics", rss_url: "https://feeds.bbci.co.uk/news/politics/rss.xml", category: "politics" },
+  {
+    name: "Google News Politics",
+    rss_url:
+      "https://news.google.com/rss/search?q=Muslim%20politics%20Islamic%20policy%20government&hl=en-US&gl=US&ceid=US:en",
+    category: "politics",
+  },
 ];
 
 const NEWS_CATEGORIES = new Set<NewsCategory>(["world", "education", "community", "charity", "business", "politics"]);
@@ -55,6 +90,12 @@ function mergeSources(sources: NewsSource[]): NewsSource[] {
     });
   }
   return [...merged.values()];
+}
+
+function ensureCategoryCoverage(sources: NewsSource[]): NewsSource[] {
+  const activeCategories = new Set(sources.map((source) => source.category));
+  const missingDefaults = DEFAULT_SOURCES.filter((source) => !activeCategories.has(source.category));
+  return [...sources, ...missingDefaults];
 }
 
 function itemCategory(sourceCategory: NewsCategory): NewsCategory {
@@ -184,6 +225,7 @@ interface ParsedItem {
   published_at: string | null;
   author: string | null;
   tags: string[];
+  source?: string | null;
 }
 
 function parseRss(xml: string): ParsedItem[] {
@@ -200,6 +242,7 @@ function parseRss(xml: string): ParsedItem[] {
     const pub = pick(block, "pubDate") || pick(block, "published") || pick(block, "updated");
     const author = stripHtml(pick(block, "dc:creator") || pick(block, "author"));
     const tags = pickAll(block, "category").filter(Boolean).slice(0, 10);
+    const source = stripHtml(pick(block, "source"));
     items.push({
       guid,
       title,
@@ -210,6 +253,7 @@ function parseRss(xml: string): ParsedItem[] {
       published_at: parseDate(pub),
       author,
       tags,
+      source,
     });
   }
   return items;
@@ -238,12 +282,14 @@ Deno.serve(async (req) => {
       .eq("is_active", true);
     if (srcErr) throw srcErr;
 
-    const activeSources = mergeSources(
-      (sources ?? []).map((source) => ({
-        name: source.name,
-        rss_url: source.rss_url,
-        category: normalizeCategory(source.category),
-      })),
+    const activeSources = ensureCategoryCoverage(
+      mergeSources(
+        (sources ?? []).map((source) => ({
+          name: source.name,
+          rss_url: source.rss_url,
+          category: normalizeCategory(source.category),
+        })),
+      ),
     );
     const filteredSources = categoryFilter
       ? activeSources.filter((source) => source.category === categoryFilter)
@@ -272,10 +318,12 @@ Deno.serve(async (req) => {
         const rowCategories: NewsCategory[] = [];
         for (const it of items) {
           const category = itemCategory(src.category);
+          const { source, ...articleItem } = it;
           rows.push({
-            ...it,
+            ...articleItem,
+            guid: `${category}:${src.name}:${it.guid}`,
             content: it.content || (it.description ? textToParagraphHtml(it.description) : null),
-            source_name: src.name,
+            source_name: source || src.name,
             category,
             published_at: it.published_at || new Date().toISOString(),
           });
