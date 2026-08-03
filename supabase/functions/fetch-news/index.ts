@@ -17,16 +17,24 @@ const DEFAULT_SOURCES: NewsSource[] = [
   { name: "Al Jazeera", rss_url: "https://www.aljazeera.com/xml/rss/all.xml", category: "world" },
   { name: "Middle East Eye", rss_url: "https://www.middleeasteye.net/rss", category: "world" },
   { name: "TRT World", rss_url: "https://www.trtworld.com/rss", category: "world" },
+  { name: "BBC World", rss_url: "https://feeds.bbci.co.uk/news/world/rss.xml", category: "world" },
   { name: "Islamic Relief Worldwide", rss_url: "https://islamic-relief.org/feed/", category: "charity" },
+  {
+    name: "Islamic Relief Press Releases",
+    rss_url: "https://islamic-relief.org/news_category/press-releases/feed/",
+    category: "charity",
+  },
   { name: "Muslim Matters", rss_url: "https://muslimmatters.org/feed/", category: "education" },
+  { name: "BBC Education", rss_url: "https://feeds.bbci.co.uk/news/education/rss.xml", category: "education" },
   { name: "About Islam", rss_url: "https://aboutislam.net/feed/", category: "community" },
   { name: "The Muslim Vibe", rss_url: "https://themuslimvibe.com/feed/", category: "community" },
   { name: "Islamic Finance Guru", rss_url: "https://www.islamicfinanceguru.com/feed/", category: "business" },
+  { name: "BBC Business", rss_url: "https://feeds.bbci.co.uk/news/business/rss.xml", category: "business" },
+  { name: "BBC Politics", rss_url: "https://feeds.bbci.co.uk/news/politics/rss.xml", category: "politics" },
 ];
 
 const NEWS_CATEGORIES = new Set<NewsCategory>(["world", "education", "community", "charity", "business", "politics"]);
 const MAX_ITEMS_PER_SOURCE = 10;
-const MAX_ARTICLE_EXCERPT_FETCHES = 12;
 
 function normalizeCategory(value: unknown): NewsCategory {
   return typeof value === "string" && NEWS_CATEGORIES.has(value as NewsCategory) ? (value as NewsCategory) : "world";
@@ -44,42 +52,9 @@ function mergeSources(sources: NewsSource[]): NewsSource[] {
   return [...merged.values()];
 }
 
-function inferCategory(item: ParsedItem, sourceCategory: NewsCategory): NewsCategory {
-  const text = [item.title, item.description, item.content, item.author, item.tags.join(" ")]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
-
-  if (
-    /\b(election|government|minister|parliament|policy|diplomat|president|prime minister|senate|congress|politic|court ruling|law)\b/.test(
-      text,
-    )
-  )
-    return "politics";
-  if (
-    /\b(zakat|sadaqah|charity|donat|relief|aid|humanitarian|fundrais|hunger|poverty|flood|earthquake|emergency)\b/.test(
-      text,
-    )
-  )
-    return "charity";
-  if (
-    /\b(finance|business|economy|market|bank|investment|startup|trade|commerce|halal industry|islamic finance|sukuk)\b/.test(
-      text,
-    )
-  )
-    return "business";
-  if (
-    /\b(education|school|university|student|teacher|quran class|learning|scholarship|curriculum|academy|study|knowledge)\b/.test(
-      text,
-    )
-  )
-    return "education";
-  if (
-    /\b(community|family|lifestyle|culture|heritage|mosque|masjid|ramadan|eid|marriage|youth|women|food|travel|event)\b/.test(
-      text,
-    )
-  )
-    return "community";
+function itemCategory(sourceCategory: NewsCategory): NewsCategory {
+  // Feeds are intentionally assigned to app sections, so keep articles in the
+  // source's configured section instead of letting keyword matching empty a tab.
   return sourceCategory;
 }
 
@@ -149,16 +124,6 @@ function escapeHtml(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
-function normalizeText(s: string): string {
-  return decode(s)
-    .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
 function textToParagraphHtml(text: string): string | null {
   const clean = text.replace(/\s+/g, " ").trim();
   if (!clean) return null;
@@ -178,22 +143,6 @@ function parseDate(value: string | null): string | null {
   if (!value) return null;
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
-}
-
-async function fetchArticleExcerpt(url: string): Promise<string | null> {
-  try {
-    const res = await fetchWithTimeout(url, 7000);
-    if (!res.ok) return null;
-    const html = await res.text();
-    const body = html.match(/<article[\s\S]*?<\/article>/i)?.[0] || html.match(/<main[\s\S]*?<\/main>/i)?.[0] || html;
-    const paragraphs = [...body.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)]
-      .map((m) => normalizeText(m[1]))
-      .filter((p) => p.length > 45 && !/^(advertisement|subscribe|follow us|read more)$/i.test(p));
-    const text = paragraphs.join(" ").slice(0, 2200);
-    return textToParagraphHtml(text);
-  } catch {
-    return null;
-  }
 }
 
 function extractImage(itemXml: string): string | null {
@@ -289,28 +238,21 @@ Deno.serve(async (req) => {
       business: 0,
       politics: 0,
     };
-    let excerptFetches = 0;
-
-    for (const src of activeSources) {
+    const processSource = async (src: NewsSource) => {
       try {
         const res = await fetchWithTimeout(src.rss_url);
         if (!res.ok) {
-          results[src.name] = `HTTP ${res.status}`;
-          continue;
+          return { source: src.name, result: `HTTP ${res.status}`, total: 0, rowCategories: [] as NewsCategory[] };
         }
         const xml = await res.text();
         const items = parseRss(xml).slice(0, MAX_ITEMS_PER_SOURCE);
         const rows = [];
         const rowCategories: NewsCategory[] = [];
         for (const it of items) {
-          const rssText = `${it.description ?? ""} ${stripHtml(it.content) ?? ""}`.trim();
-          const shouldFetchExcerpt = rssText.length < 700 && excerptFetches < MAX_ARTICLE_EXCERPT_FETCHES;
-          const enrichedContent = shouldFetchExcerpt ? await fetchArticleExcerpt(it.article_url) : it.content;
-          if (shouldFetchExcerpt) excerptFetches += 1;
-          const category = inferCategory(it, src.category);
+          const category = itemCategory(src.category);
           rows.push({
             ...it,
-            content: enrichedContent || it.content || (it.description ? textToParagraphHtml(it.description) : null),
+            content: it.content || (it.description ? textToParagraphHtml(it.description) : null),
             source_name: src.name,
             category,
           });
@@ -319,18 +261,31 @@ Deno.serve(async (req) => {
         if (rows.length) {
           const { error } = await supabase.from("news_articles").upsert(rows, { onConflict: "guid" });
           if (error) {
-            results[src.name] = `DB: ${error.message}`;
-            continue;
+            return { source: src.name, result: `DB: ${error.message}`, total: 0, rowCategories: [] as NewsCategory[] };
           }
         }
-        rowCategories.forEach((category) => {
-          categories[category] += 1;
-        });
-        results[src.name] = rows.length;
-        totalProcessed += rows.length;
+        return { source: src.name, result: rows.length, total: rows.length, rowCategories };
       } catch (e) {
-        results[src.name] = `ERR: ${(e as Error).message}`;
+        return {
+          source: src.name,
+          result: `ERR: ${(e as Error).message}`,
+          total: 0,
+          rowCategories: [] as NewsCategory[],
+        };
       }
+    };
+
+    const settledSources = await Promise.allSettled(activeSources.map(processSource));
+    for (const settled of settledSources) {
+      if (settled.status === "rejected") {
+        results.unknown = `ERR: ${settled.reason?.message ?? "Unknown source error"}`;
+        continue;
+      }
+      results[settled.value.source] = settled.value.result;
+      totalProcessed += settled.value.total;
+      settled.value.rowCategories.forEach((category) => {
+        categories[category] += 1;
+      });
     }
 
     return new Response(JSON.stringify({ success: true, totalProcessed, categories, results }), {
