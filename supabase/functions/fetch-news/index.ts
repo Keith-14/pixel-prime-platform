@@ -35,14 +35,7 @@ const NEWSDATA_DOMAINS = [
   "gulfnews.com",
 ];
 
-const DOMAIN_CHUNKS: string[][] = [];
-for (let i = 0; i < NEWSDATA_DOMAINS.length; i += 5) DOMAIN_CHUNKS.push(NEWSDATA_DOMAINS.slice(i, i + 5));
-
-const QUERIES = [
-  "Islam OR Muslim OR Palestine OR Gaza OR Ummah",
-  "Hajj OR Umrah OR Quran OR Hadith OR Ramadan OR Eid",
-  "halal OR \"Islamic finance\" OR \"Muslim community\" OR \"Islamic education\"",
-];
+const MAX_ARTICLES_PER_RUN = 45;
 
 const CATEGORY_HINTS: { re: RegExp; category: NewsCategory }[] = [
   { re: /charity|relief|donat|humanitarian|aid/i, category: "charity" },
@@ -372,10 +365,12 @@ Deno.serve(async (req) => {
         .in("guid", guids.slice(i, i + 100));
       for (const row of data ?? []) existing.set(row.guid, row);
     }
-    const toProcess = candidates.filter(([g]) => {
-      const e = existing.get(g);
-      return !e || !e.content || !e.image_url;
-    });
+    const toProcess = candidates
+      .filter(([g]) => {
+        const e = existing.get(g);
+        return !e || !e.content || !e.image_url;
+      })
+      .slice(0, MAX_ARTICLES_PER_RUN);
 
     // 4. AI relevance classification
     const classifyItems = toProcess.map(([, v], idx) => ({
@@ -402,53 +397,57 @@ Deno.serve(async (req) => {
     );
 
     const rows: any[] = [];
-    for (let idx = 0; idx < toProcess.length; idx++) {
-      const [guid, { a, pub }] = toProcess[idx];
-      const verdict = verdicts[idx];
-      if (!verdict?.relevant) {
-        rejected++;
-        continue;
-      }
-      const extraction = await extractArticle(a.link!);
-      const description = stripHtml(a.description) ?? extraction.text?.slice(0, 300) ?? null;
-      const html =
-        extraction.html ??
-        (description ? `<p>${description.replace(/</g, "&lt;")}</p>` : null);
+    const accepted = toProcess
+      .map((entry, idx) => ({ entry, verdict: verdicts[idx] }))
+      .filter((x) => x.verdict?.relevant);
+    rejected = toProcess.length - accepted.length;
 
-      // featured image priority: og/twitter (from page) -> newsdata -> first article image
-      const candidatesImg = [extraction.image, absolutize(a.image_url, a.link!)].filter(Boolean) as string[];
-      let image: string | null = null;
-      for (const c of candidatesImg) {
-        if (usedImages.has(c)) continue;
-        if (await imageExists(c)) {
-          image = c;
-          break;
+    for (let i = 0; i < accepted.length; i += 5) {
+      const batch = accepted.slice(i, i + 5);
+      const extractions = await Promise.all(batch.map((x) => extractArticle(x.entry[1].a.link!)));
+      for (let j = 0; j < batch.length; j++) {
+        const [guid, { a, pub }] = batch[j].entry;
+        const verdict = batch[j].verdict;
+        const extraction = extractions[j];
+        const description = stripHtml(a.description) ?? extraction.text?.slice(0, 300) ?? null;
+        const html =
+          extraction.html ?? (description ? `<p>${description.replace(/</g, "&lt;")}</p>` : null);
+
+        const candidatesImg = [extraction.image, absolutize(a.image_url, a.link!)].filter(
+          Boolean,
+        ) as string[];
+        let image: string | null = null;
+        for (const c of candidatesImg) {
+          if (usedImages.has(c)) continue;
+          if (await imageExists(c)) {
+            image = c;
+            break;
+          }
         }
+        if (image) usedImages.add(image);
+
+        const section = sectionFor(`${a.title} ${description ?? ""} ${verdict.category}`, pub.category);
+
+        rows.push({
+          guid,
+          title: decodeEntities(a.title!).trim(),
+          description,
+          content: html,
+          image_url: image,
+          article_url: a.link,
+          source_name: pub.name,
+          author: (a.creator?.[0] ? decodeEntities(a.creator[0]) : null) ?? extraction.author,
+          published_at: a.pubDate
+            ? new Date(a.pubDate.replace(" ", "T") + "Z").toISOString()
+            : new Date().toISOString(),
+          tags: (a.keywords ?? []).slice(0, 10),
+          category: section,
+          language: a.language ?? "en",
+          country: a.country?.[0] ?? null,
+          is_islamic: true,
+          ai_category: verdict.category,
+        });
       }
-      if (image) usedImages.add(image);
-
-      const section = sectionFor(
-        `${a.title} ${description ?? ""} ${verdict.category}`,
-        pub.category,
-      );
-
-      rows.push({
-        guid,
-        title: decodeEntities(a.title!).trim(),
-        description,
-        content: html,
-        image_url: image,
-        article_url: a.link,
-        source_name: pub.name,
-        author: (a.creator?.[0] ? decodeEntities(a.creator[0]) : null) ?? extraction.author,
-        published_at: a.pubDate ? new Date(a.pubDate.replace(" ", "T") + "Z").toISOString() : new Date().toISOString(),
-        tags: (a.keywords ?? []).slice(0, 10),
-        category: section,
-        language: a.language ?? "en",
-        country: a.country?.[0] ?? null,
-        is_islamic: true,
-        ai_category: verdict.category,
-      });
     }
 
     if (rows.length) {
