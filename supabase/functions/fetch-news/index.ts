@@ -311,10 +311,9 @@ function guidFor(link: string): string {
   }
 }
 
-async function fetchNewsData(apiKey: string, query: string, domains: string[]): Promise<NewsDataArticle[]> {
+async function fetchNewsData(apiKey: string, domains: string[]): Promise<NewsDataArticle[]> {
   const url = new URL("https://newsdata.io/api/1/latest");
   url.searchParams.set("apikey", apiKey);
-  url.searchParams.set("q", query);
   url.searchParams.set("language", "en");
   url.searchParams.set("domainurl", domains.join(","));
   try {
@@ -347,11 +346,9 @@ Deno.serve(async (req) => {
   try {
     // 1. Fetch from NewsData.io (batched queries, sequential to respect rate limits)
     const raw: NewsDataArticle[] = [];
-    for (const q of QUERIES) {
-      for (const domains of DOMAIN_CHUNKS) {
-        raw.push(...(await fetchNewsData(newsKey, q, domains)));
-        await new Promise((r) => setTimeout(r, 1200));
-      }
+    for (const domain of NEWSDATA_DOMAINS) {
+      raw.push(...(await fetchNewsData(newsKey, [domain])));
+      await new Promise((r) => setTimeout(r, 900));
     }
 
     // 2. Normalize + trusted publisher filter + dedupe by canonical link
