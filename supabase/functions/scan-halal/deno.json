@@ -1,0 +1,23 @@
+{
+  "imports": {
+    "@std/http/server": "https://deno.land/std@0.168.0/http/server.ts",
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@2"
+  },
+  "fmt": {
+    "lineWidth": 120,
+    "semiColons": true,
+    "singleQuote": false
+  },
+  "lint": {
+    "rules": {
+      "exclude": ["no-explicit-any"]
+    }
+  },
+  "tasks": {
+    "serve": "supabase functions serve",
+    "deploy:scan-halal": "supabase functions deploy scan-halal",
+    "deploy:fetch-news": "supabase functions deploy fetch-news",
+    "deploy:chat": "supabase functions deploy chat",
+    "deploy:fill-hadith": "supabase functions deploy fill-hadith"
+  }
+}
