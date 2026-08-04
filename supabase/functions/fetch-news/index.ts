@@ -1,4 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { Readability } from "https://esm.sh/@mozilla/readability@0.5.0";
+import { parseHTML } from "https://esm.sh/linkedom@0.18.5/worker";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,237 +9,314 @@ const corsHeaders = {
 
 type NewsCategory = "world" | "education" | "community" | "charity" | "business" | "politics";
 
-interface NewsSource {
-  name: string;
-  rss_url: string;
-  category: NewsCategory;
-}
-
-interface NewsArticleRow extends Omit<ParsedItem, "source"> {
-  source_name: string;
-  category: NewsCategory;
-}
-
-const DEFAULT_SOURCES: NewsSource[] = [
-  { name: "Al Jazeera", rss_url: "https://www.aljazeera.com/xml/rss/all.xml", category: "world" },
-  { name: "Middle East Eye", rss_url: "https://www.middleeasteye.net/rss", category: "world" },
-  { name: "TRT World", rss_url: "https://www.trtworld.com/rss", category: "world" },
-  { name: "BBC World", rss_url: "https://feeds.bbci.co.uk/news/world/rss.xml", category: "world" },
-  { name: "Islamic Relief Worldwide", rss_url: "https://islamic-relief.org/feed/", category: "charity" },
-  {
-    name: "Islamic Relief Press Releases",
-    rss_url: "https://islamic-relief.org/news_category/press-releases/feed/",
-    category: "charity",
-  },
-  { name: "Muslim Matters", rss_url: "https://muslimmatters.org/feed/", category: "education" },
-  { name: "BBC Education", rss_url: "https://feeds.bbci.co.uk/news/education/rss.xml", category: "education" },
-  { name: "About Islam", rss_url: "https://aboutislam.net/feed/", category: "community" },
-  { name: "The Muslim Vibe", rss_url: "https://themuslimvibe.com/feed/", category: "community" },
-  { name: "Islamic Finance Guru", rss_url: "https://www.islamicfinanceguru.com/feed/", category: "business" },
-  { name: "BBC Business", rss_url: "https://feeds.bbci.co.uk/news/business/rss.xml", category: "business" },
-  { name: "BBC Politics", rss_url: "https://feeds.bbci.co.uk/news/politics/rss.xml", category: "politics" },
-  { name: "Middle East Eye Politics", rss_url: "https://www.middleeasteye.net/rss", category: "politics" },
+const TRUSTED_PUBLISHERS: { match: RegExp; name: string; category: NewsCategory }[] = [
+  { match: /middle\s*east\s*eye|middleeasteye/i, name: "Middle East Eye", category: "world" },
+  { match: /al\s*jazeera|aljazeera/i, name: "Al Jazeera", category: "world" },
+  { match: /trt\s*(world|afrika|haber)?/i, name: "TRT World", category: "world" },
+  { match: /anadolu|aa\.com\.tr/i, name: "Anadolu Agency", category: "world" },
+  { match: /arab\s*news|arabnews/i, name: "Arab News", category: "world" },
+  { match: /the\s*new\s*arab|newarab/i, name: "The New Arab", category: "politics" },
+  { match: /muslim\s*news/i, name: "Muslim News UK", category: "community" },
+  { match: /iqna/i, name: "IQNA", category: "community" },
+  { match: /islamic\s*voice/i, name: "Islamic Voice", category: "education" },
+  { match: /gulf\s*news/i, name: "Gulf News", category: "business" },
 ];
 
-const NEWS_CATEGORIES = new Set<NewsCategory>(["world", "education", "community", "charity", "business", "politics"]);
-const MAX_ITEMS_PER_SOURCE = 10;
+const NEWSDATA_DOMAINS = [
+  "middleeasteye.net",
+  "aljazeera.com",
+  "trtworld.com",
+  "aa.com.tr",
+  "arabnews.com",
+  "newarab.com",
+  "muslimnews.co.uk",
+  "iqna.ir",
+  "islamicvoice.com",
+  "gulfnews.com",
+];
 
-function normalizeCategory(value: unknown): NewsCategory {
-  return typeof value === "string" && NEWS_CATEGORIES.has(value as NewsCategory) ? (value as NewsCategory) : "world";
+const MAX_ARTICLES_PER_RUN = 45;
+
+const CATEGORY_HINTS: { re: RegExp; category: NewsCategory }[] = [
+  { re: /charity|relief|donat|humanitarian|aid/i, category: "charity" },
+  { re: /school|university|education|student|scholar/i, category: "education" },
+  { re: /finance|business|economy|market|trade|investment|halal industry/i, category: "business" },
+  { re: /election|government|parliament|minister|policy|diplomat|war|ceasefire/i, category: "politics" },
+  { re: /mosque|community|ummah|ramadan|eid|hajj|umrah|quran|hadith/i, category: "community" },
+];
+
+interface NewsDataArticle {
+  article_id?: string;
+  title?: string;
+  link?: string;
+  description?: string;
+  content?: string;
+  image_url?: string;
+  pubDate?: string;
+  source_id?: string;
+  source_name?: string;
+  creator?: string[] | null;
+  keywords?: string[] | null;
+  language?: string;
+  country?: string[] | null;
 }
 
-function isRateLimitedSearchFeed(url: string): boolean {
+function trustedPublisher(article: NewsDataArticle) {
+  const haystack = `${article.source_name ?? ""} ${article.source_id ?? ""} ${article.link ?? ""}`;
+  return TRUSTED_PUBLISHERS.find((p) => p.match.test(haystack)) ?? null;
+}
+
+function decodeEntities(s: string): string {
+  return s
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#0?39;|&apos;|&rsquo;/gi, "'")
+    .replace(/&lsquo;/gi, "'")
+    .replace(/&ldquo;|&rdquo;/gi, '"')
+    .replace(/&mdash;/gi, "\u2014")
+    .replace(/&ndash;/gi, "\u2013")
+    .replace(/&hellip;/gi, "\u2026")
+    .replace(/&#(\d+);/g, (_m, d) => String.fromCodePoint(Number(d)))
+    .replace(/&#x([0-9a-f]+);/gi, (_m, h) => String.fromCodePoint(parseInt(h, 16)));
+}
+
+function stripHtml(html: string | null | undefined): string | null {
+  if (!html) return null;
+  const text = decodeEntities(html.replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim();
+  return text || null;
+}
+
+function absolutize(url: string | null | undefined, base: string): string | null {
+  if (!url) return null;
   try {
-    const parsed = new URL(url);
-    return parsed.hostname === "news.google.com" && parsed.pathname.startsWith("/rss/search");
-  } catch {
-    return false;
-  }
-}
-
-function isUsableSource(source: NewsSource): boolean {
-  return Boolean(source.name?.trim()) && Boolean(source.rss_url?.trim()) && !isRateLimitedSearchFeed(source.rss_url);
-}
-
-function mergeSources(sources: NewsSource[]): NewsSource[] {
-  const merged = new Map<string, NewsSource>();
-  for (const source of [...DEFAULT_SOURCES, ...sources].filter(isUsableSource)) {
-    const category = normalizeCategory(source.category);
-    const key = `${category}:${source.rss_url}`;
-    if (merged.has(key)) continue;
-    merged.set(key, {
-      ...source,
-      category,
-    });
-  }
-  return [...merged.values()];
-}
-
-function ensureCategoryCoverage(sources: NewsSource[]): NewsSource[] {
-  const activeCategories = new Set(sources.map((source) => source.category));
-  const missingDefaults = DEFAULT_SOURCES.filter((source) => !activeCategories.has(source.category));
-  return [...sources, ...missingDefaults];
-}
-
-function itemCategory(sourceCategory: NewsCategory): NewsCategory {
-  // Feeds are intentionally assigned to app sections, so keep articles in the
-  // source's configured section instead of letting keyword matching empty a tab.
-  return sourceCategory;
-}
-
-async function requestedCategory(req: Request): Promise<NewsCategory | null> {
-  try {
-    const body = await req.json();
-    const category = body?.category;
-    return typeof category === "string" && NEWS_CATEGORIES.has(category as NewsCategory)
-      ? (category as NewsCategory)
-      : null;
+    return new URL(url, base).toString();
   } catch {
     return null;
   }
 }
 
-async function fetchWithTimeout(url: string, timeoutMs = 9000): Promise<Response> {
+async function fetchWithTimeout(url: string, timeoutMs = 12000, init: RequestInit = {}): Promise<Response> {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  const id = setTimeout(() => controller.abort(), timeoutMs);
   try {
     return await fetch(url, {
-      headers: { "User-Agent": "BarakahNewsBot/1.0 (+https://barakah.app)" },
       redirect: "follow",
+      ...init,
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (compatible; BarakahNewsBot/2.0; +https://barakah.services)",
+        ...(init.headers ?? {}),
+      },
       signal: controller.signal,
     });
   } finally {
-    clearTimeout(timeoutId);
+    clearTimeout(id);
   }
 }
 
-function pick(xml: string, tag: string): string | null {
-  const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "i");
-  const m = xml.match(re);
-  if (!m) return null;
-  return decode(stripCData(m[1]).trim());
+const ALLOWED_TAGS = new Set([
+  "P","H1","H2","H3","H4","H5","H6","UL","OL","LI","BLOCKQUOTE","FIGURE","FIGCAPTION",
+  "IMG","A","STRONG","EM","B","I","BR","HR","TABLE","THEAD","TBODY","TR","TD","TH","PRE","CODE","SPAN","DIV",
+]);
+const DROP_SELECTOR =
+  "script,style,noscript,iframe,form,button,input,svg,nav,aside,footer,header," +
+  "[class*='share'],[class*='social'],[class*='newsletter'],[class*='related'],[class*='promo']," +
+  "[class*='advert'],[id*='advert'],[class*='cookie'],[id*='cookie'],[class*='comment'],[id*='comment']";
+
+function cleanArticleHtml(html: string, baseUrl: string): string | null {
+  const { document } = parseHTML(`<div id="__root">${html}</div>`);
+  const root = document.getElementById("__root");
+  if (!root) return null;
+  root.querySelectorAll(DROP_SELECTOR).forEach((el: any) => el.remove());
+  root.querySelectorAll("*").forEach((el: any) => {
+    const tag = String(el.tagName || "").toUpperCase();
+    if (!ALLOWED_TAGS.has(tag)) {
+      el.replaceWith(...Array.from(el.childNodes));
+      return;
+    }
+    for (const attr of Array.from(el.attributes ?? []) as any[]) {
+      const n = attr.name.toLowerCase();
+      const keep =
+        (tag === "IMG" && (n === "src" || n === "alt")) ||
+        (tag === "A" && (n === "href" || n === "title"));
+      if (!keep) el.removeAttribute(attr.name);
+    }
+    if (tag === "IMG") {
+      const abs = absolutize(el.getAttribute("src"), baseUrl);
+      if (!abs) el.remove();
+      else el.setAttribute("src", abs);
+    }
+    if (tag === "A") {
+      const abs = absolutize(el.getAttribute("href"), baseUrl);
+      if (abs) {
+        el.setAttribute("href", abs);
+      } else {
+        el.replaceWith(...Array.from(el.childNodes));
+      }
+    }
+  });
+  const out = decodeEntities(root.innerHTML).replace(/\s{2,}/g, " ").trim();
+  return out.length > 200 ? out : null;
 }
 
-function pickAttr(xml: string, tag: string, attr: string): string | null {
-  const re = new RegExp(`<${tag}[^>]*\\b${attr}=["']([^"']+)["'][^>]*\\/?>`, "i");
-  const m = xml.match(re);
-  return m ? m[1] : null;
+function metaContent(document: any, selectors: string[]): string | null {
+  for (const sel of selectors) {
+    const el = document.querySelector(sel);
+    const content = el?.getAttribute?.("content") || el?.getAttribute?.("href");
+    if (content) return content;
+  }
+  return null;
 }
 
-function pickAll(xml: string, tag: string): string[] {
-  const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "gi");
-  const out: string[] = [];
-  let m;
-  while ((m = re.exec(xml)) !== null) out.push(decode(stripCData(m[1]).trim()));
-  return out;
+async function imageExists(url: string): Promise<boolean> {
+  try {
+    const res = await fetchWithTimeout(url, 8000, { method: "GET", headers: { Range: "bytes=0-256" } });
+    const type = res.headers.get("content-type") ?? "";
+    return res.ok && type.startsWith("image");
+  } catch {
+    return false;
+  }
 }
 
-function stripCData(s: string): string {
-  return s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1");
-}
-
-function decode(s: string): string {
-  return s
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&apos;/g, "'");
-}
-
-function stripHtml(s: string | null): string | null {
-  if (!s) return null;
-  return s
-    .replace(/<[^>]+>/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-function textToParagraphHtml(text: string): string | null {
-  const clean = text.replace(/\s+/g, " ").trim();
-  if (!clean) return null;
-  const chunks = clean
-    .split(/(?<=[.!?])\s+(?=[A-Z"'])/)
-    .reduce<string[]>((acc, sentence) => {
-      const last = acc[acc.length - 1] ?? "";
-      if (!last || last.length > 420) acc.push(sentence);
-      else acc[acc.length - 1] = `${last} ${sentence}`;
-      return acc;
-    }, [])
-    .slice(0, 6);
-  return chunks.map((chunk) => `<p>${escapeHtml(chunk)}</p>`).join("");
-}
-
-function parseDate(value: string | null): string | null {
-  if (!value) return null;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date.toISOString();
-}
-
-function extractImage(itemXml: string): string | null {
-  const enclosure = pickAttr(itemXml, "enclosure", "url");
-  if (enclosure) return enclosure;
-  const mediaContent = pickAttr(itemXml, "media:content", "url");
-  if (mediaContent) return mediaContent;
-  const mediaThumb = pickAttr(itemXml, "media:thumbnail", "url");
-  if (mediaThumb) return mediaThumb;
-  const html = pick(itemXml, "content:encoded") || pick(itemXml, "description") || "";
-  const imgMatch = html.match(/<img[^>]+src=["']([^"']+)["']/i);
-  return imgMatch ? imgMatch[1] : null;
-}
-
-interface ParsedItem {
-  guid: string;
-  title: string;
-  description: string | null;
-  content: string | null;
-  image_url: string | null;
-  article_url: string;
-  published_at: string | null;
+interface Extraction {
+  html: string | null;
+  text: string | null;
+  image: string | null;
   author: string | null;
-  tags: string[];
-  source?: string | null;
+  title: string | null;
 }
 
-function parseRss(xml: string): ParsedItem[] {
-  const itemBlocks = xml.match(/<item[\s\S]*?<\/item>/gi) || xml.match(/<entry[\s\S]*?<\/entry>/gi) || [];
-  const items: ParsedItem[] = [];
-  for (const block of itemBlocks) {
-    const title = pick(block, "title") || "";
-    let link = pick(block, "link");
-    if (!link) link = pickAttr(block, "link", "href");
-    if (!title || !link) continue;
-    const guid = pick(block, "guid") || pick(block, "id") || link;
-    const description = stripHtml(pick(block, "description") || pick(block, "summary"));
-    const content = stripHtml(pick(block, "content:encoded") || pick(block, "content"));
-    const pub = pick(block, "pubDate") || pick(block, "published") || pick(block, "updated");
-    const author = stripHtml(pick(block, "dc:creator") || pick(block, "author"));
-    const tags = pickAll(block, "category").filter(Boolean).slice(0, 10);
-    const source = stripHtml(pick(block, "source"));
-    items.push({
-      guid,
-      title,
-      description,
-      content,
-      image_url: extractImage(block),
-      article_url: link,
-      published_at: parseDate(pub),
-      author,
-      tags,
-      source,
-    });
+async function extractArticle(url: string): Promise<Extraction> {
+  const empty: Extraction = { html: null, text: null, image: null, author: null, title: null };
+  try {
+    const res = await fetchWithTimeout(url, 15000);
+    if (!res.ok) return empty;
+    const raw = await res.text();
+    const { document } = parseHTML(raw);
+    const ogImage =
+      metaContent(document, [
+        'meta[property="og:image"]',
+        'meta[property="og:image:url"]',
+        'meta[name="og:image"]',
+        'meta[name="twitter:image"]',
+        'meta[property="twitter:image"]',
+        'meta[name="twitter:image:src"]',
+        'meta[itemprop="image"]',
+        'link[rel="image_src"]',
+      ]) ?? null;
+    let article: any = null;
+    try {
+      article = new Readability(document as any, { charThreshold: 200 }).parse();
+    } catch {
+      article = null;
+    }
+    const html = article?.content ? cleanArticleHtml(article.content, url) : null;
+    let image = absolutize(ogImage, url);
+    if (!image && html) {
+      const m = html.match(/<img[^>]+src="([^"]+)"/i);
+      image = m ? m[1] : null;
+    }
+    return {
+      html,
+      text: article?.textContent ? decodeEntities(article.textContent).replace(/\s+/g, " ").trim() : null,
+      image,
+      author: article?.byline ? decodeEntities(article.byline).trim() : null,
+      title: article?.title ? decodeEntities(article.title).trim() : null,
+    };
+  } catch {
+    return empty;
   }
-  return items;
+}
+
+const AI_CATEGORIES = [
+  "Palestine","Gaza","Ummah","Muslim Communities","Islam","Hajj","Umrah","Quran","Hadith",
+  "Ramadan","Eid","Halal","Islamic Finance","Islamic Education","Muslim Technology",
+  "Muslim Business","Humanitarian",
+];
+
+async function classifyBatch(
+  items: { idx: number; title: string; description: string }[],
+  apiKey: string,
+): Promise<Record<number, { relevant: boolean; category: string }>> {
+  const fallback: Record<number, { relevant: boolean; category: string }> = {};
+  for (const it of items) fallback[it.idx] = { relevant: false, category: "Islam" };
+  if (!items.length) return fallback;
+  try {
+    const res = await fetchWithTimeout("https://ai.gateway.lovable.dev/v1/chat/completions", 45000, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey },
+      body: JSON.stringify({
+        model: "google/gemini-3.6-flash",
+        messages: [
+          {
+            role: "system",
+            content:
+              "You classify news articles for an Islamic news app. Accept only articles about: " +
+              AI_CATEGORIES.join(", ") +
+              ", or humanitarian issues affecting Muslims. Reject celebrity gossip, sports, entertainment, general politics unrelated to Muslims, crime unless directly relevant, and irrelevant international news. " +
+              'Reply ONLY with JSON: {"results":[{"idx":number,"relevant":boolean,"category":string}]}',
+          },
+          {
+            role: "user",
+            content: JSON.stringify(
+              items.map((i) => ({ idx: i.idx, title: i.title, description: i.description.slice(0, 400) })),
+            ),
+          },
+        ],
+      }),
+    });
+    if (!res.ok) return fallback;
+    const json = await res.json();
+    const content: string = json?.choices?.[0]?.message?.content ?? "";
+    const match = content.match(/\{[\s\S]*\}/);
+    if (!match) return fallback;
+    const parsed = JSON.parse(match[0]);
+    for (const r of parsed?.results ?? []) {
+      if (typeof r?.idx === "number") {
+        fallback[r.idx] = {
+          relevant: Boolean(r.relevant),
+          category: typeof r.category === "string" && r.category ? r.category : "Islam",
+        };
+      }
+    }
+    return fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function sectionFor(text: string, fallback: NewsCategory): NewsCategory {
+  for (const hint of CATEGORY_HINTS) if (hint.re.test(text)) return hint.category;
+  return fallback;
+}
+
+function guidFor(link: string): string {
+  try {
+    const u = new URL(link);
+    u.search = "";
+    u.hash = "";
+    return `newsdata:${u.toString()}`;
+  } catch {
+    return `newsdata:${link}`;
+  }
+}
+
+async function fetchNewsData(apiKey: string, domains: string[]): Promise<NewsDataArticle[]> {
+  const url = new URL("https://newsdata.io/api/1/latest");
+  url.searchParams.set("apikey", apiKey);
+  url.searchParams.set("language", "en");
+  url.searchParams.set("domainurl", domains.join(","));
+  try {
+    const res = await fetchWithTimeout(url.toString(), 15000);
+    if (!res.ok) return [];
+    const json = await res.json();
+    return Array.isArray(json?.results) ? (json.results as NewsDataArticle[]) : [];
+  } catch {
+    return [];
+  }
 }
 
 Deno.serve(async (req) => {
@@ -245,8 +324,10 @@ Deno.serve(async (req) => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const newsKey = Deno.env.get("NEWSDATA_API_KEY");
+  const lovableKey = Deno.env.get("LOVABLE_API_KEY");
 
-  if (!supabaseUrl || !serviceKey) {
+  if (!supabaseUrl || !serviceKey || !newsKey || !lovableKey) {
     return new Response(JSON.stringify({ success: false, error: "Server configuration error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -256,97 +337,146 @@ Deno.serve(async (req) => {
   const supabase = createClient(supabaseUrl, serviceKey);
 
   try {
-    const categoryFilter = await requestedCategory(req);
-    const { data: sources, error: srcErr } = await supabase
-      .from("news_sources")
-      .select("name, rss_url, category")
-      .eq("is_active", true);
-    if (srcErr) throw srcErr;
-
-    const activeSources = ensureCategoryCoverage(
-      mergeSources(
-        (sources ?? []).map((source) => ({
-          name: source.name,
-          rss_url: source.rss_url,
-          category: normalizeCategory(source.category),
-        })),
-      ),
-    );
-    const filteredSources = categoryFilter
-      ? activeSources.filter((source) => source.category === categoryFilter)
-      : activeSources;
-
-    let totalProcessed = 0;
-    const results: Record<string, number | string> = {};
-    const articles: NewsArticleRow[] = [];
-    const categories: Record<NewsCategory, number> = {
-      world: 0,
-      education: 0,
-      community: 0,
-      charity: 0,
-      business: 0,
-      politics: 0,
-    };
-    const processSource = async (src: NewsSource) => {
-      try {
-        const res = await fetchWithTimeout(src.rss_url);
-        if (!res.ok) {
-          return { source: src.name, result: `HTTP ${res.status}`, total: 0, rowCategories: [] as NewsCategory[] };
-        }
-        const xml = await res.text();
-        const items = parseRss(xml).slice(0, MAX_ITEMS_PER_SOURCE);
-        const rows: NewsArticleRow[] = [];
-        const rowCategories: NewsCategory[] = [];
-        for (const it of items) {
-          const category = itemCategory(src.category);
-          const { source, ...articleItem } = it;
-          rows.push({
-            ...articleItem,
-            guid: `${category}:${src.name}:${it.guid}`,
-            content: it.content || (it.description ? textToParagraphHtml(it.description) : null),
-            source_name: source || src.name,
-            category,
-            published_at: it.published_at || new Date().toISOString(),
-          });
-          rowCategories.push(category);
-        }
-        if (rows.length) {
-          const { error } = await supabase.from("news_articles").upsert(rows, { onConflict: "guid" });
-          if (error) {
-            return { source: src.name, result: `DB: ${error.message}`, total: rows.length, rowCategories, rows };
-          }
-        }
-        return { source: src.name, result: rows.length, total: rows.length, rowCategories, rows };
-      } catch (e) {
-        return {
-          source: src.name,
-          result: `ERR: ${(e as Error).message}`,
-          total: 0,
-          rowCategories: [] as NewsCategory[],
-          rows: [],
-        };
-      }
-    };
-
-    const settledSources = await Promise.allSettled(filteredSources.map(processSource));
-    for (const settled of settledSources) {
-      if (settled.status === "rejected") {
-        results.unknown = `ERR: ${settled.reason?.message ?? "Unknown source error"}`;
-        continue;
-      }
-      results[settled.value.source] = settled.value.result;
-      totalProcessed += settled.value.total;
-      settled.value.rowCategories.forEach((category) => {
-        categories[category] += 1;
-      });
-      articles.push(...settled.value.rows);
+    // 1. Fetch from NewsData.io (batched queries, sequential to respect rate limits)
+    const raw: NewsDataArticle[] = [];
+    for (const domain of NEWSDATA_DOMAINS) {
+      raw.push(...(await fetchNewsData(newsKey, [domain])));
+      await new Promise((r) => setTimeout(r, 900));
     }
 
-    articles.sort((a, b) => new Date(b.published_at || 0).getTime() - new Date(a.published_at || 0).getTime());
+    // 2. Normalize + trusted publisher filter + dedupe by canonical link
+    const byGuid = new Map<string, { a: NewsDataArticle; pub: (typeof TRUSTED_PUBLISHERS)[number] }>();
+    for (const a of raw) {
+      if (!a.link || !a.title) continue;
+      const pub = trustedPublisher(a);
+      if (!pub) continue;
+      const guid = guidFor(a.link);
+      if (!byGuid.has(guid)) byGuid.set(guid, { a, pub });
+    }
+    const candidates = [...byGuid.entries()];
 
-    return new Response(JSON.stringify({ success: true, totalProcessed, categories, results, articles }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    // 3. Skip already-enriched articles (performance / caching)
+    const guids = candidates.map(([g]) => g);
+    const existing = new Map<string, { content: string | null; image_url: string | null }>();
+    for (let i = 0; i < guids.length; i += 100) {
+      const { data } = await supabase
+        .from("news_articles")
+        .select("guid, content, image_url")
+        .in("guid", guids.slice(i, i + 100));
+      for (const row of data ?? []) existing.set(row.guid, row);
+    }
+    const toProcess = candidates
+      .filter(([g]) => {
+        const e = existing.get(g);
+        return !e || !e.content || !e.image_url;
+      })
+      .slice(0, MAX_ARTICLES_PER_RUN);
+
+    // 4. AI relevance classification
+    const classifyItems = toProcess.map(([, v], idx) => ({
+      idx,
+      title: v.a.title ?? "",
+      description: stripHtml(v.a.description) ?? "",
+    }));
+    const verdicts: Record<number, { relevant: boolean; category: string }> = {};
+    for (let i = 0; i < classifyItems.length; i += 20) {
+      Object.assign(verdicts, await classifyBatch(classifyItems.slice(i, i + 20), lovableKey));
+    }
+
+    // 5. Extract + clean + image resolution + store
+    let stored = 0;
+    let rejected = 0;
+    const usedImages = new Set<string>(
+      (
+        await supabase
+          .from("news_articles")
+          .select("image_url")
+          .not("image_url", "is", null)
+          .limit(1000)
+      ).data?.map((r: any) => r.image_url) ?? [],
+    );
+
+    const rows: any[] = [];
+    const accepted = toProcess
+      .map((entry, idx) => ({ entry, verdict: verdicts[idx] }))
+      .filter((x) => x.verdict?.relevant);
+    rejected = toProcess.length - accepted.length;
+
+    for (let i = 0; i < accepted.length; i += 5) {
+      const batch = accepted.slice(i, i + 5);
+      const extractions = await Promise.all(batch.map((x) => extractArticle(x.entry[1].a.link!)));
+      for (let j = 0; j < batch.length; j++) {
+        const [guid, { a, pub }] = batch[j].entry;
+        const verdict = batch[j].verdict;
+        const extraction = extractions[j];
+        const description = stripHtml(a.description) ?? extraction.text?.slice(0, 300) ?? null;
+        const html =
+          extraction.html ?? (description ? `<p>${description.replace(/</g, "&lt;")}</p>` : null);
+
+        const candidatesImg = [extraction.image, absolutize(a.image_url, a.link!)].filter(
+          Boolean,
+        ) as string[];
+        let image: string | null = null;
+        for (const c of candidatesImg) {
+          if (usedImages.has(c)) continue;
+          if (await imageExists(c)) {
+            image = c;
+            break;
+          }
+        }
+        if (image) usedImages.add(image);
+
+        const section = sectionFor(`${a.title} ${description ?? ""} ${verdict.category}`, pub.category);
+
+        rows.push({
+          guid,
+          title: decodeEntities(a.title!).trim(),
+          description,
+          content: html,
+          image_url: image,
+          article_url: a.link,
+          source_name: pub.name,
+          author: (a.creator?.[0] ? decodeEntities(a.creator[0]) : null) ?? extraction.author,
+          published_at: a.pubDate
+            ? new Date(a.pubDate.replace(" ", "T") + "Z").toISOString()
+            : new Date().toISOString(),
+          tags: (a.keywords ?? []).slice(0, 10),
+          category: section,
+          language: a.language ?? "en",
+          country: a.country?.[0] ?? null,
+          is_islamic: true,
+          ai_category: verdict.category,
+        });
+      }
+    }
+
+    if (rows.length) {
+      const { error } = await supabase.from("news_articles").upsert(rows, { onConflict: "guid" });
+      if (error) throw error;
+      stored = rows.length;
+    }
+
+    // 6. Cleanup: remove legacy RSS rows and unusable articles
+    await supabase.from("news_articles").delete().not("guid", "like", "newsdata:%");
+    await supabase.from("news_articles").delete().is("image_url", null);
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        fetched: raw.length,
+        trusted: candidates.length,
+        processed: toProcess.length,
+        rejectedByAi: rejected,
+        stored,
+        samples: rows.slice(0, 5).map((r) => ({
+          title: r.title,
+          source_name: r.source_name,
+          image_url: r.image_url,
+          published_at: r.published_at,
+        })),
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   } catch (e) {
     return new Response(JSON.stringify({ success: false, error: (e as Error).message }), {
       status: 500,
