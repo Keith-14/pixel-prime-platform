@@ -21,6 +21,7 @@ interface ProductLookup {
   brand: string | null;
   category: string | null;
   region: string | null;
+  labels: string | null;
   ingredients_text: string | null;
   ingredients: string[];
 }
@@ -70,7 +71,8 @@ Rules:
 - Do not identify a barcode from memory.
 - If product facts are supplied, keep product_name and brand aligned with those facts.
 - Never invent ingredients. If no ingredient list is supplied or readable, leave ingredients empty.
-- If product facts and image are insufficient, set status="unknown" with confidence <= 20 and product_name "Unknown Product".`;
+- If product facts include a clear low-risk category such as water, plain juice, tea, coffee, rice, flour, sugar, salt, grains, pulses, fruits, vegetables, or vegan/vegetarian labeling, you may classify from that verified product context with moderate confidence.
+- If product facts and image are insufficient, set status="unknown" with confidence <= 25 and product_name "Unknown Product".`;
 
 const HARAM_RULES = [
   { pattern: /\bpork\b/i, label: "Pork", note: "Pork is prohibited." },
@@ -126,6 +128,12 @@ const getIngredientInputs = (productFacts: ProductLookup) => {
   return Array.from(new Set(values.map((value) => value.trim()).filter(Boolean)));
 };
 
+const productContextText = (productFacts: ProductLookup) =>
+  [productFacts.product_name, productFacts.brand, productFacts.category, productFacts.region, productFacts.labels]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
 const evaluateIngredient = (ingredient: string) => {
   for (const rule of HARAM_RULES) {
     if (rule.pattern.test(ingredient)) {
@@ -142,10 +150,81 @@ const evaluateIngredient = (ingredient: string) => {
   return { status: "halal" as const, rule: "No flagged ingredient", note: "No prohibited or doubtful match found." };
 };
 
+function inferFromProductContext(productFacts: ProductLookup, body: ScanRequest): DeterministicResult | null {
+  const context = productContextText(productFacts);
+  const directDecision = evaluateIngredient(context);
+  if (directDecision.status !== "halal") {
+    return {
+      product_name: productFacts.product_name,
+      brand: productFacts.brand,
+      status: directDecision.status,
+      confidence: directDecision.status === "haram" ? 88 : 65,
+      verdict:
+        directDecision.status === "haram"
+          ? `Product context indicates a prohibited ingredient/type: ${directDecision.rule}.`
+          : `Product context contains a doubtful ingredient/type: ${directDecision.rule}.`,
+      category: productFacts.category,
+      region: productFacts.region ?? body.region ?? null,
+      ingredients: [],
+      ingredients_hash: null,
+      source: "product_context_rules",
+      lookup: productFacts,
+      deterministic: {
+        status: directDecision.status,
+        matched: [
+          { ingredient: context, rule: directDecision.rule, status: directDecision.status, note: directDecision.note },
+        ],
+      },
+    };
+  }
+
+  const halalCertifiedPattern = /\b(halal|halaal|halal certified|vegetarian|vegan)\b/i;
+  if (halalCertifiedPattern.test(context)) {
+    return {
+      product_name: productFacts.product_name,
+      brand: productFacts.brand,
+      status: "halal",
+      confidence: /\bhalal|halaal\b/i.test(context) ? 90 : 78,
+      verdict:
+        "The verified barcode lookup includes halal/vegetarian/vegan labeling and no prohibited context was detected.",
+      category: productFacts.category,
+      region: productFacts.region ?? body.region ?? null,
+      ingredients: [],
+      ingredients_hash: null,
+      source: "product_context_rules",
+      lookup: productFacts,
+      deterministic: { status: "halal", matched: [] },
+    };
+  }
+
+  const lowRiskPattern =
+    /\b(water|mineral water|sparkling water|juice|tea|coffee|rice|flour|salt|sugar|honey|dates|oats|grains?|lentils?|beans?|chickpeas?|nuts?|almonds?|cashews?|raisins?|fruit|vegetable|spices?|masala|oil|olive oil|sunflower oil|coconut oil|cereal|pasta|noodles?|biscuits?|cookies?|crackers?|chips?|crisps?|snacks?|namkeen)\b/i;
+  if (!lowRiskPattern.test(context)) return null;
+
+  return {
+    product_name: productFacts.product_name,
+    brand: productFacts.brand,
+    status: "halal",
+    confidence: 68,
+    verdict:
+      "No ingredient list was available, but the verified product name/category appears low-risk for halal compliance.",
+    category: productFacts.category,
+    region: productFacts.region ?? body.region ?? null,
+    ingredients: [],
+    ingredients_hash: null,
+    source: "product_context_rules",
+    lookup: productFacts,
+    deterministic: { status: "halal", matched: [] },
+  };
+}
+
 function runDeterministicHalalCheck(productFacts: ProductLookup, body: ScanRequest): DeterministicResult {
   const ingredients = getIngredientInputs(productFacts);
 
   if (ingredients.length === 0) {
+    const contextResult = inferFromProductContext(productFacts, body);
+    if (contextResult) return contextResult;
+
     return {
       product_name: productFacts.product_name,
       brand: productFacts.brand,
@@ -217,6 +296,8 @@ async function lookupBarcode(barcode?: string): Promise<ProductLookup | null> {
     "brands",
     "categories",
     "countries",
+    "labels",
+    "labels_tags",
     "ingredients_text",
     "ingredients_text_en",
     "ingredients",
@@ -246,6 +327,7 @@ async function lookupBarcode(barcode?: string): Promise<ProductLookup | null> {
     brand: product.brands || null,
     category: product.categories || null,
     region: product.countries || null,
+    labels: product.labels || (Array.isArray(product.labels_tags) ? product.labels_tags.join(", ") : null),
     ingredients_text: product.ingredients_text_en || product.ingredients_text || null,
     ingredients: ingredientNames,
   };
@@ -336,6 +418,9 @@ const mergeGeminiWithDeterministic = (geminiResult: any, deterministicResult: De
   ...geminiResult,
   product_name: deterministicResult.product_name,
   brand: deterministicResult.brand,
+  status: deterministicResult.status,
+  confidence: deterministicResult.confidence,
+  verdict: deterministicResult.verdict,
   category: geminiResult.category ?? deterministicResult.category,
   region: geminiResult.region ?? deterministicResult.region,
   ingredients:
@@ -347,6 +432,44 @@ const mergeGeminiWithDeterministic = (geminiResult: any, deterministicResult: De
   deterministic: deterministicResult.deterministic,
   deterministic_verdict: deterministicResult.verdict,
 });
+
+const mergeGeminiWithProductContext = (geminiResult: any, deterministicResult: DeterministicResult) => {
+  const geminiStatus = ["halal", "haram", "mushbooh", "unknown"].includes(geminiResult.status)
+    ? geminiResult.status
+    : deterministicResult.status;
+  const hasVerifiedProduct =
+    deterministicResult.product_name && deterministicResult.product_name.toLowerCase() !== "unknown product";
+  const status = geminiStatus === "unknown" && hasVerifiedProduct ? "mushbooh" : geminiStatus;
+
+  return {
+    ...geminiResult,
+    product_name: deterministicResult.product_name,
+    brand: deterministicResult.brand,
+    status,
+    confidence:
+      geminiStatus === "unknown" && hasVerifiedProduct
+        ? Math.max(typeof geminiResult.confidence === "number" ? geminiResult.confidence : 0, 45)
+        : typeof geminiResult.confidence === "number"
+          ? geminiResult.confidence
+          : deterministicResult.confidence,
+    verdict:
+      geminiStatus === "unknown" && hasVerifiedProduct
+        ? "This barcode matched a real product, but the ingredient list was not available. Treat it as mushbooh and verify the label/certification before relying on it."
+        : (geminiResult.verdict ??
+          "OpenFoodFacts identified this product but did not provide ingredients, so Barakah AI reviewed the verified product context."),
+    category: geminiResult.category ?? deterministicResult.category,
+    region: geminiResult.region ?? deterministicResult.region,
+    ingredients:
+      Array.isArray(geminiResult.ingredients) && geminiResult.ingredients.length > 0
+        ? geminiResult.ingredients
+        : deterministicResult.ingredients,
+    ingredients_hash: geminiResult.ingredients_hash ?? deterministicResult.ingredients_hash,
+    source: "openfoodfacts_gemini_context",
+    lookup: deterministicResult.lookup,
+    deterministic: deterministicResult.deterministic,
+    deterministic_verdict: deterministicResult.verdict,
+  };
+};
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -385,23 +508,40 @@ serve(async (req) => {
             };
           }
         }
+      } else if (deterministicResult.status === "unknown") {
+        const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+        if (!LOVABLE_API_KEY) {
+          parsed = deterministicResult;
+        } else {
+          try {
+            const geminiResult = await callGemini(LOVABLE_API_KEY, body, productFacts);
+            parsed = mergeGeminiWithProductContext(geminiResult, deterministicResult);
+          } catch (error) {
+            console.error("Gemini context fallback failed after OpenFoodFacts product lookup:", error);
+            parsed = deterministicResult;
+          }
+        }
       } else {
         parsed = deterministicResult;
       }
     } else {
-      const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-      if (!LOVABLE_API_KEY) {
+      if (body.barcode) {
         parsed = unknownBarcodeResult(body);
       } else {
-        try {
-          parsed = await callGemini(LOVABLE_API_KEY, body, null);
-          parsed.source = "gemini_openfoodfacts_miss";
-          parsed.verdict =
-            parsed.verdict ??
-            "OpenFoodFacts did not return a product match, so Gemini reviewed the available barcode/image context.";
-        } catch (error) {
-          console.error("Gemini fallback failed after OpenFoodFacts miss:", error);
+        const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+        if (!LOVABLE_API_KEY) {
           parsed = unknownBarcodeResult(body);
+        } else {
+          try {
+            parsed = await callGemini(LOVABLE_API_KEY, body, null);
+            parsed.source = "gemini_openfoodfacts_miss";
+            parsed.verdict =
+              parsed.verdict ??
+              "OpenFoodFacts did not return a product match, so Gemini reviewed the available barcode/image context.";
+          } catch (error) {
+            console.error("Gemini fallback failed after OpenFoodFacts miss:", error);
+            parsed = unknownBarcodeResult(body);
+          }
         }
       }
     }
@@ -411,7 +551,7 @@ serve(async (req) => {
       parsed.brand = productFacts.brand;
       parsed.category = parsed.category ?? productFacts.category;
       parsed.region = parsed.region ?? productFacts.region ?? body.region ?? null;
-      parsed.source = productFacts.source;
+      parsed.source = parsed.source ?? productFacts.source;
       parsed.lookup = productFacts;
     }
 
