@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { Readability } from "https://esm.sh/@mozilla/readability@0.5.0";
-import { parseHTML } from "https://esm.sh/linkedom@0.18.5";
+import { parseHTML } from "https://esm.sh/linkedom@0.18.5/worker";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
