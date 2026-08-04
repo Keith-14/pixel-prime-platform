@@ -33,7 +33,10 @@ const NEWSDATA_DOMAINS = [
   "iqna.ir",
   "islamicvoice.com",
   "gulfnews.com",
-].join(",");
+];
+
+const DOMAIN_CHUNKS: string[][] = [];
+for (let i = 0; i < NEWSDATA_DOMAINS.length; i += 5) DOMAIN_CHUNKS.push(NEWSDATA_DOMAINS.slice(i, i + 5));
 
 const QUERIES = [
   "Islam OR Muslim OR Palestine OR Gaza OR Ummah",
@@ -308,12 +311,12 @@ function guidFor(link: string): string {
   }
 }
 
-async function fetchNewsData(apiKey: string, query: string): Promise<NewsDataArticle[]> {
+async function fetchNewsData(apiKey: string, query: string, domains: string[]): Promise<NewsDataArticle[]> {
   const url = new URL("https://newsdata.io/api/1/latest");
   url.searchParams.set("apikey", apiKey);
   url.searchParams.set("q", query);
   url.searchParams.set("language", "en");
-  url.searchParams.set("domainurl", NEWSDATA_DOMAINS);
+  url.searchParams.set("domainurl", domains.join(","));
   try {
     const res = await fetchWithTimeout(url.toString(), 15000);
     if (!res.ok) return [];
@@ -345,8 +348,10 @@ Deno.serve(async (req) => {
     // 1. Fetch from NewsData.io (batched queries, sequential to respect rate limits)
     const raw: NewsDataArticle[] = [];
     for (const q of QUERIES) {
-      raw.push(...(await fetchNewsData(newsKey, q)));
-      await new Promise((r) => setTimeout(r, 1200));
+      for (const domains of DOMAIN_CHUNKS) {
+        raw.push(...(await fetchNewsData(newsKey, q, domains)));
+        await new Promise((r) => setTimeout(r, 1200));
+      }
     }
 
     // 2. Normalize + trusted publisher filter + dedupe by canonical link
