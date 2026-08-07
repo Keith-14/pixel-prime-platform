@@ -20,10 +20,11 @@ const BORDER = 'rgba(232,213,196,0.86)';
 interface DuaItem {
   number: number;
   title: string;
-  url: string;
   arabic: string;
-  translation: string[];
-  transliteration_and_notes: string;
+  translation_en: string;
+  transliteration: string;
+  reference: string;
+  grade: string;
 }
 
 interface GroupedDua {
@@ -39,7 +40,7 @@ const slugify = (value: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '');
 
-const getPartCount = (dua: DuaItem) => Math.max(dua.translation.length, 1);
+const getPartCount = (_dua: DuaItem) => 1;
 
 const groupedDuas: GroupedDua[] = Array.from(
   (duasData as DuaItem[]).reduce((groups, dua) => {
@@ -72,8 +73,9 @@ const groupMatchesSearch = (group: GroupedDua, query: string) =>
     [
       dua.number.toString(),
       dua.arabic,
-      dua.transliteration_and_notes,
-      ...dua.translation,
+      dua.transliteration,
+      dua.translation_en,
+      dua.reference,
     ]
       .join(' ')
       .toLowerCase()
