@@ -58,9 +58,9 @@ export const NewsDetail = () => {
     'The beauty of our heritage is not that it happened, but that it lives on in the way we choose to perceive the world today.';
   const stripRepeatedQuote = (value: string | null) =>
     (value ?? '')
-      .replaceAll(`"${REMOVED_QUOTE}"`, '')
-      .replaceAll(`&quot;${REMOVED_QUOTE}&quot;`, '')
-      .replaceAll(REMOVED_QUOTE, '')
+      .split(`"${REMOVED_QUOTE}"`).join('')
+      .split(`&quot;${REMOVED_QUOTE}&quot;`).join('')
+      .split(REMOVED_QUOTE).join('')
       .replace(/\s*<p>\s*<\/p>\s*/gi, '')
       .replace(/\s{2,}/g, ' ')
       .trim();
