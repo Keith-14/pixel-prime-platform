@@ -82,6 +82,7 @@ interface Post {
   created_at: string;
   category?: string;
   community?: string;
+  community_id?: string;
   image_url?: string;
   avatar_url?: string;
   replies?: Reply[];
@@ -132,55 +133,6 @@ const SOFT_BORDER = 'rgba(123, 63, 30, 0.12)';
 const OLIVE = '#7C7E2D';
 const OLIVE_DARK = '#656823';
 
-// Mock posts from Ayesha Khan to populate the feed
-const AYESHA_AVATAR = 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop&crop=faces';
-const MOCK_POSTS: Post[] = [
-  {
-    id: 'mock-1',
-    user_id: 'mock-ayesha',
-    user_name: 'Ayesha Khan',
-    avatar_url: AYESHA_AVATAR,
-    community: 'Quran Meaning',
-    content:
-      'This The whole secret of existence lies in the pursuit of meaning, purpose, and connection. It is a delicate dance between self-discovery....vcbbfvvvvvv',
-    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    likeCount: 24,
-    isLiked: true,
-    replies: Array(8).fill(null).map((_, i) => ({ id: `mr-1-${i}`, post_id: 'mock-1', user_id: '', user_name: '', content: '', created_at: '' })),
-    likes: [],
-  },
-  {
-    id: 'mock-2',
-    user_id: 'mock-ayesha',
-    user_name: 'Ayesha Khan',
-    avatar_url: AYESHA_AVATAR,
-    community: 'Quran Meaning',
-    image_url: 'https://images.unsplash.com/photo-1564769625905-50e93615e769?w=800&h=500&fit=crop',
-    content:
-      'This The whole secret of existence lies in the pursuit of meaning, purpose, and connection. It is a delicate dance between self-discovery....vcbbfvvvvvv',
-    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    likeCount: 24,
-    isLiked: false,
-    replies: Array(8).fill(null).map((_, i) => ({ id: `mr-2-${i}`, post_id: 'mock-2', user_id: '', user_name: '', content: '', created_at: '' })),
-    likes: [],
-  },
-  {
-    id: 'mock-3',
-    user_id: 'mock-ayesha',
-    user_name: 'Ayesha Khan',
-    avatar_url: AYESHA_AVATAR,
-    community: 'Quran Meaning',
-    content:
-      'This The whole secret of existence lies in the pursuit of meaning, purpose, and connection. It is a delicate dance between self-discovery....vcbbfvvvvvv',
-    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    likeCount: 24,
-    isLiked: false,
-    replies: Array(8).fill(null).map((_, i) => ({ id: `mr-3-${i}`, post_id: 'mock-3', user_id: '', user_name: '', content: '', created_at: '' })),
-    likes: [],
-  },
-];
-
-// Mock communities for the Explore tab
 interface Community {
   id: string;
   name: string;
@@ -192,37 +144,28 @@ interface Community {
   featured?: boolean;
   isAdmin?: boolean;
   iconUrl?: string;
+  memberCount?: number;
+  postCount?: number;
 }
 
 const QURAN_BANNER = 'https://images.unsplash.com/photo-1609599006353-e629aaabfeae?w=900&h=560&fit=crop';
 const KAABA_BANNER = 'https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=900&h=560&fit=crop';
 
-const COMMUNITIES: Community[] = [
-  {
-    id: 'quran-meanings',
-    name: 'Quran Meanings',
-    members: '12.4k members',
-    type: 'Private Group',
-    description: 'A curated space for discussions on contemporary faith, art, and reflection.',
-    banner: QURAN_BANNER,
-    category: 'ummah',
-    featured: true,
-  },
-  {
-    id: 'sacred-journeys',
-    name: 'Sacred Journeys',
-    members: '8.7k members',
-    type: 'Public Group',
-    description: 'Stories, tips, and reflections from pilgrims around the world.',
-    banner: KAABA_BANNER,
-    category: 'heritage',
-    featured: true,
-  },
-  { id: 'quranic-journaling-1', name: 'Quranic Journaling', members: '3.2k members', type: 'Private Group', description: 'Daily reflections on ayat.', banner: QURAN_BANNER, category: 'ummah' },
-  { id: 'halal-living', name: 'Halal Living', members: '5.1k members', type: 'Public Group', description: 'Tips for a halal lifestyle.', banner: QURAN_BANNER, category: 'lifestyle' },
-  { id: 'islamic-heritage', name: 'Islamic Heritage', members: '2.8k members', type: 'Public Group', description: 'Art, architecture, and history.', banner: QURAN_BANNER, category: 'heritage' },
-  { id: 'youth-ummah', name: 'Youth Ummah', members: '6.4k members', type: 'Public Group', description: 'A space for young Muslims.', banner: QURAN_BANNER, category: 'ummah' },
-];
+// Map a Supabase `communities` row into the shape the UI already expects.
+const mapCommunityRow = (row: any, currentUserId?: string, featuredIds: string[] = []): Community => ({
+  id: row.id,
+  name: row.name,
+  members: `${row.member_count ?? 0} ${row.member_count === 1 ? 'member' : 'members'}`,
+  type: 'Public Group',
+  description: row.description || '',
+  banner: row.image_url || QURAN_BANNER,
+  category: row.category || 'ummah',
+  featured: featuredIds.includes(row.id),
+  isAdmin: !!currentUserId && row.created_by === currentUserId,
+  iconUrl: row.image_url || undefined,
+  memberCount: row.member_count ?? 0,
+  postCount: row.post_count ?? 0,
+});
 
 const COMMUNITY_CATEGORIES = [
   { id: 'all', label: 'All' },
@@ -747,7 +690,7 @@ export const Forum = () => {
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<string>>(new Set());
   const [joinedCommunities, setJoinedCommunities] = useState<Set<string>>(new Set());
   const [exploreCategory, setExploreCategory] = useState<string>('all');
-  const [userCommunities, setUserCommunities] = useState<Community[]>([]);
+  const [communities, setCommunities] = useState<Community[]>([]);
   const [createCommunityOpen, setCreateCommunityOpen] = useState(false);
   const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(null);
   const [communityTab, setCommunityTab] = useState<'posts' | 'members' | 'settings'>('posts');
@@ -772,29 +715,52 @@ export const Forum = () => {
       reader.readAsDataURL(file);
     });
 
-  // Persist joined communities per user in localStorage
-  const joinedStorageKey = `guftagu_joined_${user?.uid || 'guest'}`;
-  const createdStorageKey = `guftagu_created_${user?.uid || 'guest'}`;
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(joinedStorageKey);
-      if (raw) setJoinedCommunities(new Set(JSON.parse(raw)));
-      else setJoinedCommunities(new Set());
-    } catch {
-      setJoinedCommunities(new Set());
-    }
-  }, [joinedStorageKey]);
+  const [communityPosts, setCommunityPosts] = useState<Post[]>([]);
+  const [communityMembers, setCommunityMembers] = useState<
+    Array<{ id: string; user_id: string; role: string; name: string; avatar: string | null }>
+  >([]);
+
+  // ---- Communities (Supabase) ----
+  const fetchCommunities = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('communities')
+      .select('id,name,description,image_url,category,created_by,member_count,post_count,created_at')
+      .order('member_count', { ascending: false });
+    if (error) { console.error('Error loading communities:', error); return; }
+    const rows = data || [];
+    const featuredIds = rows.slice(0, 2).map((r: any) => r.id);
+    setCommunities(rows.map((r: any) => mapCommunityRow(r, user?.uid, featuredIds)));
+  }, [user?.uid]);
+
+  const fetchMyMemberships = useCallback(async () => {
+    if (!user?.uid) { setJoinedCommunities(new Set()); return; }
+    const { data } = await supabase
+      .from('community_members')
+      .select('community_id')
+      .eq('user_id', user.uid);
+    setJoinedCommunities(new Set((data || []).map((m: any) => m.community_id)));
+  }, [user?.uid]);
+
+  useEffect(() => { fetchCommunities(); fetchMyMemberships(); }, [fetchCommunities, fetchMyMemberships]);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(createdStorageKey);
-      setUserCommunities(raw ? JSON.parse(raw) : []);
-    } catch {
-      setUserCommunities([]);
-    }
-  }, [createdStorageKey]);
+    const channel = supabase
+      .channel('guftagu-communities')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'communities' }, () => { fetchCommunities(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'community_members' }, () => {
+        fetchCommunities();
+        fetchMyMemberships();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [fetchCommunities, fetchMyMemberships]);
 
-  const handleCreateCommunity = (data: {
+  const userCommunities = communities.filter((c) => c.isAdmin);
+  const joinedNotOwned = new Set(
+    Array.from(joinedCommunities).filter((id) => !userCommunities.some((c) => c.id === id))
+  );
+
+  const handleCreateCommunity = async (data: {
     name: string;
     description: string;
     category: string;
@@ -802,42 +768,160 @@ export const Forum = () => {
     cover: string | null;
     icon: string | null;
   }) => {
-    const newCommunity: Community = {
-      id: `user-${Date.now()}`,
+    if (!user?.uid) { toast.error('Please sign in to create a community'); return; }
+    const { error } = await supabase.from('communities').insert({
       name: data.name,
-      members: '1 member',
-      type: data.privacy === 'public' ? 'Public Group' : 'Private Group',
       description: data.description,
-      banner: data.cover || QURAN_BANNER,
       category: data.category,
-      isAdmin: true,
-      iconUrl: data.icon || undefined,
-    };
-    setUserCommunities((prev) => {
-      const next = [newCommunity, ...prev];
-      try { localStorage.setItem(createdStorageKey, JSON.stringify(next)); } catch {}
-      return next;
+      image_url: data.cover || data.icon || null,
+      created_by: user.uid,
     });
-    toast.success('Community sent for approval');
+    if (error) {
+      toast.error(error.code === '23505' ? 'A community with that name already exists' : 'Failed to create community');
+      return;
+    }
+    await Promise.all([fetchCommunities(), fetchMyMemberships()]);
+    toast.success('Community created');
     setActiveTab('communities');
   };
 
-  const toggleJoinCommunity = (id: string) => {
+  const toggleJoinCommunity = async (id: string) => {
+    if (!user?.uid) { toast.error('Please sign in to join communities'); return; }
+    const isJoined = joinedCommunities.has(id);
+    // Optimistic UI
     setJoinedCommunities((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-        toast.success('Left community');
-      } else {
-        next.add(id);
-        toast.success('Joined community');
-      }
-      try {
-        localStorage.setItem(joinedStorageKey, JSON.stringify(Array.from(next)));
-      } catch {}
+      if (isJoined) next.delete(id); else next.add(id);
       return next;
     });
+    const { error } = isJoined
+      ? await supabase.from('community_members').delete().eq('community_id', id).eq('user_id', user.uid)
+      : await supabase.from('community_members').insert({ community_id: id, user_id: user.uid, role: 'member' });
+    if (error && error.code !== '23505') {
+      setJoinedCommunities((prev) => {
+        const next = new Set(prev);
+        if (isJoined) next.add(id); else next.delete(id);
+        return next;
+      });
+      toast.error('Failed to update membership');
+      return;
+    }
+    toast.success(isJoined ? 'Left community' : 'Joined community');
+    fetchCommunities();
   };
+
+  // ---- Community detail: posts + members (Supabase) ----
+  const resolveNames = useCallback(async (ids: string[]) => {
+    const unique = Array.from(new Set(ids)).filter(Boolean);
+    if (unique.length === 0) return {} as Record<string, { name: string; avatar: string | null }>;
+    const { data } = await supabase.rpc('get_public_profiles', { _user_ids: unique });
+    const map: Record<string, { name: string; avatar: string | null }> = {};
+    (data || []).forEach((p: any) => {
+      map[p.user_id] = { name: p.full_name || 'User', avatar: p.avatar_url || null };
+    });
+    return map;
+  }, []);
+
+  const fetchCommunityPosts = useCallback(async (communityId: string, communityName: string) => {
+    const { data, error } = await supabase
+      .from('community_posts')
+      .select('id,community_id,user_id,content,image_url,like_count,comment_count,created_at')
+      .eq('community_id', communityId)
+      .order('created_at', { ascending: false });
+    if (error) { console.error('Error loading community posts:', error); return; }
+    const rows = data || [];
+    const names = await resolveNames(rows.map((r: any) => r.user_id));
+    let likedIds = new Set<string>();
+    if (user?.uid && rows.length) {
+      const { data: likes } = await supabase
+        .from('post_likes')
+        .select('post_id')
+        .eq('user_id', user.uid)
+        .in('post_id', rows.map((r: any) => r.id));
+      likedIds = new Set((likes || []).map((l: any) => l.post_id));
+    }
+    setCommunityPosts(rows.map((r: any) => ({
+      id: r.id,
+      user_id: r.user_id,
+      user_name: names[r.user_id]?.name || 'User',
+      avatar_url: names[r.user_id]?.avatar || undefined,
+      content: r.content,
+      created_at: r.created_at,
+      community: communityName,
+      community_id: r.community_id,
+      image_url: r.image_url || undefined,
+      likeCount: r.like_count,
+      isLiked: likedIds.has(r.id),
+      replies: Array(r.comment_count).fill(null).map((_, i) => ({ id: `${r.id}-c-${i}`, post_id: r.id, user_id: '', user_name: '', content: '', created_at: '' })),
+    })));
+  }, [resolveNames, user?.uid]);
+
+  const fetchCommunityMembers = useCallback(async (communityId: string) => {
+    const { data } = await supabase
+      .from('community_members')
+      .select('id,user_id,role,joined_at')
+      .eq('community_id', communityId)
+      .order('joined_at', { ascending: true });
+    const rows = data || [];
+    const names = await resolveNames(rows.map((r: any) => r.user_id));
+    setCommunityMembers(rows.map((r: any) => ({
+      id: r.id,
+      user_id: r.user_id,
+      role: r.role,
+      name: names[r.user_id]?.name || 'User',
+      avatar: names[r.user_id]?.avatar || null,
+    })));
+  }, [resolveNames]);
+
+  // Load comments for a community post into the shared replies view.
+  const loadCommunityComments = useCallback(async (postId: string) => {
+    const { data } = await supabase
+      .from('community_comments')
+      .select('id,post_id,user_id,content,created_at')
+      .eq('post_id', postId)
+      .order('created_at', { ascending: true });
+    const rows = data || [];
+    const names = await resolveNames(rows.map((r: any) => r.user_id));
+    const replies: Reply[] = rows.map((r: any) => ({
+      id: r.id,
+      post_id: r.post_id,
+      user_id: r.user_id,
+      user_name: names[r.user_id]?.name || 'User',
+      content: r.content,
+      created_at: r.created_at,
+    }));
+    setSelectedPost((prev) => (prev && prev.id === postId ? { ...prev, replies } : prev));
+    setCommunityPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, replies } : p)));
+  }, [resolveNames]);
+
+  useEffect(() => {
+    if (!selectedPost?.community_id) return;
+    const pid = selectedPost.id;
+    loadCommunityComments(pid);
+    const channel = supabase
+      .channel(`community-comments-${pid}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'community_comments', filter: `post_id=eq.${pid}` },
+        () => { loadCommunityComments(pid); })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [selectedPost?.id, selectedPost?.community_id, loadCommunityComments]);
+
+  useEffect(() => {
+    if (!selectedCommunity) { setCommunityPosts([]); setCommunityMembers([]); return; }
+    const cid = selectedCommunity.id;
+    const cname = selectedCommunity.name;
+    fetchCommunityPosts(cid, cname);
+    fetchCommunityMembers(cid);
+
+    const channel = supabase
+      .channel(`community-detail-${cid}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'community_posts', filter: `community_id=eq.${cid}` },
+        () => { fetchCommunityPosts(cid, cname); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'community_members', filter: `community_id=eq.${cid}` },
+        () => { fetchCommunityMembers(cid); })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [selectedCommunity?.id, fetchCommunityPosts, fetchCommunityMembers]);
   
   // Pull to refresh state
   const [pullDistance, setPullDistance] = useState(0);
@@ -1163,6 +1247,19 @@ export const Forum = () => {
 
     setSubmitting(true);
     try {
+      if (selectedCommunity) {
+        const { error } = await supabase.from('community_posts').insert({
+          community_id: selectedCommunity.id,
+          user_id: user.uid,
+          content: newPostContent.trim(),
+        });
+        if (error) throw error;
+        await fetchCommunityPosts(selectedCommunity.id, selectedCommunity.name);
+        setNewPostContent('');
+        setIsCreateDialogOpen(false);
+        toast.success('Post shared!');
+        return;
+      }
       const { data, error } = await supabase.from('guftagu_posts').insert({
         user_id: user.uid,
         user_name: currentUserName,
@@ -1212,7 +1309,6 @@ export const Forum = () => {
   };
 
   const handleToggleLike = async (postId: string, isCurrentlyLiked: boolean) => {
-    if (postId.startsWith('mock-')) return;
     if (!user) {
       toast.error('Please sign in to like posts');
       return;
@@ -1221,6 +1317,28 @@ export const Forum = () => {
     if (likingPosts.has(postId)) return;
 
     setLikingPosts(prev => new Set(prev).add(postId));
+
+    const communityPost = communityPosts.find((p) => p.id === postId);
+    if (communityPost) {
+      setCommunityPosts((prev) => prev.map((p) => p.id === postId ? {
+        ...p,
+        isLiked: !isCurrentlyLiked,
+        likeCount: isCurrentlyLiked ? Math.max(0, (p.likeCount || 1) - 1) : (p.likeCount || 0) + 1,
+      } : p));
+      const { error } = isCurrentlyLiked
+        ? await supabase.from('post_likes').delete().eq('post_id', postId).eq('user_id', user.uid)
+        : await supabase.from('post_likes').insert({ post_id: postId, user_id: user.uid });
+      if (error && error.code !== '23505') {
+        setCommunityPosts((prev) => prev.map((p) => p.id === postId ? {
+          ...p,
+          isLiked: isCurrentlyLiked,
+          likeCount: isCurrentlyLiked ? (p.likeCount || 0) + 1 : Math.max(0, (p.likeCount || 1) - 1),
+        } : p));
+        toast.error('Failed to update like');
+      }
+      setLikingPosts(prev => { const next = new Set(prev); next.delete(postId); return next; });
+      return;
+    }
 
     setPosts(prev => prev.map(p => {
       if (p.id === postId) {
@@ -1274,6 +1392,18 @@ export const Forum = () => {
 
     setSubmitting(true);
     try {
+      if (selectedPost.community_id) {
+        const { error } = await supabase.from('community_comments').insert({
+          post_id: selectedPost.id,
+          user_id: user.uid,
+          content: newReply.trim(),
+        });
+        if (error) throw error;
+        await loadCommunityComments(selectedPost.id);
+        setNewReply('');
+        toast.success('Reply sent!');
+        return;
+      }
       const { data, error } = await supabase.from('guftagu_replies').insert({
         post_id: selectedPost.id,
         user_id: user.uid,
@@ -1691,14 +1821,12 @@ export const Forum = () => {
       { id: 'members', label: 'Members' },
       ...(isAdmin ? [{ id: 'settings' as const, label: 'Settings' }] : []),
     ];
-    const MOCK_MEMBERS = [
-      { name: 'Ayesha Khan', role: 'Admin', avatar: AYESHA_AVATAR },
-      { name: 'Fatima Noor', role: 'Moderator', avatar: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=200&h=200&fit=crop&crop=faces' },
-      { name: 'Zayd Rahman', role: 'Member', avatar: 'https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=200&h=200&fit=crop&crop=faces' },
-      { name: 'Hafsa Iqbal', role: 'Member', avatar: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=200&h=200&fit=crop&crop=faces' },
-      { name: 'Bilal Ahmed', role: 'Member', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=faces' },
-      { name: 'Mariam Yusuf', role: 'Member', avatar: 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39?w=200&h=200&fit=crop&crop=faces' },
-    ];
+    const MEMBERS = communityMembers.map((m) => ({
+      id: m.id,
+      name: m.name,
+      role: m.role === 'owner' ? 'Admin' : 'Member',
+      avatar: m.avatar,
+    }));
     return (
       <Layout showHeader={false} pageBackgroundColor={CREAM_BG}>
         <div className="min-h-screen pb-28" style={{ background: CREAM_BG, fontFamily: "'Inter', sans-serif" }}>
@@ -1801,10 +1929,12 @@ export const Forum = () => {
                 >
                   <div className="flex items-start gap-3 px-4 pt-4">
                     <div className="w-9 h-9 rounded-full overflow-hidden shrink-0" style={{ background: '#EAD9BE' }}>
-                      <img src={AYESHA_AVATAR} alt="" className="w-full h-full object-cover" />
+                      <div className="w-full h-full flex items-center justify-center">
+                        <User className="h-4 w-4" style={{ color: '#A88B66' }} />
+                      </div>
                     </div>
                     <span className="text-sm pt-1" style={{ color: '#5C4632' }}>
-                      This The whole secret of existence lies in the pursuit of meaning, purpose, and connection...
+                      write your post here
                     </span>
                   </div>
                   <div
@@ -1824,22 +1954,35 @@ export const Forum = () => {
                 </button>
 
                 <div className="space-y-3">
-                  {MOCK_POSTS.map((post, index) => (
+                  {communityPosts.map((post, index) => (
                     <PostCard key={post.id} post={post} index={index} />
                   ))}
+                  {communityPosts.length === 0 && (
+                    <div className="text-center py-12 rounded-2xl" style={{ background: '#FFFFFF' }}>
+                      <MessageCircle className="h-8 w-8 mx-auto mb-3" style={{ color: '#C4A98A' }} />
+                      <p className="font-medium text-sm" style={{ color: BROWN_DARK }}>No posts yet</p>
+                      <p className="text-xs mt-1" style={{ color: '#9C8569' }}>Be the first to share something!</p>
+                    </div>
+                  )}
                 </div>
               </>
             )}
 
             {communityTab === 'members' && (
               <div className="space-y-2 pb-6">
-                {MOCK_MEMBERS.map((m) => (
+                {MEMBERS.map((m) => (
                   <div
-                    key={m.name}
+                    key={m.id}
                     className="flex items-center gap-3 p-3 rounded-2xl"
                     style={{ background: '#FFFFFF', boxShadow: '0 1px 3px rgba(123, 63, 30, 0.05)' }}
                   >
-                    <img src={m.avatar} alt={m.name} className="w-11 h-11 rounded-full object-cover shrink-0" />
+                    {m.avatar ? (
+                      <img src={m.avatar} alt={m.name} className="w-11 h-11 rounded-full object-cover shrink-0" />
+                    ) : (
+                      <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: '#EAD9BE' }}>
+                        <User className="h-5 w-5" style={{ color: '#A88B66' }} />
+                      </div>
+                    )}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold truncate" style={{ color: BROWN_DARK }}>{m.name}</p>
                       <p className="text-xs mt-0.5" style={{ color: '#9C8569' }}>{m.role}</p>
@@ -2027,8 +2170,8 @@ export const Forum = () => {
 
           {activeTab === 'communities' ? (
             <MyCommunitiesView
-              joined={joinedCommunities}
-              communities={COMMUNITIES}
+              joined={joinedNotOwned}
+              communities={communities}
               userCreated={userCommunities}
               onToggle={toggleJoinCommunity}
               onExplore={() => setActiveTab('explore')}
@@ -2038,7 +2181,7 @@ export const Forum = () => {
           ) : activeTab === 'explore' ? (
             <ExploreView
               joined={joinedCommunities}
-              communities={COMMUNITIES}
+              communities={communities}
               category={exploreCategory}
               setCategory={setExploreCategory}
               onToggle={toggleJoinCommunity}
@@ -2143,7 +2286,7 @@ export const Forum = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {[...filteredPosts, ...MOCK_POSTS].map((post, index) => (
+                  {filteredPosts.map((post, index) => (
                     <PostCard key={post.id} post={post} index={index} />
                   ))}
                 </div>
