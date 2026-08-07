@@ -857,11 +857,6 @@ export const Forum = () => {
   }, [resolveNames, user?.uid]);
 
   const fetchCommunityMembers = useCallback(async (communityId: string) => {
-    const _unused = communityId;
-    return fetchCommunityMembersImpl(communityId);
-  }, []);
-
-  const fetchCommunityMembersImpl = async (communityId: string) => {
     const { data } = await supabase
       .from('community_members')
       .select('id,user_id,role,joined_at')
@@ -876,7 +871,7 @@ export const Forum = () => {
       name: names[r.user_id]?.name || 'User',
       avatar: names[r.user_id]?.avatar || null,
     })));
-  };
+  }, [resolveNames]);
 
   // Load comments for a community post into the shared replies view.
   const loadCommunityComments = useCallback(async (postId: string) => {
