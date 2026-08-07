@@ -689,7 +689,7 @@ export const Forum = () => {
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<string>>(new Set());
   const [joinedCommunities, setJoinedCommunities] = useState<Set<string>>(new Set());
   const [exploreCategory, setExploreCategory] = useState<string>('all');
-  const [userCommunities, setUserCommunities] = useState<Community[]>([]);
+  const [communities, setCommunities] = useState<Community[]>([]);
   const [createCommunityOpen, setCreateCommunityOpen] = useState(false);
   const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(null);
   const [communityTab, setCommunityTab] = useState<'posts' | 'members' | 'settings'>('posts');
