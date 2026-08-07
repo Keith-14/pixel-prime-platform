@@ -1276,7 +1276,6 @@ export const Forum = () => {
   };
 
   const handleToggleLike = async (postId: string, isCurrentlyLiked: boolean) => {
-    if (postId.startsWith('mock-')) return;
     if (!user) {
       toast.error('Please sign in to like posts');
       return;
@@ -1285,6 +1284,28 @@ export const Forum = () => {
     if (likingPosts.has(postId)) return;
 
     setLikingPosts(prev => new Set(prev).add(postId));
+
+    const communityPost = communityPosts.find((p) => p.id === postId);
+    if (communityPost) {
+      setCommunityPosts((prev) => prev.map((p) => p.id === postId ? {
+        ...p,
+        isLiked: !isCurrentlyLiked,
+        likeCount: isCurrentlyLiked ? Math.max(0, (p.likeCount || 1) - 1) : (p.likeCount || 0) + 1,
+      } : p));
+      const { error } = isCurrentlyLiked
+        ? await supabase.from('post_likes').delete().eq('post_id', postId).eq('user_id', user.uid)
+        : await supabase.from('post_likes').insert({ post_id: postId, user_id: user.uid });
+      if (error && error.code !== '23505') {
+        setCommunityPosts((prev) => prev.map((p) => p.id === postId ? {
+          ...p,
+          isLiked: isCurrentlyLiked,
+          likeCount: isCurrentlyLiked ? (p.likeCount || 0) + 1 : Math.max(0, (p.likeCount || 1) - 1),
+        } : p));
+        toast.error('Failed to update like');
+      }
+      setLikingPosts(prev => { const next = new Set(prev); next.delete(postId); return next; });
+      return;
+    }
 
     setPosts(prev => prev.map(p => {
       if (p.id === postId) {
