@@ -82,6 +82,7 @@ interface Post {
   created_at: string;
   category?: string;
   community?: string;
+  community_id?: string;
   image_url?: string;
   avatar_url?: string;
   replies?: Reply[];
