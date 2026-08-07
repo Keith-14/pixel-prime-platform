@@ -809,6 +809,86 @@ export const Forum = () => {
     toast.success(isJoined ? 'Left community' : 'Joined community');
     fetchCommunities();
   };
+
+  // ---- Community detail: posts + members (Supabase) ----
+  const resolveNames = useCallback(async (ids: string[]) => {
+    const unique = Array.from(new Set(ids)).filter(Boolean);
+    if (unique.length === 0) return {} as Record<string, { name: string; avatar: string | null }>;
+    const { data } = await supabase.rpc('get_public_profiles', { _user_ids: unique });
+    const map: Record<string, { name: string; avatar: string | null }> = {};
+    (data || []).forEach((p: any) => {
+      map[p.user_id] = { name: p.full_name || 'User', avatar: p.avatar_url || null };
+    });
+    return map;
+  }, []);
+
+  const fetchCommunityPosts = useCallback(async (communityId: string, communityName: string) => {
+    const { data, error } = await supabase
+      .from('community_posts')
+      .select('id,community_id,user_id,content,image_url,like_count,comment_count,created_at')
+      .eq('community_id', communityId)
+      .order('created_at', { ascending: false });
+    if (error) { console.error('Error loading community posts:', error); return; }
+    const rows = data || [];
+    const names = await resolveNames(rows.map((r: any) => r.user_id));
+    let likedIds = new Set<string>();
+    if (user?.uid && rows.length) {
+      const { data: likes } = await supabase
+        .from('post_likes')
+        .select('post_id')
+        .eq('user_id', user.uid)
+        .in('post_id', rows.map((r: any) => r.id));
+      likedIds = new Set((likes || []).map((l: any) => l.post_id));
+    }
+    setCommunityPosts(rows.map((r: any) => ({
+      id: r.id,
+      user_id: r.user_id,
+      user_name: names[r.user_id]?.name || 'User',
+      avatar_url: names[r.user_id]?.avatar || undefined,
+      content: r.content,
+      created_at: r.created_at,
+      community: communityName,
+      community_id: r.community_id,
+      image_url: r.image_url || undefined,
+      likeCount: r.like_count,
+      isLiked: likedIds.has(r.id),
+      replies: Array(r.comment_count).fill(null).map((_, i) => ({ id: `${r.id}-c-${i}`, post_id: r.id, user_id: '', user_name: '', content: '', created_at: '' })),
+    })));
+  }, [resolveNames, user?.uid]);
+
+  const fetchCommunityMembers = useCallback(async (communityId: string) => {
+    const { data } = await supabase
+      .from('community_members')
+      .select('id,user_id,role,joined_at')
+      .eq('community_id', communityId)
+      .order('joined_at', { ascending: true });
+    const rows = data || [];
+    const names = await resolveNames(rows.map((r: any) => r.user_id));
+    setCommunityMembers(rows.map((r: any) => ({
+      id: r.id,
+      user_id: r.user_id,
+      role: r.role,
+      name: names[r.user_id]?.name || 'User',
+      avatar: names[r.user_id]?.avatar || null,
+    })));
+  }, [resolveNames]);
+
+  useEffect(() => {
+    if (!selectedCommunity) { setCommunityPosts([]); setCommunityMembers([]); return; }
+    const cid = selectedCommunity.id;
+    const cname = selectedCommunity.name;
+    fetchCommunityPosts(cid, cname);
+    fetchCommunityMembers(cid);
+
+    const channel = supabase
+      .channel(`community-detail-${cid}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'community_posts', filter: `community_id=eq.${cid}` },
+        () => { fetchCommunityPosts(cid, cname); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'community_members', filter: `community_id=eq.${cid}` },
+        () => { fetchCommunityMembers(cid); })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [selectedCommunity?.id, fetchCommunityPosts, fetchCommunityMembers]);
   
   // Pull to refresh state
   const [pullDistance, setPullDistance] = useState(0);
