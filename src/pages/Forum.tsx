@@ -1769,10 +1769,12 @@ export const Forum = () => {
                 >
                   <div className="flex items-start gap-3 px-4 pt-4">
                     <div className="w-9 h-9 rounded-full overflow-hidden shrink-0" style={{ background: '#EAD9BE' }}>
-                      <img src={AYESHA_AVATAR} alt="" className="w-full h-full object-cover" />
+                      <div className="w-full h-full flex items-center justify-center">
+                        <User className="h-4 w-4" style={{ color: '#A88B66' }} />
+                      </div>
                     </div>
                     <span className="text-sm pt-1" style={{ color: '#5C4632' }}>
-                      This The whole secret of existence lies in the pursuit of meaning, purpose, and connection...
+                      write your post here
                     </span>
                   </div>
                   <div
@@ -1792,22 +1794,35 @@ export const Forum = () => {
                 </button>
 
                 <div className="space-y-3">
-                  {MOCK_POSTS.map((post, index) => (
+                  {communityPosts.map((post, index) => (
                     <PostCard key={post.id} post={post} index={index} />
                   ))}
+                  {communityPosts.length === 0 && (
+                    <div className="text-center py-12 rounded-2xl" style={{ background: '#FFFFFF' }}>
+                      <MessageCircle className="h-8 w-8 mx-auto mb-3" style={{ color: '#C4A98A' }} />
+                      <p className="font-medium text-sm" style={{ color: BROWN_DARK }}>No posts yet</p>
+                      <p className="text-xs mt-1" style={{ color: '#9C8569' }}>Be the first to share something!</p>
+                    </div>
+                  )}
                 </div>
               </>
             )}
 
             {communityTab === 'members' && (
               <div className="space-y-2 pb-6">
-                {MOCK_MEMBERS.map((m) => (
+                {MEMBERS.map((m) => (
                   <div
-                    key={m.name}
+                    key={m.id}
                     className="flex items-center gap-3 p-3 rounded-2xl"
                     style={{ background: '#FFFFFF', boxShadow: '0 1px 3px rgba(123, 63, 30, 0.05)' }}
                   >
-                    <img src={m.avatar} alt={m.name} className="w-11 h-11 rounded-full object-cover shrink-0" />
+                    {m.avatar ? (
+                      <img src={m.avatar} alt={m.name} className="w-11 h-11 rounded-full object-cover shrink-0" />
+                    ) : (
+                      <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: '#EAD9BE' }}>
+                        <User className="h-5 w-5" style={{ color: '#A88B66' }} />
+                      </div>
+                    )}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold truncate" style={{ color: BROWN_DARK }}>{m.name}</p>
                       <p className="text-xs mt-0.5" style={{ color: '#9C8569' }}>{m.role}</p>
