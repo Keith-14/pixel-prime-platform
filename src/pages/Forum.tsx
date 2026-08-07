@@ -857,6 +857,11 @@ export const Forum = () => {
   }, [resolveNames, user?.uid]);
 
   const fetchCommunityMembers = useCallback(async (communityId: string) => {
+    const _unused = communityId;
+    return fetchCommunityMembersImpl(communityId);
+  }, []);
+
+  const fetchCommunityMembersImpl = async (communityId: string) => {
     const { data } = await supabase
       .from('community_members')
       .select('id,user_id,role,joined_at')
@@ -871,7 +876,40 @@ export const Forum = () => {
       name: names[r.user_id]?.name || 'User',
       avatar: names[r.user_id]?.avatar || null,
     })));
+  };
+
+  // Load comments for a community post into the shared replies view.
+  const loadCommunityComments = useCallback(async (postId: string) => {
+    const { data } = await supabase
+      .from('community_comments')
+      .select('id,post_id,user_id,content,created_at')
+      .eq('post_id', postId)
+      .order('created_at', { ascending: true });
+    const rows = data || [];
+    const names = await resolveNames(rows.map((r: any) => r.user_id));
+    const replies: Reply[] = rows.map((r: any) => ({
+      id: r.id,
+      post_id: r.post_id,
+      user_id: r.user_id,
+      user_name: names[r.user_id]?.name || 'User',
+      content: r.content,
+      created_at: r.created_at,
+    }));
+    setSelectedPost((prev) => (prev && prev.id === postId ? { ...prev, replies } : prev));
+    setCommunityPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, replies } : p)));
   }, [resolveNames]);
+
+  useEffect(() => {
+    if (!selectedPost?.community_id) return;
+    const pid = selectedPost.id;
+    loadCommunityComments(pid);
+    const channel = supabase
+      .channel(`community-comments-${pid}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'community_comments', filter: `post_id=eq.${pid}` },
+        () => { loadCommunityComments(pid); })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [selectedPost?.id, selectedPost?.community_id, loadCommunityComments]);
 
   useEffect(() => {
     if (!selectedCommunity) { setCommunityPosts([]); setCommunityMembers([]); return; }
