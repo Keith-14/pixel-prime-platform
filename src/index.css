@@ -202,6 +202,17 @@ All colors MUST be HSL.
   .font-arabic {
     font-family: 'Plus Jakarta Sans', sans-serif;
   }
+
+  /* Proper Arabic script rendering (Quran / duas) */
+  .font-quran {
+    font-family: 'Amiri', 'Noto Naskh Arabic', 'KFGQPC Uthmanic Script HAFS',
+      'Traditional Arabic', serif;
+    direction: rtl;
+    text-align: right;
+    unicode-bidi: plaintext;
+    font-feature-settings: 'liga' 1, 'calt' 1, 'kern' 1;
+    -webkit-font-smoothing: antialiased;
+  }
   
   /* Premium glow effects */
   .glow-brown {
