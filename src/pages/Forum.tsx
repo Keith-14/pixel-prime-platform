@@ -714,29 +714,52 @@ export const Forum = () => {
       reader.readAsDataURL(file);
     });
 
-  // Persist joined communities per user in localStorage
-  const joinedStorageKey = `guftagu_joined_${user?.uid || 'guest'}`;
-  const createdStorageKey = `guftagu_created_${user?.uid || 'guest'}`;
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(joinedStorageKey);
-      if (raw) setJoinedCommunities(new Set(JSON.parse(raw)));
-      else setJoinedCommunities(new Set());
-    } catch {
-      setJoinedCommunities(new Set());
-    }
-  }, [joinedStorageKey]);
+  const [communityPosts, setCommunityPosts] = useState<Post[]>([]);
+  const [communityMembers, setCommunityMembers] = useState<
+    Array<{ id: string; user_id: string; role: string; name: string; avatar: string | null }>
+  >([]);
+
+  // ---- Communities (Supabase) ----
+  const fetchCommunities = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('communities')
+      .select('id,name,description,image_url,category,created_by,member_count,post_count,created_at')
+      .order('member_count', { ascending: false });
+    if (error) { console.error('Error loading communities:', error); return; }
+    const rows = data || [];
+    const featuredIds = rows.slice(0, 2).map((r: any) => r.id);
+    setCommunities(rows.map((r: any) => mapCommunityRow(r, user?.uid, featuredIds)));
+  }, [user?.uid]);
+
+  const fetchMyMemberships = useCallback(async () => {
+    if (!user?.uid) { setJoinedCommunities(new Set()); return; }
+    const { data } = await supabase
+      .from('community_members')
+      .select('community_id')
+      .eq('user_id', user.uid);
+    setJoinedCommunities(new Set((data || []).map((m: any) => m.community_id)));
+  }, [user?.uid]);
+
+  useEffect(() => { fetchCommunities(); fetchMyMemberships(); }, [fetchCommunities, fetchMyMemberships]);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(createdStorageKey);
-      setUserCommunities(raw ? JSON.parse(raw) : []);
-    } catch {
-      setUserCommunities([]);
-    }
-  }, [createdStorageKey]);
+    const channel = supabase
+      .channel('guftagu-communities')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'communities' }, () => { fetchCommunities(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'community_members' }, () => {
+        fetchCommunities();
+        fetchMyMemberships();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [fetchCommunities, fetchMyMemberships]);
 
-  const handleCreateCommunity = (data: {
+  const userCommunities = communities.filter((c) => c.isAdmin);
+  const joinedNotOwned = new Set(
+    Array.from(joinedCommunities).filter((id) => !userCommunities.some((c) => c.id === id))
+  );
+
+  const handleCreateCommunity = async (data: {
     name: string;
     description: string;
     category: string;
@@ -744,41 +767,46 @@ export const Forum = () => {
     cover: string | null;
     icon: string | null;
   }) => {
-    const newCommunity: Community = {
-      id: `user-${Date.now()}`,
+    if (!user?.uid) { toast.error('Please sign in to create a community'); return; }
+    const { error } = await supabase.from('communities').insert({
       name: data.name,
-      members: '1 member',
-      type: data.privacy === 'public' ? 'Public Group' : 'Private Group',
       description: data.description,
-      banner: data.cover || QURAN_BANNER,
       category: data.category,
-      isAdmin: true,
-      iconUrl: data.icon || undefined,
-    };
-    setUserCommunities((prev) => {
-      const next = [newCommunity, ...prev];
-      try { localStorage.setItem(createdStorageKey, JSON.stringify(next)); } catch {}
-      return next;
+      image_url: data.cover || data.icon || null,
+      created_by: user.uid,
     });
-    toast.success('Community sent for approval');
+    if (error) {
+      toast.error(error.code === '23505' ? 'A community with that name already exists' : 'Failed to create community');
+      return;
+    }
+    await Promise.all([fetchCommunities(), fetchMyMemberships()]);
+    toast.success('Community created');
     setActiveTab('communities');
   };
 
-  const toggleJoinCommunity = (id: string) => {
+  const toggleJoinCommunity = async (id: string) => {
+    if (!user?.uid) { toast.error('Please sign in to join communities'); return; }
+    const isJoined = joinedCommunities.has(id);
+    // Optimistic UI
     setJoinedCommunities((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-        toast.success('Left community');
-      } else {
-        next.add(id);
-        toast.success('Joined community');
-      }
-      try {
-        localStorage.setItem(joinedStorageKey, JSON.stringify(Array.from(next)));
-      } catch {}
+      if (isJoined) next.delete(id); else next.add(id);
       return next;
     });
+    const { error } = isJoined
+      ? await supabase.from('community_members').delete().eq('community_id', id).eq('user_id', user.uid)
+      : await supabase.from('community_members').insert({ community_id: id, user_id: user.uid, role: 'member' });
+    if (error && error.code !== '23505') {
+      setJoinedCommunities((prev) => {
+        const next = new Set(prev);
+        if (isJoined) next.add(id); else next.delete(id);
+        return next;
+      });
+      toast.error('Failed to update membership');
+      return;
+    }
+    toast.success(isJoined ? 'Left community' : 'Joined community');
+    fetchCommunities();
   };
   
   // Pull to refresh state
