@@ -1359,6 +1359,18 @@ export const Forum = () => {
 
     setSubmitting(true);
     try {
+      if (selectedPost.community_id) {
+        const { error } = await supabase.from('community_comments').insert({
+          post_id: selectedPost.id,
+          user_id: user.uid,
+          content: newReply.trim(),
+        });
+        if (error) throw error;
+        await loadCommunityComments(selectedPost.id);
+        setNewReply('');
+        toast.success('Reply sent!');
+        return;
+      }
       const { data, error } = await supabase.from('guftagu_replies').insert({
         post_id: selectedPost.id,
         user_id: user.uid,
