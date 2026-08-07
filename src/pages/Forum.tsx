@@ -876,6 +876,7 @@ export const Forum = () => {
   useEffect(() => {
     if (!selectedCommunity) { setCommunityPosts([]); setCommunityMembers([]); return; }
     const cid = selectedCommunity.id;
+    const cid = selectedCommunity.id;
     const cname = selectedCommunity.name;
     fetchCommunityPosts(cid, cname);
     fetchCommunityMembers(cid);
