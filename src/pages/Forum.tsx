@@ -1214,6 +1214,19 @@ export const Forum = () => {
 
     setSubmitting(true);
     try {
+      if (selectedCommunity) {
+        const { error } = await supabase.from('community_posts').insert({
+          community_id: selectedCommunity.id,
+          user_id: user.uid,
+          content: newPostContent.trim(),
+        });
+        if (error) throw error;
+        await fetchCommunityPosts(selectedCommunity.id, selectedCommunity.name);
+        setNewPostContent('');
+        setIsCreateDialogOpen(false);
+        toast.success('Post shared!');
+        return;
+      }
       const { data, error } = await supabase.from('guftagu_posts').insert({
         user_id: user.uid,
         user_name: currentUserName,
