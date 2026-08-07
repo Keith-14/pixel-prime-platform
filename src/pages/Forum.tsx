@@ -1661,14 +1661,12 @@ export const Forum = () => {
       { id: 'members', label: 'Members' },
       ...(isAdmin ? [{ id: 'settings' as const, label: 'Settings' }] : []),
     ];
-    const MOCK_MEMBERS = [
-      { name: 'Ayesha Khan', role: 'Admin', avatar: AYESHA_AVATAR },
-      { name: 'Fatima Noor', role: 'Moderator', avatar: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=200&h=200&fit=crop&crop=faces' },
-      { name: 'Zayd Rahman', role: 'Member', avatar: 'https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=200&h=200&fit=crop&crop=faces' },
-      { name: 'Hafsa Iqbal', role: 'Member', avatar: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=200&h=200&fit=crop&crop=faces' },
-      { name: 'Bilal Ahmed', role: 'Member', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=faces' },
-      { name: 'Mariam Yusuf', role: 'Member', avatar: 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39?w=200&h=200&fit=crop&crop=faces' },
-    ];
+    const MEMBERS = communityMembers.map((m) => ({
+      id: m.id,
+      name: m.name,
+      role: m.role === 'owner' ? 'Admin' : 'Member',
+      avatar: m.avatar,
+    }));
     return (
       <Layout showHeader={false} pageBackgroundColor={CREAM_BG}>
         <div className="min-h-screen pb-28" style={{ background: CREAM_BG, fontFamily: "'Inter', sans-serif" }}>
