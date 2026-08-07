@@ -240,9 +240,17 @@ export const Mood = () => {
                   )}
 
                   <p
-                    className="whitespace-pre-line text-[24px] leading-[1.8] text-center font-arabic"
-                    style={{ color: BROWN }}
+                    className="font-quran whitespace-pre-line text-[26px] leading-[2.1] w-full"
+                    style={{
+                      color: BROWN,
+                      direction: 'rtl',
+                      textAlign: 'right',
+                      unicodeBidi: 'plaintext',
+                      wordBreak: 'normal',
+                      overflowWrap: 'break-word',
+                    }}
                     dir="rtl"
+                    lang="ar"
                   >
                     {dua.arabic}
                   </p>
@@ -257,52 +265,40 @@ export const Mood = () => {
                     >
                       English
                     </p>
-                    <div className="space-y-3">
-                      {dua.translation.map((translation, index) => (
-                        <p
-                          key={`${dua.number}-translation-${index}`}
-                          className="text-[16px] leading-relaxed"
-                          style={{ color: BROWN }}
-                        >
-                          {dua.translation.length > 1 && (
-                            <span
-                              className="mr-2 text-[13px] font-semibold"
-                              style={{ color: BROWN_ACCENT }}
-                            >
-                              {index + 1}.
-                            </span>
-                          )}
-                          {translation}
-                        </p>
-                      ))}
-                    </div>
+                    <p
+                      className="whitespace-pre-line text-[16px] leading-relaxed"
+                      style={{ color: BROWN }}
+                    >
+                      {dua.translation_en}
+                    </p>
                   </div>
 
-                  {dua.transliteration_and_notes && (
+                  {dua.transliteration && (
                     <div>
                       <p
                         className="text-[14px] font-semibold mb-3"
                         style={{ color: BROWN }}
                       >
-                        Transliteration and notes
+                        Transliteration
                       </p>
                       <p
                         className="whitespace-pre-line text-[14px] italic leading-relaxed"
                         style={{ color: BROWN_MUTED }}
                       >
-                        {dua.transliteration_and_notes}
+                        {dua.transliteration}
                       </p>
                     </div>
                   )}
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-start gap-2">
                     <BookOpen
-                      className="h-4 w-4 flex-shrink-0"
+                      className="h-4 w-4 flex-shrink-0 mt-0.5"
                       style={{ color: BROWN_ACCENT }}
                       strokeWidth={2}
                     />
                     <p className="text-[13px]" style={{ color: BROWN_MUTED }}>
-                      Source: Hisnul Muslim #{dua.number}
+                      Hisnul Muslim #{dua.number}
+                      {dua.reference ? ` — ${dua.reference}` : ''}
                     </p>
                   </div>
                 </section>
