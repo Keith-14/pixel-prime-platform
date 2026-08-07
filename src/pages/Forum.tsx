@@ -2010,8 +2010,8 @@ export const Forum = () => {
 
           {activeTab === 'communities' ? (
             <MyCommunitiesView
-              joined={joinedCommunities}
-              communities={COMMUNITIES}
+              joined={joinedNotOwned}
+              communities={communities}
               userCreated={userCommunities}
               onToggle={toggleJoinCommunity}
               onExplore={() => setActiveTab('explore')}
@@ -2021,7 +2021,7 @@ export const Forum = () => {
           ) : activeTab === 'explore' ? (
             <ExploreView
               joined={joinedCommunities}
-              communities={COMMUNITIES}
+              communities={communities}
               category={exploreCategory}
               setCategory={setExploreCategory}
               onToggle={toggleJoinCommunity}
@@ -2126,7 +2126,7 @@ export const Forum = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {[...filteredPosts, ...MOCK_POSTS].map((post, index) => (
+                  {filteredPosts.map((post, index) => (
                     <PostCard key={post.id} post={post} index={index} />
                   ))}
                 </div>
