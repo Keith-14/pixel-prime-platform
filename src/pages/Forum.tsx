@@ -1296,8 +1296,15 @@ export const Forum = () => {
 
   const handleDeletePost = async (postId: string) => {
     try {
-      const { error } = await supabase.from('guftagu_posts').delete().eq('id', postId);
-      if (error) throw error;
+      const communityPost = communityPosts.find((p) => p.id === postId);
+      if (communityPost?.community_id) {
+        const { error } = await supabase.from('community_posts').delete().eq('id', postId);
+        if (error) throw error;
+        setCommunityPosts((prev) => prev.filter((p) => p.id !== postId));
+      } else {
+        const { error } = await supabase.from('guftagu_posts').delete().eq('id', postId);
+        if (error) throw error;
+      }
       toast.success('Post deleted');
       if (selectedPost?.id === postId) {
         setSelectedPost(null);
@@ -1306,6 +1313,51 @@ export const Forum = () => {
       console.error('Error deleting post:', error);
       toast.error('Failed to delete post');
     }
+  };
+
+  // ---- Community admin actions ----
+  const handleRemoveMember = async (memberId: string, memberName: string) => {
+    const { error } = await supabase.from('community_members').delete().eq('id', memberId);
+    if (error) {
+      console.error('Error removing member:', error);
+      toast.error('Failed to remove member');
+      return;
+    }
+    setCommunityMembers((prev) => prev.filter((m) => m.id !== memberId));
+    toast.success(`${memberName} removed from the community`);
+    fetchCommunities();
+  };
+
+  const handleUpdateCommunityInfo = async (
+    communityId: string,
+    patch: { name: string; description: string; category: string }
+  ) => {
+    const { error } = await supabase.from('communities').update(patch).eq('id', communityId);
+    if (error) {
+      console.error('Error updating community:', error);
+      toast.error(error.code === '23505' ? 'A community with that name already exists' : 'Failed to update community');
+      return false;
+    }
+    setSelectedCommunity((prev) =>
+      prev && prev.id === communityId
+        ? { ...prev, name: patch.name, description: patch.description, category: patch.category, type: patch.category }
+        : prev
+    );
+    toast.success('Community info updated');
+    fetchCommunities();
+    return true;
+  };
+
+  const handleDeleteCommunity = async (communityId: string) => {
+    const { error } = await supabase.from('communities').delete().eq('id', communityId);
+    if (error) {
+      console.error('Error deleting community:', error);
+      toast.error('Failed to delete community');
+      return;
+    }
+    toast.success('Community deleted');
+    setSelectedCommunity(null);
+    fetchCommunities();
   };
 
   const handleToggleLike = async (postId: string, isCurrentlyLiked: boolean) => {
