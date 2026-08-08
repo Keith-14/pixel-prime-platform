@@ -1553,6 +1553,9 @@ export const Forum = () => {
 
   const PostCard = ({ post }: { post: Post; index?: number }) => {
     const isOwner = user?.uid === post.user_id;
+    const isCommunityAdmin =
+      !!post.community_id && !!selectedCommunity?.isAdmin && selectedCommunity.id === post.community_id;
+    const canDelete = isOwner || isCommunityAdmin;
     const isLiking = likingPosts.has(post.id);
     const isBookmarked = bookmarkedPosts.has(post.id);
     const contentPreview = post.content.length > 180 ? post.content.slice(0, 180) + '...' : post.content;
@@ -1610,12 +1613,15 @@ export const Forum = () => {
               </div>
               <p className="text-xs mt-0.5" style={{ color: '#9C8569' }}>{formatTimeAgo(post.created_at)}</p>
             </div>
-            {isOwner && (
+            {canDelete && (
               <button
                 className="hover:text-destructive transition-colors p-1"
                 style={{ color: '#C4A98A' }}
                 onClick={(e) => {
                   e.stopPropagation();
+                  if (isCommunityAdmin && !isOwner) {
+                    if (!window.confirm('Delete this member\u2019s post from your community?')) return;
+                  }
                   handleDeletePost(post.id);
                 }}
               >
