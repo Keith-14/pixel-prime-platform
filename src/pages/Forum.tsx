@@ -2061,6 +2061,17 @@ export const Forum = () => {
                       >
                         ADMIN
                       </span>
+                    ) : isAdmin ? (
+                      <button
+                        onClick={() => {
+                          if (!window.confirm(`Remove ${m.name} from this community?`)) return;
+                          handleRemoveMember(m.id, m.name);
+                        }}
+                        className="px-4 py-1.5 rounded-full text-xs font-semibold shrink-0"
+                        style={{ background: '#FFFFFF', color: '#B3261E', border: '1px solid #F0C8BD' }}
+                      >
+                        Remove
+                      </button>
                     ) : (
                       <button
                         className="px-4 py-1.5 rounded-full text-xs font-semibold shrink-0"
