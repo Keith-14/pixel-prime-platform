@@ -694,6 +694,10 @@ export const Forum = () => {
   const [createCommunityOpen, setCreateCommunityOpen] = useState(false);
   const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(null);
   const [communityTab, setCommunityTab] = useState<'posts' | 'members' | 'settings'>('posts');
+  const [editInfo, setEditInfo] = useState<{ name: string; description: string; category: string }>({
+    name: '', description: '', category: '',
+  });
+  const [savingInfo, setSavingInfo] = useState(false);
   const [communityOverrides, setCommunityOverrides] = useState<Record<string, { banner?: string; iconUrl?: string }>>(() => {
     try {
       const raw = localStorage.getItem('guftagu_community_overrides');
