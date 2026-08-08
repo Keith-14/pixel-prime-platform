@@ -914,6 +914,11 @@ export const Forum = () => {
     if (!selectedCommunity) { setCommunityPosts([]); setCommunityMembers([]); return; }
     const cid = selectedCommunity.id;
     const cname = selectedCommunity.name;
+    setEditInfo({
+      name: selectedCommunity.name,
+      description: selectedCommunity.description,
+      category: selectedCommunity.category,
+    });
     fetchCommunityPosts(cid, cname);
     fetchCommunityMembers(cid);
 
