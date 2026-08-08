@@ -694,6 +694,10 @@ export const Forum = () => {
   const [createCommunityOpen, setCreateCommunityOpen] = useState(false);
   const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(null);
   const [communityTab, setCommunityTab] = useState<'posts' | 'members' | 'settings'>('posts');
+  const [editInfo, setEditInfo] = useState<{ name: string; description: string; category: string }>({
+    name: '', description: '', category: '',
+  });
+  const [savingInfo, setSavingInfo] = useState(false);
   const [communityOverrides, setCommunityOverrides] = useState<Record<string, { banner?: string; iconUrl?: string }>>(() => {
     try {
       const raw = localStorage.getItem('guftagu_community_overrides');
@@ -910,6 +914,11 @@ export const Forum = () => {
     if (!selectedCommunity) { setCommunityPosts([]); setCommunityMembers([]); return; }
     const cid = selectedCommunity.id;
     const cname = selectedCommunity.name;
+    setEditInfo({
+      name: selectedCommunity.name,
+      description: selectedCommunity.description,
+      category: selectedCommunity.category,
+    });
     fetchCommunityPosts(cid, cname);
     fetchCommunityMembers(cid);
 
@@ -1296,8 +1305,15 @@ export const Forum = () => {
 
   const handleDeletePost = async (postId: string) => {
     try {
-      const { error } = await supabase.from('guftagu_posts').delete().eq('id', postId);
-      if (error) throw error;
+      const communityPost = communityPosts.find((p) => p.id === postId);
+      if (communityPost?.community_id) {
+        const { error } = await supabase.from('community_posts').delete().eq('id', postId);
+        if (error) throw error;
+        setCommunityPosts((prev) => prev.filter((p) => p.id !== postId));
+      } else {
+        const { error } = await supabase.from('guftagu_posts').delete().eq('id', postId);
+        if (error) throw error;
+      }
       toast.success('Post deleted');
       if (selectedPost?.id === postId) {
         setSelectedPost(null);
@@ -1306,6 +1322,51 @@ export const Forum = () => {
       console.error('Error deleting post:', error);
       toast.error('Failed to delete post');
     }
+  };
+
+  // ---- Community admin actions ----
+  const handleRemoveMember = async (memberId: string, memberName: string) => {
+    const { error } = await supabase.from('community_members').delete().eq('id', memberId);
+    if (error) {
+      console.error('Error removing member:', error);
+      toast.error('Failed to remove member');
+      return;
+    }
+    setCommunityMembers((prev) => prev.filter((m) => m.id !== memberId));
+    toast.success(`${memberName} removed from the community`);
+    fetchCommunities();
+  };
+
+  const handleUpdateCommunityInfo = async (
+    communityId: string,
+    patch: { name: string; description: string; category: string }
+  ) => {
+    const { error } = await supabase.from('communities').update(patch).eq('id', communityId);
+    if (error) {
+      console.error('Error updating community:', error);
+      toast.error(error.code === '23505' ? 'A community with that name already exists' : 'Failed to update community');
+      return false;
+    }
+    setSelectedCommunity((prev) =>
+      prev && prev.id === communityId
+        ? { ...prev, name: patch.name, description: patch.description, category: patch.category, type: patch.category }
+        : prev
+    );
+    toast.success('Community info updated');
+    fetchCommunities();
+    return true;
+  };
+
+  const handleDeleteCommunity = async (communityId: string) => {
+    const { error } = await supabase.from('communities').delete().eq('id', communityId);
+    if (error) {
+      console.error('Error deleting community:', error);
+      toast.error('Failed to delete community');
+      return;
+    }
+    toast.success('Community deleted');
+    setSelectedCommunity(null);
+    fetchCommunities();
   };
 
   const handleToggleLike = async (postId: string, isCurrentlyLiked: boolean) => {
@@ -1492,6 +1553,9 @@ export const Forum = () => {
 
   const PostCard = ({ post }: { post: Post; index?: number }) => {
     const isOwner = user?.uid === post.user_id;
+    const isCommunityAdmin =
+      !!post.community_id && !!selectedCommunity?.isAdmin && selectedCommunity.id === post.community_id;
+    const canDelete = isOwner || isCommunityAdmin;
     const isLiking = likingPosts.has(post.id);
     const isBookmarked = bookmarkedPosts.has(post.id);
     const contentPreview = post.content.length > 180 ? post.content.slice(0, 180) + '...' : post.content;
@@ -1549,12 +1613,15 @@ export const Forum = () => {
               </div>
               <p className="text-xs mt-0.5" style={{ color: '#9C8569' }}>{formatTimeAgo(post.created_at)}</p>
             </div>
-            {isOwner && (
+            {canDelete && (
               <button
                 className="hover:text-destructive transition-colors p-1"
                 style={{ color: '#C4A98A' }}
                 onClick={(e) => {
                   e.stopPropagation();
+                  if (isCommunityAdmin && !isOwner) {
+                    if (!window.confirm('Delete this member\u2019s post from your community?')) return;
+                  }
                   handleDeletePost(post.id);
                 }}
               >
@@ -1994,6 +2061,17 @@ export const Forum = () => {
                       >
                         ADMIN
                       </span>
+                    ) : isAdmin ? (
+                      <button
+                        onClick={() => {
+                          if (!window.confirm(`Remove ${m.name} from this community?`)) return;
+                          handleRemoveMember(m.id, m.name);
+                        }}
+                        className="px-4 py-1.5 rounded-full text-xs font-semibold shrink-0"
+                        style={{ background: '#FFFFFF', color: '#B3261E', border: '1px solid #F0C8BD' }}
+                      >
+                        Remove
+                      </button>
                     ) : (
                       <button
                         className="px-4 py-1.5 rounded-full text-xs font-semibold shrink-0"
@@ -2009,6 +2087,62 @@ export const Forum = () => {
 
             {communityTab === 'settings' && (
               <div className="space-y-4 pb-6">
+                <p className="text-xs uppercase tracking-wider font-semibold" style={{ color: '#9C8569' }}>
+                  Group Info
+                </p>
+                <div className="rounded-2xl p-4 space-y-3" style={{ background: '#FFFFFF', boxShadow: '0 1px 3px rgba(123, 63, 30, 0.05)' }}>
+                  <div>
+                    <label className="text-xs font-semibold" style={{ color: '#9C8569' }}>Name</label>
+                    <input
+                      value={editInfo.name}
+                      onChange={(e) => setEditInfo((p) => ({ ...p, name: e.target.value }))}
+                      className="mt-1 w-full rounded-xl px-3 py-2 text-sm outline-none"
+                      style={{ background: CREAM_BG, border: `1px solid ${SOFT_BORDER}`, color: BROWN_DARK }}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold" style={{ color: '#9C8569' }}>Description</label>
+                    <Textarea
+                      value={editInfo.description}
+                      onChange={(e) => setEditInfo((p) => ({ ...p, description: e.target.value }))}
+                      rows={3}
+                      className="mt-1 text-sm"
+                      style={{ background: CREAM_BG, borderColor: SOFT_BORDER, color: BROWN_DARK }}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold" style={{ color: '#9C8569' }}>Category</label>
+                    <Select value={editInfo.category} onValueChange={(v) => setEditInfo((p) => ({ ...p, category: v }))}>
+                      <SelectTrigger className="mt-1 text-sm" style={{ background: CREAM_BG, borderColor: SOFT_BORDER, color: BROWN_DARK }}>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CREATE_CATEGORIES.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>{cat.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <button
+                    disabled={savingInfo}
+                    onClick={async () => {
+                      const name = editInfo.name.trim();
+                      if (!name) { toast.error('Community name is required'); return; }
+                      setSavingInfo(true);
+                      await handleUpdateCommunityInfo(c.id, {
+                        name,
+                        description: editInfo.description.trim(),
+                        category: editInfo.category,
+                      });
+                      setSavingInfo(false);
+                    }}
+                    className="w-full py-2.5 rounded-full text-sm font-semibold text-white disabled:opacity-60"
+                    style={{ background: BROWN }}
+                  >
+                    {savingInfo ? 'Saving...' : 'Save changes'}
+                  </button>
+                </div>
+
                 <p className="text-xs uppercase tracking-wider font-semibold" style={{ color: '#9C8569' }}>
                   Community Media
                 </p>
@@ -2077,6 +2211,26 @@ export const Forum = () => {
                       }}
                     />
                   </label>
+                </div>
+
+                <p className="text-xs uppercase tracking-wider font-semibold pt-2" style={{ color: '#9C8569' }}>
+                  Danger Zone
+                </p>
+                <div className="rounded-2xl p-4" style={{ background: '#FFFFFF', border: '1px solid #F0C8BD' }}>
+                  <p className="text-sm font-bold" style={{ color: '#B3261E' }}>Delete community</p>
+                  <p className="text-xs mt-0.5 mb-3" style={{ color: '#9C8569' }}>
+                    This permanently removes the community, its posts, comments and members.
+                  </p>
+                  <button
+                    onClick={() => {
+                      if (!window.confirm(`Delete "${c.name}"? This cannot be undone.`)) return;
+                      handleDeleteCommunity(c.id);
+                    }}
+                    className="w-full py-2.5 rounded-full text-sm font-semibold text-white"
+                    style={{ background: '#B3261E' }}
+                  >
+                    Delete community
+                  </button>
                 </div>
               </div>
             )}
