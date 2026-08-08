@@ -2088,6 +2088,62 @@ export const Forum = () => {
             {communityTab === 'settings' && (
               <div className="space-y-4 pb-6">
                 <p className="text-xs uppercase tracking-wider font-semibold" style={{ color: '#9C8569' }}>
+                  Group Info
+                </p>
+                <div className="rounded-2xl p-4 space-y-3" style={{ background: '#FFFFFF', boxShadow: '0 1px 3px rgba(123, 63, 30, 0.05)' }}>
+                  <div>
+                    <label className="text-xs font-semibold" style={{ color: '#9C8569' }}>Name</label>
+                    <input
+                      value={editInfo.name}
+                      onChange={(e) => setEditInfo((p) => ({ ...p, name: e.target.value }))}
+                      className="mt-1 w-full rounded-xl px-3 py-2 text-sm outline-none"
+                      style={{ background: CREAM_BG, border: `1px solid ${SOFT_BORDER}`, color: BROWN_DARK }}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold" style={{ color: '#9C8569' }}>Description</label>
+                    <Textarea
+                      value={editInfo.description}
+                      onChange={(e) => setEditInfo((p) => ({ ...p, description: e.target.value }))}
+                      rows={3}
+                      className="mt-1 text-sm"
+                      style={{ background: CREAM_BG, borderColor: SOFT_BORDER, color: BROWN_DARK }}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold" style={{ color: '#9C8569' }}>Category</label>
+                    <Select value={editInfo.category} onValueChange={(v) => setEditInfo((p) => ({ ...p, category: v }))}>
+                      <SelectTrigger className="mt-1 text-sm" style={{ background: CREAM_BG, borderColor: SOFT_BORDER, color: BROWN_DARK }}>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CREATE_CATEGORIES.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>{cat.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <button
+                    disabled={savingInfo}
+                    onClick={async () => {
+                      const name = editInfo.name.trim();
+                      if (!name) { toast.error('Community name is required'); return; }
+                      setSavingInfo(true);
+                      await handleUpdateCommunityInfo(c.id, {
+                        name,
+                        description: editInfo.description.trim(),
+                        category: editInfo.category,
+                      });
+                      setSavingInfo(false);
+                    }}
+                    className="w-full py-2.5 rounded-full text-sm font-semibold text-white disabled:opacity-60"
+                    style={{ background: BROWN }}
+                  >
+                    {savingInfo ? 'Saving...' : 'Save changes'}
+                  </button>
+                </div>
+
+                <p className="text-xs uppercase tracking-wider font-semibold" style={{ color: '#9C8569' }}>
                   Community Media
                 </p>
 
