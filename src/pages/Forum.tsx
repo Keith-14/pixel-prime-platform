@@ -694,6 +694,7 @@ export const Forum = () => {
   const [createCommunityOpen, setCreateCommunityOpen] = useState(false);
   const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(null);
   const [communityTab, setCommunityTab] = useState<'posts' | 'members' | 'settings'>('posts');
+  const [guidelinesOpen, setGuidelinesOpen] = useState(false);
   const [editInfo, setEditInfo] = useState<{ name: string; description: string; category: string }>({
     name: '', description: '', category: '',
   });
@@ -1910,6 +1911,7 @@ export const Forum = () => {
               <span className="text-base font-bold">Back to Guftagu</span>
             </button>
             <button
+              onClick={() => setGuidelinesOpen(true)}
               className="w-9 h-9 rounded-full flex items-center justify-center"
               style={{ border: `1.5px solid ${BROWN_DARK}`, color: BROWN_DARK }}
               aria-label="Help"
@@ -1917,6 +1919,81 @@ export const Forum = () => {
               <span className="text-sm font-bold">?</span>
             </button>
           </div>
+
+          {/* Community Guidelines */}
+          <Dialog open={guidelinesOpen} onOpenChange={setGuidelinesOpen}>
+            <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto rounded-2xl" style={{ background: CREAM_BG }}>
+              <DialogHeader>
+                <DialogTitle style={{ color: BROWN_DARK }}>Community Guidelines</DialogTitle>
+                <DialogDescription style={{ color: '#8B6E4A' }}>
+                  Adab (etiquette) every member of this community is expected to follow, in line with Islamic values.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 text-sm" style={{ color: BROWN_DARK }}>
+                <p className="italic" style={{ color: '#8B6E4A' }}>
+                  “Let him who believes in Allah and the Last Day either speak good or keep silent.” — Sahih al-Bukhari &amp; Muslim
+                </p>
+                {[
+                  {
+                    t: '1. Speak with Adab and Ihsan',
+                    d: 'Be respectful, gentle and sincere. No insults, mockery, name-calling, sarcasm or harsh speech towards any member, scholar, or group.',
+                  },
+                  {
+                    t: '2. Verify Before You Share',
+                    d: 'Quote Qur’an, Hadith and rulings with authentic references. Do not spread unverified narrations, rumours, or forwarded messages without checking their source.',
+                  },
+                  {
+                    t: '3. No Fatwas Without Knowledge',
+                    d: 'Do not issue religious rulings. Share knowledge with references, and refer complex or personal matters to qualified scholars in your locality.',
+                  },
+                  {
+                    t: '4. Respect Differences of Opinion',
+                    d: 'Valid scholarly differences (ikhtilaf) exist. Avoid sectarian arguments, takfir (declaring others disbelievers), or attacking madhhabs and communities.',
+                  },
+                  {
+                    t: '5. Guard Your Speech',
+                    d: 'Backbiting (gheebah), slander (buhtan), tale-carrying (nameemah), lying and public shaming are forbidden — including screenshots of private conversations.',
+                  },
+                  {
+                    t: '6. Modesty in Content',
+                    d: 'Keep images, videos and language modest and halal. No immodest content, profanity, music-centred or clearly impermissible material.',
+                  },
+                  {
+                    t: '7. Zero Tolerance for Hate & Extremism',
+                    d: 'No hate speech, racism, nationalism-based hostility, incitement to violence, extremist propaganda, or support for any group that harms innocent people.',
+                  },
+                  {
+                    t: '8. Protect Privacy & Trust',
+                    d: 'Do not share anyone’s personal details, photos or private matters without permission. Conceal the faults of others as you would wish yours concealed.',
+                  },
+                  {
+                    t: '9. No Spam, Riba or Haram Trade',
+                    d: 'No spam, repetitive promotions, chain messages, scams, interest-based (riba) offers, gambling, or sale of impermissible goods and services.',
+                  },
+                  {
+                    t: '10. Stay on Topic & Be Beneficial',
+                    d: 'Keep discussion beneficial for the deen and the community. Avoid pointless arguments, provocative debates and off-topic content.',
+                  },
+                  {
+                    t: '11. Respect Admins & Moderation',
+                    d: 'Community admins may edit group info, remove posts and remove members who violate these guidelines. Report violations instead of responding harshly.',
+                  },
+                  {
+                    t: '12. Advise with Sincerity',
+                    d: 'Correct others privately and kindly where possible. Naseehah is a gift — give it with mercy, and accept it with humility.',
+                  },
+                ].map((g) => (
+                  <div key={g.t}>
+                    <p className="font-semibold">{g.t}</p>
+                    <p style={{ color: '#8B6E4A' }}>{g.d}</p>
+                  </div>
+                ))}
+                <p className="text-xs pt-2" style={{ color: '#9C8569' }}>
+                  Repeated or serious violations may result in removal from the community or the Barakah platform.
+                </p>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           {/* Banner */}
           <div className="w-full" style={{ aspectRatio: '16 / 9' }}>
