@@ -2212,6 +2212,26 @@ export const Forum = () => {
                     />
                   </label>
                 </div>
+
+                <p className="text-xs uppercase tracking-wider font-semibold pt-2" style={{ color: '#9C8569' }}>
+                  Danger Zone
+                </p>
+                <div className="rounded-2xl p-4" style={{ background: '#FFFFFF', border: '1px solid #F0C8BD' }}>
+                  <p className="text-sm font-bold" style={{ color: '#B3261E' }}>Delete community</p>
+                  <p className="text-xs mt-0.5 mb-3" style={{ color: '#9C8569' }}>
+                    This permanently removes the community, its posts, comments and members.
+                  </p>
+                  <button
+                    onClick={() => {
+                      if (!window.confirm(`Delete "${c.name}"? This cannot be undone.`)) return;
+                      handleDeleteCommunity(c.id);
+                    }}
+                    className="w-full py-2.5 rounded-full text-sm font-semibold text-white"
+                    style={{ background: '#B3261E' }}
+                  >
+                    Delete community
+                  </button>
+                </div>
               </div>
             )}
           </div>
