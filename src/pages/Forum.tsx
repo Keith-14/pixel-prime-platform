@@ -694,6 +694,7 @@ export const Forum = () => {
   const [createCommunityOpen, setCreateCommunityOpen] = useState(false);
   const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(null);
   const [communityTab, setCommunityTab] = useState<'posts' | 'members' | 'settings'>('posts');
+  const [guidelinesOpen, setGuidelinesOpen] = useState(false);
   const [editInfo, setEditInfo] = useState<{ name: string; description: string; category: string }>({
     name: '', description: '', category: '',
   });
